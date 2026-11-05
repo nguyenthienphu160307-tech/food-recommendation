@@ -71,7 +71,7 @@ def run_tests():
     
     profile = db.query(UserProfile).filter(UserProfile.user_id == user.id).first()
     assert profile is not None
-    assert profile.full_name == "Nguyễn Văn Sinh Viên"
+    assert profile.full_name == "Nguyễn Văn A"
 
     user_role = db.query(UserRole).filter(UserRole.user_id == user.id).first()
     assert user_role is not None
@@ -90,7 +90,7 @@ def run_tests():
     res5 = client.post("/api/auth/register", json={
         "email": "sinhvien@example.com",
         "password": "password123",
-        "full_name": "Nguyễn Văn Sinh Viên",
+        "full_name": "Nguyễn Văn A",
         "otp_code": otp_code
     })
     print("Response status:", res5.status_code)
