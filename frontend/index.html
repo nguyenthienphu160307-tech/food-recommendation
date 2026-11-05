@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodAI — Khám phá & Gợi ý địa điểm ẩm thực quanh bạn</title>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Design Tokens đồng bộ với trang Profile */
         :root[data-theme="light"] {
             --bg-page: #f7f7f8;
             --bg-surface: #ffffff;
@@ -57,721 +56,296 @@
             flex-direction: column;
         }
 
-        /* Top Navigation (DoorDash / Uber Eats Standard) */
+        /* Header & Search Bar */
         .topbar {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            height: 72px;
-            padding: 0 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            background: var(--bg-surface); border-bottom: 1px solid var(--border);
+            height: 72px; padding: 0 28px; display: flex;
+            align-items: center; justify-content: space-between;
+            gap: 20px; position: sticky; top: 0; z-index: 1000;
         }
-
-        .topbar-left {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-
+        .topbar-left { display: flex; align-items: center; gap: 18px; }
         .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: var(--text-primary);
-            font-weight: 700;
-            font-size: 1.25rem;
-            letter-spacing: -0.03em;
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text-primary);
+            font-weight: 700; font-size: 1.25rem; letter-spacing: -0.03em;
         }
-
         .logo-mark {
-            width: 36px;
-            height: 36px;
-            background: var(--brand-red);
-            color: #ffffff;
-            border-radius: 9px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 36px; height: 36px; background: var(--brand-red);
+            color: #ffffff; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        /* Location Selector Pill */
         .location-pill {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: var(--bg-subtle);
-            border: 1px solid var(--border);
-            padding: 8px 14px;
-            border-radius: 999px;
-            cursor: pointer;
-            max-width: 280px;
-            transition: border-color 0.15s;
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            padding: 8px 14px; border-radius: 999px; cursor: pointer;
+            max-width: 280px; transition: border-color 0.15s;
         }
-
-        .location-pill:hover {
-            border-color: var(--text-muted);
-        }
-
-        .location-pill svg {
-            color: var(--brand-red);
-            flex-shrink: 0;
-        }
-
+        .location-pill:hover { border-color: var(--text-muted); }
+        .location-pill svg { color: var(--brand-red); flex-shrink: 0; }
         .location-pill-text {
-            font-size: 0.83rem;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.83rem; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        /* Center Search & AI Bar */
-        .search-wrapper {
-            flex: 1;
-            max-width: 580px;
-            position: relative;
-        }
-
+        .search-wrapper { flex: 1; max-width: 580px; position: relative; }
         .search-bar {
-            display: flex;
-            align-items: center;
-            background: var(--bg-subtle);
-            border: 1.5px solid var(--border);
-            border-radius: 999px;
-            height: 44px;
-            padding: 0 6px 0 16px;
-            transition: all 0.15s;
+            display: flex; align-items: center; background: var(--bg-subtle);
+            border: 1.5px solid var(--border); border-radius: 999px;
+            height: 44px; padding: 0 6px 0 16px; transition: all 0.15s;
         }
-
         .search-bar:focus-within {
-            background: var(--bg-surface);
-            border-color: var(--text-primary);
+            background: var(--bg-surface); border-color: var(--text-primary);
             box-shadow: var(--shadow-sm);
         }
-
         .search-bar input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            outline: none;
-            padding: 0 10px;
+            flex: 1; border: none; background: transparent;
+            color: var(--text-primary); font-size: 0.9rem;
+            outline: none; padding: 0 10px;
         }
-
         .btn-ai-ask {
-            background: var(--brand-red);
-            color: #ffffff;
-            border: none;
-            height: 32px;
-            padding: 0 14px;
-            border-radius: 999px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.15s;
+            background: var(--brand-red); color: #ffffff; border: none;
+            height: 32px; padding: 0 14px; border-radius: 999px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: background 0.15s;
         }
+        .btn-ai-ask:hover { background: var(--brand-red-hover); }
 
-        .btn-ai-ask:hover {
-            background: var(--brand-red-hover);
-        }
-
-        /* Instant Search Dropdown */
         .search-suggestions {
-            position: absolute;
-            top: 52px;
-            left: 0;
-            right: 0;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            box-shadow: var(--shadow-lg);
-            padding: 12px;
-            display: none;
-            z-index: 1200;
+            position: absolute; top: 52px; left: 0; right: 0;
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 14px; box-shadow: var(--shadow-lg);
+            padding: 12px; display: none; z-index: 1200;
         }
-
-        .search-suggestions.open {
-            display: block;
-        }
-
+        .search-suggestions.open { display: block; }
         .suggestion-label {
-            font-size: 0.74rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--text-muted);
-            padding: 4px 8px 8px;
+            font-size: 0.74rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.04em; color: var(--text-muted); padding: 4px 8px 8px;
         }
-
         .suggestion-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 9px 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.86rem;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 0.86rem;
         }
+        .suggestion-item:hover { background: var(--bg-subtle); }
 
-        .suggestion-item:hover {
-            background: var(--bg-subtle);
-        }
-
-        /* Topbar Right & Account Menu */
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            position: relative;
-        }
-
+        .topbar-right { display: flex; align-items: center; gap: 12px; position: relative; }
         .btn-icon-only {
-            width: 38px;
-            height: 38px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: var(--bg-surface);
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.15s;
+            width: 38px; height: 38px; border-radius: 999px;
+            border: 1px solid var(--border); background: var(--bg-surface);
+            color: var(--text-primary); display: flex; align-items: center;
+            justify-content: center; cursor: pointer; transition: background 0.15s;
         }
-
-        .btn-icon-only:hover {
-            background: var(--bg-subtle);
-        }
+        .btn-icon-only:hover { background: var(--bg-subtle); }
 
         .account-trigger {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 5px 12px 5px 6px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: var(--bg-surface);
-            color: var(--text-primary);
-            cursor: pointer;
-            transition: box-shadow 0.15s;
+            display: flex; align-items: center; gap: 10px;
+            padding: 5px 12px 5px 6px; border-radius: 999px;
+            border: 1px solid var(--border); background: var(--bg-surface);
+            color: var(--text-primary); cursor: pointer; transition: box-shadow 0.15s;
         }
+        .account-trigger:hover { box-shadow: var(--shadow-sm); }
+        .account-trigger img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+        .account-trigger span { font-size: 0.85rem; font-weight: 600; }
 
-        .account-trigger:hover {
-            box-shadow: var(--shadow-sm);
-        }
-
-        .account-trigger img {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .account-trigger span {
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        /* User Dropdown Menu (Góc trên bên phải) */
         .account-dropdown {
-            position: absolute;
-            top: 50px;
-            right: 0;
-            width: 260px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            box-shadow: var(--shadow-lg);
-            padding: 8px;
-            display: none;
-            z-index: 1500;
+            position: absolute; top: 50px; right: 0; width: 260px;
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 14px; box-shadow: var(--shadow-lg);
+            padding: 8px; display: none; z-index: 1500;
         }
-
-        .account-dropdown.open {
-            display: block;
-        }
-
+        .account-dropdown.open { display: block; }
         .dropdown-user-header {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 6px;
+            padding: 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
         }
-
-        .dropdown-user-header strong {
-            display: block;
-            font-size: 0.92rem;
-        }
-
-        .dropdown-user-header small {
-            color: var(--text-muted);
-            font-size: 0.78rem;
-        }
-
+        .dropdown-user-header strong { display: block; font-size: 0.92rem; }
+        .dropdown-user-header small { color: var(--text-muted); font-size: 0.78rem; }
         .dropdown-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 0.86rem;
-            font-weight: 500;
-            cursor: pointer;
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 8px; color: var(--text-primary);
+            text-decoration: none; font-size: 0.86rem; font-weight: 500; cursor: pointer;
         }
+        .dropdown-link:hover { background: var(--bg-subtle); }
+        .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-        .dropdown-link:hover {
-            background: var(--bg-subtle);
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 6px 0;
-        }
-
-        /* Filter Bar */
+        /* Filter Ribbon */
         .filter-ribbon {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            overflow-x: auto;
+            background: var(--bg-surface); border-bottom: 1px solid var(--border);
+            padding: 12px 28px; display: flex; align-items: center;
+            justify-content: space-between; gap: 16px; overflow-x: auto;
         }
-
-        .category-pills, .amenity-filters {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .category-pills, .amenity-filters { display: flex; align-items: center; gap: 8px; }
         .filter-pill {
-            height: 36px;
-            padding: 0 14px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: var(--bg-surface);
-            color: var(--text-secondary);
-            font-size: 0.83rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-            transition: all 0.15s;
+            height: 36px; padding: 0 14px; border-radius: 999px;
+            border: 1px solid var(--border); background: var(--bg-surface);
+            color: var(--text-secondary); font-size: 0.83rem; font-weight: 500;
+            cursor: pointer; display: inline-flex; align-items: center;
+            gap: 6px; white-space: nowrap; transition: all 0.15s;
         }
-
-        .filter-pill:hover {
-            border-color: var(--text-primary);
-            color: var(--text-primary);
-        }
-
+        .filter-pill:hover { border-color: var(--text-primary); color: var(--text-primary); }
         .filter-pill.active {
-            background: var(--text-primary);
-            color: var(--bg-surface);
-            border-color: var(--text-primary);
-            font-weight: 600;
+            background: var(--text-primary); color: var(--bg-surface);
+            border-color: var(--text-primary); font-weight: 600;
         }
 
-        /* Main Split Layout (Danh sách quán + Bản đồ Google Maps) */
-        .discovery-layout {
-            display: grid;
-            grid-template-columns: 1fr 460px;
-            flex: 1;
-        }
-
+        /* Split Discovery View (Listings + Map) */
+        .discovery-layout { display: grid; grid-template-columns: 1fr 460px; flex: 1; }
         @media (max-width: 1024px) {
-            .discovery-layout {
-                grid-template-columns: 1fr;
-            }
-            .map-column {
-                height: 380px;
-                order: -1;
-            }
+            .discovery-layout { grid-template-columns: 1fr; }
+            .map-column { height: 380px; order: -1; }
         }
+        .listings-column { padding: 24px 28px; }
 
-        .listings-column {
-            padding: 24px 28px;
-        }
-
-        /* AI Recommendation Banner */
         .ai-insight-banner {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--brand-red);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 22px;
-            display: none;
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-left: 4px solid var(--brand-red); border-radius: 12px;
+            padding: 16px 20px; margin-bottom: 22px; display: none;
             box-shadow: var(--shadow-sm);
         }
-
-        .ai-insight-banner.visible {
-            display: block;
-        }
-
+        .ai-insight-banner.visible { display: block; }
         .ai-banner-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 6px;
         }
-
         .ai-banner-top strong {
-            font-size: 0.9rem;
-            color: var(--brand-red);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 0.9rem; color: var(--brand-red);
+            display: flex; align-items: center; gap: 6px;
         }
-
-        .ai-banner-text {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
+        .ai-banner-text { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; }
 
         .listings-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 18px;
         }
-
-        .listings-header h2 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-
+        .listings-header h2 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
         .sort-select {
-            height: 36px;
-            padding: 0 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg-surface);
-            color: var(--text-primary);
-            font-size: 0.83rem;
-            font-weight: 500;
+            height: 36px; padding: 0 12px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg-surface);
+            color: var(--text-primary); font-size: 0.83rem; font-weight: 500;
         }
 
-        /* Restaurant Cards Grid */
         .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
             gap: 22px;
         }
-
         .venue-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden;
             transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
+            cursor: pointer; display: flex; flex-direction: column;
         }
-
-        .venue-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
-        }
-
+        .venue-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
         .venue-img-wrap {
-            position: relative;
-            height: 176px;
-            width: 100%;
-            background: var(--bg-subtle);
+            position: relative; height: 176px; width: 100%; background: var(--bg-subtle);
         }
-
-        .venue-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
+        .venue-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .match-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: rgba(17, 24, 39, 0.88);
-            color: #ffffff;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 0.74rem;
-            font-weight: 600;
-            backdrop-filter: blur(4px);
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(17, 24, 39, 0.88); color: #ffffff;
+            padding: 4px 10px; border-radius: 999px; font-size: 0.74rem;
+            font-weight: 600; backdrop-filter: blur(4px);
         }
-
         .fav-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #111827;
+            position: absolute; top: 12px; right: 12px;
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9); border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: #111827;
         }
+        .fav-btn.saved { color: var(--brand-red); }
 
-        .fav-btn.saved {
-            color: var(--brand-red);
-        }
-
-        .venue-body {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-
+        .venue-body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
         .venue-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 8px;
-            margin-bottom: 4px;
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 8px; margin-bottom: 4px;
         }
-
-        .venue-name {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1.3;
-        }
-
+        .venue-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
         .rating-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: var(--bg-subtle);
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            flex-shrink: 0;
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--bg-subtle); padding: 3px 8px;
+            border-radius: 6px; font-size: 0.78rem; font-weight: 700; flex-shrink: 0;
         }
-
-        .venue-meta {
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-        }
-
+        .venue-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; }
         .venue-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: auto;
-            padding-top: 10px;
-            border-top: 1px solid var(--border);
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border);
         }
-
         .venue-tag {
-            font-size: 0.74rem;
-            color: var(--text-secondary);
-            background: var(--bg-subtle);
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-weight: 500;
+            font-size: 0.74rem; color: var(--text-secondary);
+            background: var(--bg-subtle); padding: 3px 8px;
+            border-radius: 6px; font-weight: 500;
         }
 
-        /* Right Sticky Map Column */
         .map-column {
-            position: sticky;
-            top: 72px;
-            height: calc(100vh - 72px);
-            border-left: 1px solid var(--border);
+            position: sticky; top: 72px;
+            height: calc(100vh - 72px); border-left: 1px solid var(--border);
         }
+        #main-map { width: 100%; height: 100%; }
 
-        #main-map {
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Floating AI Chat Drawer */
+        /* AI Conversational Drawer & Modals */
         .ai-drawer {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 390px;
-            max-width: calc(100vw - 32px);
-            height: 520px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            box-shadow: var(--shadow-lg);
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 2000;
+            position: fixed; bottom: 24px; right: 24px; width: 390px;
+            max-width: calc(100vw - 32px); height: 520px;
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 18px; box-shadow: var(--shadow-lg);
+            display: none; flex-direction: column; overflow: hidden; z-index: 2000;
         }
-
-        .ai-drawer.open {
-            display: flex;
-        }
-
+        .ai-drawer.open { display: flex; }
         .ai-drawer-header {
-            padding: 14px 18px;
-            background: #111827;
-            color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 14px 18px; background: #111827; color: #ffffff;
+            display: flex; justify-content: space-between; align-items: center;
         }
-
-        .ai-drawer-header h4 {
-            font-size: 0.92rem;
-            font-weight: 600;
-        }
-
+        .ai-drawer-header h4 { font-size: 0.92rem; font-weight: 600; }
         .ai-chat-feed {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            background: var(--bg-page);
+            flex: 1; padding: 16px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 12px; background: var(--bg-page);
         }
-
         .bubble {
-            max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 14px;
-            font-size: 0.85rem;
-            line-height: 1.45;
+            max-width: 85%; padding: 10px 14px;
+            border-radius: 14px; font-size: 0.85rem; line-height: 1.45;
         }
-
-        .bubble-ai {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            align-self: flex-start;
-        }
-
-        .bubble-user {
-            background: var(--brand-red);
-            color: #ffffff;
-            align-self: flex-end;
-        }
-
+        .bubble-ai { background: var(--bg-surface); border: 1px solid var(--border); align-self: flex-start; }
+        .bubble-user { background: var(--brand-red); color: #ffffff; align-self: flex-end; }
         .ai-drawer-input {
-            padding: 12px;
-            border-top: 1px solid var(--border);
-            background: var(--bg-surface);
-            display: flex;
-            gap: 8px;
+            padding: 12px; border-top: 1px solid var(--border);
+            background: var(--bg-surface); display: flex; gap: 8px;
         }
-
         .ai-drawer-input input {
-            flex: 1;
-            height: 38px;
-            padding: 0 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-subtle);
-            color: var(--text-primary);
-            outline: none;
-            font-size: 0.85rem;
+            flex: 1; height: 38px; padding: 0 12px;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg-subtle); color: var(--text-primary);
+            outline: none; font-size: 0.85rem;
         }
 
-        /* Modal Chi Tiết Quán & Đăng Nhập */
         .modal-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2500;
-            padding: 20px;
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2500; padding: 20px;
         }
-
-        .modal-backdrop.open {
-            display: flex;
-        }
-
+        .modal-backdrop.open { display: flex; }
         .modal-card {
-            background: var(--bg-surface);
-            border-radius: 16px;
-            width: 560px;
-            max-width: 100%;
-            max-height: 88vh;
-            overflow-y: auto;
-            padding: 24px;
-            position: relative;
+            background: var(--bg-surface); border-radius: 16px;
+            width: 560px; max-width: 100%; max-height: 88vh;
+            overflow-y: auto; padding: 24px; position: relative;
         }
 
-        /* Footer PTIT HCM */
         .site-footer {
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border);
-            padding: 40px 28px;
-            margin-top: auto;
+            background: var(--bg-surface); border-top: 1px solid var(--border);
+            padding: 40px 28px; margin-top: auto;
         }
-
         .footer-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 32px;
-            font-size: 0.84rem;
-            color: var(--text-secondary);
+            max-width: 1200px; margin: 0 auto; display: grid;
+            grid-template-columns: 2fr 1fr 1fr; gap: 32px;
+            font-size: 0.84rem; color: var(--text-secondary);
         }
-
-        @media (max-width: 768px) {
-            .footer-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .footer-col h4 {
-            color: var(--text-primary);
-            font-size: 0.92rem;
-            margin-bottom: 12px;
-        }
-
-        .footer-col p {
-            line-height: 1.6;
-            margin-bottom: 6px;
-        }
-
-        .footer-col a {
-            display: block;
-            color: var(--text-secondary);
-            text-decoration: none;
-            margin-bottom: 8px;
-        }
-
-        .footer-col a:hover {
-            color: var(--brand-red);
-        }
+        @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr; } }
+        .footer-col h4 { color: var(--text-primary); font-size: 0.92rem; margin-bottom: 12px; }
+        .footer-col p { line-height: 1.6; margin-bottom: 6px; }
+        .footer-col a { display: block; color: var(--text-secondary); text-decoration: none; margin-bottom: 8px; }
+        .footer-col a:hover { color: var(--brand-red); }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation -->
     <header class="topbar">
         <div class="topbar-left">
             <a href="index.html" class="logo">
@@ -783,14 +357,12 @@
                 <span>FoodAI</span>
             </a>
 
-            <!-- Location Button (Synced with UserProfiles) -->
             <div class="location-pill" onclick="locateUserGPS()" title="Nhấp để định vị GPS hoặc đổi vị trí trên bản đồ">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span class="location-pill-text" id="current-address-label">379/40 Thống Nhất, Gò Vấp</span>
+                <span class="location-pill-text" id="current-address-label">11 Nguyễn Đình Chiểu, Quận 1</span>
             </div>
         </div>
 
-        <!-- Natural Language Search Bar -->
         <div class="search-wrapper">
             <div class="search-bar">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted)">
@@ -802,7 +374,6 @@
                 </button>
             </div>
 
-            <!-- Instant Suggestions Dropdown -->
             <div class="search-suggestions" id="search-suggestions">
                 <div class="suggestion-label">Truy vấn thông minh phổ biến</div>
                 <div class="suggestion-item" onclick="applyQuickQuery('Nhóm 4 người muốn ăn đồ nướng có chỗ đậu ô tô dưới 300k/người')">
@@ -820,7 +391,6 @@
             </div>
         </div>
 
-        <!-- Topbar Right: Theme Toggle, AI Chat Button & Account Menu (Hình người góc trên phải) -->
         <div class="topbar-right">
             <button type="button" class="btn-icon-only" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
@@ -830,18 +400,16 @@
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </button>
 
-            <!-- Mục Hình Người ở góc trên bên phải -->
             <div class="account-trigger" onclick="toggleAccountDropdown()">
                 <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar">
-                <span id="nav-user-name">Nguyễn Thiên Phú</span>
+                <span id="nav-user-name">Nguyễn Văn An</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
 
-            <!-- Dropdown Tài khoản -->
             <div class="account-dropdown" id="account-dropdown">
                 <div class="dropdown-user-header">
-                    <strong id="drop-user-name">Nguyễn Thiên Phú</strong>
-                    <small>nguyenthienphu160307@gmail.com</small>
+                    <strong id="drop-user-name">Nguyễn Văn An</strong>
+                    <small>user.demo@foodai.vn</small>
                 </div>
                 <a href="profile.html" class="dropdown-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -864,7 +432,6 @@
         </div>
     </header>
 
-    <!-- Filter Ribbon -->
     <div class="filter-ribbon">
         <div class="category-pills">
             <button class="filter-pill active" onclick="setCategory('all', this)">Tất cả</button>
@@ -882,11 +449,8 @@
         </div>
     </div>
 
-    <!-- Main Content: Split View -->
     <main class="discovery-layout">
-        <!-- Left Listings -->
         <section class="listings-column">
-            <!-- AI Explanation Banner -->
             <div class="ai-insight-banner" id="ai-banner">
                 <div class="ai-banner-top">
                     <strong>
@@ -911,13 +475,11 @@
             <div class="cards-grid" id="venues-grid"></div>
         </section>
 
-        <!-- Right Map (Google Maps thật) -->
         <aside class="map-column">
             <div id="main-map"></div>
         </aside>
     </main>
 
-    <!-- Floating AI Multi-turn Assistant Drawer -->
     <div class="ai-drawer" id="ai-drawer">
         <div class="ai-drawer-header">
             <h4>Trợ lý Tìm kiếm Ẩm thực AI</h4>
@@ -934,12 +496,10 @@
         </div>
     </div>
 
-    <!-- Modal Chi Tiết Nhà Hàng -->
     <div class="modal-backdrop" id="venue-modal" onclick="if(event.target===this) closeVenueModal()">
         <div class="modal-card" id="venue-modal-content"></div>
     </div>
 
-    <!-- Modal Đăng Nhập / Đăng Ký -->
     <div class="modal-backdrop" id="auth-modal" onclick="if(event.target===this) closeAuthModal()">
         <div class="modal-card" style="width:420px;">
             <h3 style="font-size:1.25rem;margin-bottom:6px;">Đăng nhập vào FoodAI</h3>
@@ -947,46 +507,42 @@
             <div style="display:flex;flex-direction:column;gap:14px;">
                 <div>
                     <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px;">Email hoặc Số điện thoại</label>
-                    <input type="email" id="login-email" value="nguyenthienphu160307@gmail.com" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
+                    <input type="email" id="login-email" value="user.demo@foodai.vn" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
                 </div>
                 <div>
                     <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px;">Mật khẩu</label>
                     <input type="password" value="12345678" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
                 </div>
                 <button type="button" class="btn-ai-ask" style="height:42px;justify-content:center;font-size:0.9rem;border-radius:8px;" onclick="closeAuthModal()">Đăng nhập</button>
-                <a href="profile.html" style="text-align:center;font-size:0.84rem;color:var(--brand-red);text-decoration:none;font-weight:600;">Đi tới trang Quản lý Hồ sơ cá nhân (UserProfiles) →</a>
+                <a href="profile.html" style="text-align:center;font-size:0.84rem;color:var(--brand-red);text-decoration:none;font-weight:600;">Đi tới trang Quản lý Hồ sơ cá nhân →</a>
             </div>
         </div>
     </div>
 
-    <!-- Footer PTIT HCM -->
     <footer class="site-footer">
         <div class="footer-grid">
             <div class="footer-col">
                 <h4>HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG — CƠ SỞ TẠI TP. HỒ CHÍ MINH (PTIT HCM)</h4>
                 <p><strong>Cơ sở Thủ Đức:</strong> Đường Man Thiện, Phường Hiệp Phú, TP. Thủ Đức, TP. Hồ Chí Minh.</p>
                 <p><strong>Cơ sở Quận 1:</strong> Số 11 Nguyễn Đình Chiểu, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh.</p>
-                <p>Dự án Thực tập: Hệ thống Gợi ý Địa điểm Ăn uống theo Vị trí & Hội thoại Tự nhiên (NLP/LLM).</p>
             </div>
             <div class="footer-col">
                 <h4>Điều hướng nhanh</h4>
                 <a href="index.html">Khám phá nhà hàng</a>
-                <a href="profile.html">Hồ sơ cá nhân (UserProfiles)</a>
+                <a href="profile.html">Hồ sơ cá nhân</a>
                 <a href="profile.html#location-section">Cài đặt vị trí mặc định</a>
             </div>
             <div class="footer-col">
-                <h4>Nhóm phát triển (Agile/Scrum)</h4>
-                <p>Nguyễn Thiên Phú — MSSV: N25DTCN044</p>
-                <p>Nguyễn Minh Khôi</p>
-                <p>Triệu Tấn Tú</p>
+                <h4>Thông tin Dự án</h4>
+                <p>Mô hình phát triển: Agile / Scrum</p>
+                <p>Hỗ trợ kỹ thuật: support@foodai.vn</p>
             </div>
         </div>
     </footer>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const STORAGE_KEY = 'foodai_user_profile_v1';
+        const STORAGE_KEY = 'foodai_demo_profile_state';
 
         const venues = [
             {
@@ -1094,38 +650,43 @@
             }
         ];
 
-        let currentPos = { lat: 10.8386, lng: 106.6652 };
+        let currentPos = { lat: 10.7860, lng: 106.7003 };
         let activeCategory = 'all';
         let activeAmenities = { parking: false, private_room: false, vegetarian: false };
         let maxBudgetFilter = null;
         let savedIds = [1, 4];
         let mainMap, userMarker, venueMarkers = [];
 
-        // Đồng bộ dữ liệu từ UserProfiles (profile.html)
+        /**
+         * Nạp thông tin hồ sơ người dùng từ LocalStorage để đồng bộ tên, ảnh đại diện
+         * và tọa độ tìm kiếm mặc định (default_lat, default_lng).
+         */
         function syncProfileData() {
             const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                try {
-                    const prof = JSON.parse(raw);
-                    if (prof.full_name) {
-                        document.getElementById('nav-user-name').innerText = prof.full_name;
-                        document.getElementById('drop-user-name').innerText = prof.full_name;
-                    }
-                    if (prof.avatar_url) {
-                        document.getElementById('nav-user-avatar').src = prof.avatar_url;
-                    }
-                    if (prof.default_address) {
-                        document.getElementById('current-address-label').innerText = prof.default_address;
-                    }
-                    if (prof.default_lat && prof.default_lng) {
-                        currentPos.lat = parseFloat(prof.default_lat);
-                        currentPos.lng = parseFloat(prof.default_lng);
-                    }
-                } catch (e) {}
-            }
+            if (!raw) return;
+            try {
+                const prof = JSON.parse(raw);
+                if (prof.full_name) {
+                    document.getElementById('nav-user-name').innerText = prof.full_name;
+                    document.getElementById('drop-user-name').innerText = prof.full_name;
+                }
+                if (prof.avatar_url) {
+                    document.getElementById('nav-user-avatar').src = prof.avatar_url;
+                }
+                if (prof.default_address) {
+                    document.getElementById('current-address-label').innerText = prof.default_address;
+                }
+                if (prof.default_lat && prof.default_lng) {
+                    currentPos.lat = parseFloat(prof.default_lat);
+                    currentPos.lng = parseFloat(prof.default_lng);
+                }
+            } catch (_) {}
         }
 
-        // Khởi tạo Google Maps thật trên Leaflet
+        /**
+         * Khởi tạo bản đồ tương tác chính với 2 lớp Google Maps (Streets & Hybrid).
+         * Khi người dùng di chuyển ghim cá nhân, danh sách nhà hàng tự động tính lại khoảng cách.
+         */
         function initMainMap() {
             mainMap = L.map('main-map').setView([currentPos.lat, currentPos.lng], 13);
 
@@ -1154,7 +715,7 @@
 
             userMarker = L.marker([currentPos.lat, currentPos.lng], { icon: userIcon, draggable: true })
                 .addTo(mainMap)
-                .bindPopup("<strong>Vị trí của bạn</strong><br>Kéo thả hoặc nhấp bản đồ để đổi vị trí");
+                .bindPopup("<strong>Vị trí tìm kiếm hiện tại</strong><br>Kéo thả hoặc nhấp bản đồ để đổi vị trí");
 
             userMarker.on('dragend', (e) => {
                 const p = e.target.getLatLng();
@@ -1169,6 +730,9 @@
             });
         }
 
+        /**
+         * Tính khoảng cách đường chim bay (km) giữa 2 tọa độ GPS theo công thức Haversine.
+         */
         function calcDistanceKm(lat1, lon1, lat2, lon2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1179,6 +743,9 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
+        /**
+         * Lọc, chấm điểm xếp hạng đa tiêu chí (Weighted Scoring) và đồng bộ danh sách thẻ với Marker trên bản đồ.
+         */
         function renderVenues(customList = null) {
             let list = customList ? [...customList] : [...venues];
 
@@ -1192,7 +759,6 @@
                 if (maxBudgetFilter) list = list.filter(v => v.priceMin <= maxBudgetFilter);
             }
 
-            // Tính khoảng cách và điểm Weighted Score
             list = list.map(v => {
                 const dist = calcDistanceKm(currentPos.lat, currentPos.lng, v.lat, v.lng);
                 const distScore = Math.max(0, 1 - dist / 15);
@@ -1208,7 +774,6 @@
             else if (sortMode === 'price_asc') list.sort((a, b) => a.priceMin - b.priceMin);
             else list.sort((a, b) => b.matchScore - a.matchScore);
 
-            // Render Cards
             const grid = document.getElementById('venues-grid');
             grid.innerHTML = '';
 
@@ -1268,7 +833,10 @@
             renderVenues();
         }
 
-        // Xử lý tìm kiếm ngôn ngữ tự nhiên (NLP Query Parsing)
+        /**
+         * Phân tích câu truy vấn ngôn ngữ tự nhiên (Rule-based NLP Fallback),
+         * bóc tách thực thể ẩm thực, tiện ích, ngân sách và sinh lời giải thích đề xuất.
+         */
         function executeAISearch(customPrompt = null) {
             const q = (customPrompt || document.getElementById('main-search-input').value).trim();
             document.getElementById('search-suggestions').classList.remove('open');
@@ -1434,6 +1002,7 @@
             html.setAttribute('data-theme', next);
         }
 
+        // Đóng các popover/dropdown khi click ra vùng ngoài
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-wrapper')) {
                 document.getElementById('search-suggestions').classList.remove('open');
