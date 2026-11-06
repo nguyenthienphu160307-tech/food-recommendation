@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 app = FastAPI(
-    title="FoodAI Service - User Profile API",
+    title="Smart Dining Service - User Profile API",
     description="RESTful API quản lý hồ sơ người dùng và cấu hình tọa độ mặc định.",
     version="1.0.0",
 )
