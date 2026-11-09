@@ -4,6 +4,8 @@ from .auth import (
     UserDataResponse,
     RegisterResponse,
     StandardResponse,
+    LoginRequest,
+    LoginResponse,
 )
 from .restaurant import (
     AmenityResponse,
@@ -18,6 +20,8 @@ __all__ = [
     "UserDataResponse",
     "RegisterResponse",
     "StandardResponse",
+    "LoginRequest",
+    "LoginResponse",
     "AmenityResponse",
     "RestaurantListItemResponse",
     "PaginationMetadata",
