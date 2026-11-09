@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodAI — Khám phá & Gợi ý địa điểm ẩm thực quanh bạn</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="map-component.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Design Tokens đồng bộ với trang Profile */
@@ -449,7 +450,7 @@
         </div>
     </div>
 
-    <main class="discovery-layout">
+    <main class="discovery-layout view-list">
         <section class="listings-column">
             <div class="ai-insight-banner" id="ai-banner">
                 <div class="ai-banner-top">
@@ -541,10 +542,12 @@
     </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="venues-data.js"></script>
+    <script src="map-component.js"></script>
     <script>
         const STORAGE_KEY = 'foodai_demo_profile_state';
 
-        const venues = [
+        const fallbackVenues = [
             {
                 id: 1,
                 name: "GoGi House — Thịt Nướng Hàn Quốc",
@@ -650,12 +653,18 @@
             }
         ];
 
-        let currentPos = { lat: 10.7860, lng: 106.7003 };
+                // Ưu tiên nạp 50 nhà hàng thực tế từ CSDL seed
+        let venues = (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES) && SEED_VENUES.length > 0)
+            ? SEED_VENUES
+            : fallbackVenues;
+
+        // Tọa độ định tâm mặc định: Trung tâm TP.HCM (Quận 1: Nhà thờ Đức Bà / Chợ Bến Thành)
+        let currentPos = { lat: 10.776889, lng: 106.700806 };
         let activeCategory = 'all';
         let activeAmenities = { parking: false, private_room: false, vegetarian: false };
         let maxBudgetFilter = null;
         let savedIds = [1, 4];
-        let mainMap, userMarker, venueMarkers = [];
+        let mapComponent = null;
 
         /**
          * Nạp thông tin hồ sơ người dùng từ LocalStorage để đồng bộ tên, ảnh đại diện
@@ -679,6 +688,9 @@
                 if (prof.default_lat && prof.default_lng) {
                     currentPos.lat = parseFloat(prof.default_lat);
                     currentPos.lng = parseFloat(prof.default_lng);
+                    if (mapComponent) {
+                        mapComponent.setUserPosition(currentPos.lat, currentPos.lng, false);
+                    }
                 }
             } catch (_) {}
         }
@@ -687,46 +699,29 @@
          * Khởi tạo bản đồ tương tác chính với 2 lớp Google Maps (Streets & Hybrid).
          * Khi người dùng di chuyển ghim cá nhân, danh sách nhà hàng tự động tính lại khoảng cách.
          */
+                /**
+         * Khởi tạo Map Component (Leaflet + Google Maps / OSM)
+         * Cấu hình đầy đủ: lớp bản đồ nền, điều khiển zoom, định tâm mặc định và GPS.
+         */
         function initMainMap() {
-            mainMap = L.map('main-map').setView([currentPos.lat, currentPos.lng], 13);
-
-            const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
+            mapComponent = new FoodAIMapComponent({
+                containerId: 'main-map',
+                defaultCenter: [10.776889, 106.700806],
+                currentCenter: [currentPos.lat, currentPos.lng],
+                defaultZoom: 13,
+                minZoom: 5,
                 maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: '© Google Maps'
-            });
-
-            const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}&hl=vi', {
-                maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: '© Google Maps Satellite'
-            });
-
-            googleStreets.addTo(mainMap);
-            L.control.layers({
-                "Bản đồ Đường phố": googleStreets,
-                "Vệ tinh": googleHybrid
-            }).addTo(mainMap);
-
-            const userIcon = L.divIcon({
-                html: `<div style="width:18px;height:18px;background:#e11d48;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
-                className: ''
-            });
-
-            userMarker = L.marker([currentPos.lat, currentPos.lng], { icon: userIcon, draggable: true })
-                .addTo(mainMap)
-                .bindPopup("<strong>Vị trí tìm kiếm hiện tại</strong><br>Kéo thả hoặc nhấp bản đồ để đổi vị trí");
-
-            userMarker.on('dragend', (e) => {
-                const p = e.target.getLatLng();
-                currentPos = { lat: p.lat, lng: p.lng };
-                renderVenues();
-            });
-
-            mainMap.on('click', (e) => {
-                currentPos = { lat: e.latlng.lat, lng: e.latlng.lng };
-                userMarker.setLatLng([currentPos.lat, currentPos.lng]);
-                renderVenues();
+                onLocationChange: (pos) => {
+                    currentPos = pos;
+                    renderVenues();
+                    const addrLabel = document.getElementById('current-address-label');
+                    if (addrLabel) {
+                        addrLabel.innerText = `Tọa độ: ${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}`;
+                    }
+                },
+                onVenueClick: (v) => {
+                    console.log('Quán ăn được chọn trên bản đồ:', v.name);
+                }
             });
         }
 
@@ -777,20 +772,23 @@
             const grid = document.getElementById('venues-grid');
             grid.innerHTML = '';
 
-            venueMarkers.forEach(m => mainMap.removeLayer(m));
-            venueMarkers = [];
+                        // Đồng bộ marker trên bản đồ số qua Map Component
+            if (mapComponent) {
+                mapComponent.setVenueMarkers(list);
+            }
 
             list.forEach(v => {
                 const isSaved = savedIds.includes(v.id);
                 const travelMins = Math.max(4, Math.round(v.distanceKm * 3.2));
 
-                const m = L.marker([v.lat, v.lng]).addTo(mainMap)
-                    .bindPopup(`<strong>${v.name}</strong><br>${v.cuisineLabel} • ⭐ ${v.rating}<br>Cách ${v.distanceKm.toFixed(1)} km`);
-                venueMarkers.push(m);
-
                 const card = document.createElement('article');
                 card.className = 'venue-card';
-                card.onclick = () => openVenueModal(v);
+                card.onclick = () => {
+                    openVenueModal(v);
+                    if (mapComponent) {
+                        mapComponent.focusVenue(v.id);
+                    }
+                };
                 card.innerHTML = `
                     <div class="venue-img-wrap">
                         <img src="${v.image}" alt="${v.name}">
@@ -1012,11 +1010,52 @@
             }
         });
 
+        
+        /**
+         * Callback khi người dùng click vào nút 'Chi tiết' trên Popup của Marker bản đồ
+         */
+        window.onMapPopupSelectVenue = function(venueId) {
+            const v = venues.find(item => item.id === venueId);
+            if (v) openVenueModal(v);
+        };
+
+        /**
+         * Chuyển đổi giữa chế độ xem Danh sách và Bản đồ trên màn hình di động (Mobile)
+         */
+        function switchMobileView(mode) {
+            const layout = document.querySelector('.discovery-layout');
+            const btnList = document.getElementById('btn-view-list');
+            const btnMap = document.getElementById('btn-view-map');
+            if (!layout) return;
+
+            if (mode === 'map') {
+                layout.classList.remove('view-list');
+                layout.classList.add('view-map');
+                if (btnList) btnList.classList.remove('active');
+                if (btnMap) btnMap.classList.add('active');
+                if (mapComponent) mapComponent.invalidateSize();
+            } else {
+                layout.classList.remove('view-map');
+                layout.classList.add('view-list');
+                if (btnList) btnList.classList.add('active');
+                if (btnMap) btnMap.classList.remove('active');
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             syncProfileData();
             initMainMap();
             renderVenues();
         });
     </script>
+    <!-- Thanh chuyển đổi xem Danh sách / Bản đồ trên Mobile -->
+    <div class="mobile-view-toggle-bar" id="mobile-view-toggle">
+        <button type="button" class="mobile-view-btn active" id="btn-view-list" onclick="switchMobileView('list')">
+            📋 Danh sách
+        </button>
+        <button type="button" class="mobile-view-btn" id="btn-view-map" onclick="switchMobileView('map')">
+            🗺️ Bản đồ
+        </button>
+    </div>
 </body>
 </html>
