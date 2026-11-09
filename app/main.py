@@ -5,7 +5,11 @@ from sqlalchemy import text
 from app.core.database import engine, Base, get_db
 import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
 from app.routers import auth_router
+from app.routers import geo
+from backend.profile_api import app as profile_app
 
+app.include_router(geo.router)
+app.mount("/profile-service", profile_app)
 # Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage)
 Base.metadata.create_all(bind=engine)
 
