@@ -1,11 +1,26 @@
+# Môi trường và Bảo mật (TUYỆT ĐỐI KHÔNG PUSH LÊN GIT)
 .env
 .env.local
-*.env
+
+# Python Cache & Bytecode
 __pycache__/
 *.py[cod]
+*$py.class
+*.pyc
+
+# Virtual Environment (Môi trường ảo)
 venv/
 .venv/
-node_modules/
+env/
+
+# Cơ sở dữ liệu cục bộ & SQLite
+*.db
+*.sqlite3
+
+# IDE & Editor
 .vscode/
-.DS_Store
+.idea/
+*.swp
+
+# Log files
 *.log
