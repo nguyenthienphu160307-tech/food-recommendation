@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodAI — Bảng Điều Khiển Quản Trị Hệ Thống (Admin Portal)</title>
+    <link rel="stylesheet" href="admin.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- =========================================================================
+         1. FRONTEND ROUTE GUARD ACCESS CONTROL (MÀN HÌNH CHẶN TRUY CẬP TRÁI PHÉP)
+         ========================================================================= -->
+
+    <!-- Màn hình 403: Đã đăng nhập nhưng không có quyền Admin (User thường cố vào) -->
+    <div class="access-denied-container" id="guard-403">
+        <div class="access-card">
+            <div class="access-icon-wrap access-icon-403">🚫</div>
+            <h2>Quyền truy cập bị từ chối (403 Forbidden)</h2>
+            <p>
+                Khu vực <strong>Admin Portal</strong> chỉ dành riêng cho tài khoản Quản trị viên hệ thống.
+                Tài khoản hiện tại của bạn (<span id="guard-user-email">user@foodai.vn</span>) không có thẩm quyền truy cập.
+            </p>
+            <div class="access-actions">
+                <a href="index.html" class="btn-access-primary">← Quay về Trang chủ Khám phá</a>
+                <button type="button" class="btn-access-secondary" onclick="simulateRoleSwitch('admin')">
+                    🔑 Chuyển sang quyền Quản trị viên (Admin Demo)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Màn hình 401: Khách chưa đăng nhập -->
+    <div class="access-denied-container" id="guard-401">
+        <div class="access-card">
+            <div class="access-icon-wrap access-icon-401">🔒</div>
+            <h2>Yêu cầu Đăng nhập (401 Unauthorized)</h2>
+            <p>
+                Bạn đang duyệt hệ thống với tư cách Khách (Guest).
+                Vui lòng đăng nhập bằng tài khoản Quản trị viên để truy cập bảng điều khiển hệ thống.
+            </p>
+            <div class="access-actions">
+                <button type="button" class="btn-access-primary" onclick="simulateRoleSwitch('admin')">
+                    Đăng nhập tài khoản Quản trị viên (Admin)
+                </button>
+                <a href="index.html" class="btn-access-secondary">Quay về Trang chủ Khách</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         2. SIDEBAR MENU ĐIỀU HƯỚNG QUẢN TRỊ
+         ========================================================================= -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">⚡</div>
+            <div class="brand-text">
+                <h2>FoodAI Admin</h2>
+                <span class="brand-badge">Hệ thống Quản trị</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <span class="menu-label">Trung tâm Điều khiển</span>
+            <a class="nav-item active" data-tab="tab-overview" onclick="switchAdminTab('tab-overview', this)">
+                <span class="nav-item-icon">📊</span>
+                <span>Tổng quan Dashboard</span>
+            </a>
+
+            <span class="menu-label">Quản lý Dữ liệu & Người dùng</span>
+            <a class="nav-item" data-tab="tab-users" onclick="switchAdminTab('tab-users', this)">
+                <span class="nav-item-icon">👥</span>
+                <span>Quản lý Người dùng</span>
+                <span class="nav-item-badge" id="badge-users-count">...</span>
+            </a>
+            <a class="nav-item" data-tab="tab-restaurants" onclick="switchAdminTab('tab-restaurants', this)">
+                <span class="nav-item-icon">🍽️</span>
+                <span>Quản lý Nhà hàng</span>
+                <span class="nav-item-badge" id="badge-venues-count">50</span>
+            </a>
+
+            <span class="menu-label">Kiểm duyệt & An toàn</span>
+            <a class="nav-item" data-tab="tab-reports" onclick="switchAdminTab('tab-reports', this)">
+                <span class="nav-item-icon">🚩</span>
+                <span>Báo cáo & Khiếu nại</span>
+                <span class="nav-item-badge" style="background:#e11d48;" id="badge-reports-count">3</span>
+            </a>
+            <a class="nav-item" data-tab="tab-settings" onclick="switchAdminTab('tab-settings', this)">
+                <span class="nav-item-icon">⚙️</span>
+                <span>Cài đặt Hệ thống</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="index.html" class="btn-switch-client">
+                <span>🌐</span> Xem Trang chủ (Khách)
+            </a>
+        </div>
+    </aside>
+
+    <!-- =========================================================================
+         3. MAIN AREA & TOPBAR
+         ========================================================================= -->
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <button type="button" class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Đóng/Mở Menu">
+                    ☰
+                </button>
+                <h1 class="breadcrumb-title" id="page-title">Tổng quan Dashboard</h1>
+            </div>
+
+            <div class="topbar-right">
+                <div class="admin-profile-pill">
+                    <div class="admin-avatar" id="topbar-admin-avatar">AD</div>
+                    <div class="admin-info">
+                        <span class="admin-name" id="topbar-admin-name">Quản trị viên Hệ thống</span>
+                        <span class="admin-role-badge">Super Admin</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-admin-logout" onclick="adminLogout()" title="Đăng xuất quản trị">
+                    <span>Đăng xuất</span> ➔
+                </button>
+            </div>
+        </header>
+
+        <main class="admin-content">
+
+            <!-- =================================================================
+                 TAB 1: TỔNG QUAN DASHBOARD (KPI STATS & CHARTS)
+                 ================================================================= -->
+            <section class="tab-pane active" id="tab-overview">
+                <!-- KPI Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p>Tổng số Người dùng</p>
+                            <h3 id="stat-total-users">2</h3>
+                            <span class="stat-trend">↑ 100% Hoạt động (BR-07)</span>
+                        </div>
+                        <div class="stat-icon icon-blue">👥</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p>Tổng số Nhà hàng</p>
+                            <h3 id="stat-total-venues">50</h3>
+                            <span class="stat-trend">✓ 4 Quận trọng điểm TP.HCM</span>
+                        </div>
+                        <div class="stat-icon icon-red">🍽️</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p>Báo cáo Chờ xử lý</p>
+                            <h3 id="stat-pending-reports">3</h3>
+                            <span class="stat-trend" style="color:var(--brand-amber);">⚠ Cần kiểm duyệt</span>
+                        </div>
+                        <div class="stat-icon icon-amber">🚩</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p>Điểm Đánh giá Trung bình</p>
+                            <h3 id="stat-avg-rating">4.7</h3>
+                            <span class="stat-trend">★ Điểm thực tế từ Seed</span>
+                        </div>
+                        <div class="stat-icon icon-purple">⭐</div>
+                    </div>
+                </div>
+
+                <!-- Panels Row: Phân bố Nhà hàng theo Quận & Theo Ẩm thực -->
+                <div class="dashboard-row">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>Phân bố Nhà hàng theo Quận (TP. Hồ Chí Minh)</h4>
+                            <span style="font-size:0.78rem;color:var(--text-muted);">50 địa điểm thực tế</span>
+                        </div>
+                        <div id="district-distribution-list">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>Tỷ lệ Thể loại Ẩm thực</h4>
+                        </div>
+                        <div id="cuisine-distribution-list">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hoạt động gần đây -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h4>Nhật ký Hoạt động Hệ thống Gần đây</h4>
+                        <span style="font-size:0.78rem;color:var(--brand-green);">● Hệ thống Trực tuyến</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;" id="recent-logs-list">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                            <span>🔒 <strong>RBAC Guard:</strong> Đã bảo vệ các route nhạy cảm với Token JWT và phân quyền Admin/User.</span>
+                            <span style="color:var(--text-muted);font-size:0.75rem;">Vừa xong</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                            <span>🗺️ <strong>Bản đồ số Leaflet:</strong> Tích hợp 50 quán ăn GPS và định vị vị trí tìm kiếm.</span>
+                            <span style="color:var(--text-muted);font-size:0.75rem;">10 phút trước</span>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                            <span>👤 <strong>Quy tắc BR-07:</strong> Sẵn sàng cơ chế khóa tài khoản vi phạm và ngăn chặn đăng nhập.</span>
+                            <span style="color:var(--text-muted);font-size:0.75rem;">30 phút trước</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =================================================================
+                 TAB 2: QUẢN LÝ NGƯỜI DÙNG (USER MANAGEMENT & BR-07 LOCK/UNLOCK)
+                 ================================================================= -->
+            <section class="tab-pane" id="tab-users">
+                <div class="table-toolbar">
+                    <div class="toolbar-search">
+                        <span class="toolbar-search-icon">🔍</span>
+                        <input type="text" id="user-search-input" placeholder="Tìm theo tên, email hoặc số điện thoại..." oninput="handleUserSearch()">
+                    </div>
+                    <div class="toolbar-filters">
+                        <select class="filter-select" id="user-status-filter" onchange="handleUserSearch()">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="active">Đang hoạt động (Active)</option>
+                            <option value="locked">Bị khóa (Locked - BR-07)</option>
+                        </select>
+                        <select class="filter-select" id="user-role-filter" onchange="handleUserSearch()">
+                            <option value="">Tất cả vai trò</option>
+                            <option value="user">User thường</option>
+                            <option value="admin">Quản trị viên (Admin)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Người dùng</th>
+                                <th>Số điện thoại</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái (BR-07)</th>
+                                <th>Ngày đăng ký</th>
+                                <th style="text-align:right;">Hành động Quản trị</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Render bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =================================================================
+                 TAB 3: QUẢN LÝ NHÀ HÀNG (RESTAURANT MANAGEMENT)
+                 ================================================================= -->
+            <section class="tab-pane" id="tab-restaurants">
+                <div class="table-toolbar">
+                    <div class="toolbar-search">
+                        <span class="toolbar-search-icon">🔍</span>
+                        <input type="text" id="venue-search-input" placeholder="Tìm kiếm tên quán ăn hoặc địa chỉ..." oninput="handleVenueSearch()">
+                    </div>
+                    <div class="toolbar-filters">
+                        <select class="filter-select" id="venue-district-filter" onchange="handleVenueSearch()">
+                            <option value="">Tất cả Quận</option>
+                            <option value="Quận 1">Quận 1</option>
+                            <option value="Quận 3">Quận 3</option>
+                            <option value="Bình Thạnh">Bình Thạnh</option>
+                            <option value="Thủ Đức">TP. Thủ Đức</option>
+                        </select>
+                        <select class="filter-select" id="venue-status-filter" onchange="handleVenueSearch()">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="active">Đang hiển thị</option>
+                            <option value="hidden">Đã ẩn</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nhà hàng</th>
+                                <th>Thể loại & Khoảng giá</th>
+                                <th>Đánh giá & Review</th>
+                                <th>Tiện ích</th>
+                                <th>Trạng thái</th>
+                                <th style="text-align:right;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="venues-table-body">
+                            <!-- Render bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =================================================================
+                 TAB 4: QUẢN LÝ BÁO CÁO & KHIẾU NẠI (REPORTS MODERATION)
+                 ================================================================= -->
+            <section class="tab-pane" id="tab-reports">
+                <div class="table-toolbar">
+                    <div style="font-size:0.9rem;font-weight:600;color:var(--text-secondary);">
+                        Danh sách các nội dung bị người dùng báo cáo vi phạm cần Quản trị viên xử lý
+                    </div>
+                    <div class="toolbar-filters">
+                        <select class="filter-select" id="report-status-filter" onchange="handleReportFilter()">
+                            <option value="">Tất cả báo cáo</option>
+                            <option value="pending">Chờ xử lý</option>
+                            <option value="resolved">Đã giải quyết</option>
+                            <option value="dismissed">Đã bác bỏ</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Loại vi phạm</th>
+                                <th>Đối tượng liên quan</th>
+                                <th>Người báo cáo</th>
+                                <th>Nội dung phản ánh</th>
+                                <th>Thời gian</th>
+                                <th>Trạng thái</th>
+                                <th style="text-align:right;">Xử lý</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-table-body">
+                            <!-- Render bằng JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- =================================================================
+                 TAB 5: CÀI ĐẶT HỆ THỐNG
+                 ================================================================= -->
+            <section class="tab-pane" id="tab-settings">
+                <div style="max-width:700px;display:flex;flex-direction:column;gap:20px;">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>Cấu hình Thuật toán Gợi ý (Weighted Scoring)</h4>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:14px;font-size:0.85rem;">
+                            <div>
+                                <label style="display:block;font-weight:600;margin-bottom:6px;">Trọng số Khoảng cách Địa lý (GPS Distance)</label>
+                                <input type="range" min="0" max="100" value="40" style="width:100%;">
+                                <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:0.75rem;">
+                                    <span>0%</span><span>Hiện tại: 40%</span><span>100%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display:block;font-weight:600;margin-bottom:6px;">Trọng số Điểm Đánh giá Sao (Rating Score)</label>
+                                <input type="range" min="0" max="100" value="40" style="width:100%;">
+                                <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:0.75rem;">
+                                    <span>0%</span><span>Hiện tại: 40%</span><span>100%</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display:block;font-weight:600;margin-bottom:6px;">Trọng số Tiện ích (Đỗ ô tô, Phòng riêng, Ăn chay)</label>
+                                <input type="range" min="0" max="100" value="20" style="width:100%;">
+                                <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:0.75rem;">
+                                    <span>0%</span><span>Hiện tại: 20%</span><span>100%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>Thông tin Hệ thống & OpenAPI Docs</h4>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:10px;font-size:0.85rem;">
+                            <p><strong>Phiên bản API:</strong> Smart Dining Core v1.0.0 (FastAPI + SQLAlchemy + JWT/RBAC)</p>
+                            <p><strong>Cơ sở dữ liệu:</strong> MySQL 8.0 & SQLite Local Fallback</p>
+                            <p><strong>Swagger UI:</strong> <a href="/docs" target="_blank" style="color:var(--brand-red);font-weight:600;">Xem chi tiết OpenAPI Docs (/docs) →</a></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- =========================================================================
+         4. THANH ROLE SWITCHER DEMO (TIỆN ÍCH KIỂM THỬ ROUTE GUARD TRỰC QUAN)
+         ========================================================================= -->
+    <div class="demo-role-bar">
+        <span class="demo-role-label">Kiểm thử Route Guard:</span>
+        <button type="button" class="demo-role-btn active-admin" id="btn-role-admin" onclick="simulateRoleSwitch('admin')">
+            🟢 Quyền Admin
+        </button>
+        <button type="button" class="demo-role-btn" id="btn-role-user" onclick="simulateRoleSwitch('user')">
+            🟡 Quyền User (Thử 403)
+        </button>
+        <button type="button" class="demo-role-btn" id="btn-role-guest" onclick="simulateRoleSwitch('guest')">
+            ⚪ Khách (Thử 401)
+        </button>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="admin-toast-container" id="admin-toast-container"></div>
+
+    <!-- Nạp dữ liệu 50 nhà hàng và logic tương tác -->
+    <script src="venues-data.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
