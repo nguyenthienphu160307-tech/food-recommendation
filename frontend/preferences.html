@@ -337,19 +337,40 @@
         }
         .btn-discover:hover { background: var(--border); }
 
-        .json-viewer-card {
-            background: var(--code-bg); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px; overflow: hidden;
+        .ai-tips-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
         }
-        .json-header {
-            display: flex; justify-content: space-between; align-items: center;
-            font-family: 'JetBrains Mono', monospace; font-size: 0.74rem;
-            color: #94a3b8; margin-bottom: 10px;
+        .ai-tips-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
         }
-        .json-viewer-card pre {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.74rem;
-            color: var(--code-text); line-height: 1.45; max-height: 240px;
-            overflow-y: auto;
+        .ai-tips-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .ai-tips-list li {
+            position: relative;
+            padding-left: 18px;
+        }
+        .ai-tips-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--brand-green);
+            font-weight: 700;
         }
 
         /* Toast */
@@ -408,7 +429,7 @@
                     <span class="task-badge">TASK TE9C64E / FR-04</span>
                 </h1>
                 <p>
-                    Hệ thống sẽ lưu trữ thông tin dưới dạng JSON vào bảng <code>user_preferences</code> (CSDL mục 2.1.3).
+                    Thiết lập khẩu vị, chế độ dinh dưỡng và các thành phần dị ứng của bạn.
                     Khi tìm kiếm quán ăn, AI sẽ tự động đọc chế độ ăn và danh sách dị ứng để cá nhân hóa kết quả gợi ý.
                 </p>
             </div>
@@ -675,7 +696,7 @@
                     <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
                         <button type="submit" class="btn-submit-main">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                            Lưu Sở Thích (Save JSON)
+                            Lưu Sở Thích Ẩm Thực
                         </button>
                         <a href="index.html" class="btn-discover">
                             <span>Khám phá Nhà hàng ngay →</span>
@@ -683,14 +704,20 @@
                     </div>
                 </div>
 
-                <!-- LIVE JSON PAYLOAD PREVIEW -->
-                <div class="json-viewer-card">
-                    <div class="json-header">
-                        <span>JSON BẢNG USER_PREFERENCES</span>
-                        <span style="color:#10b981;">LIVE SYNC</span>
+                <!-- THÔNG TIN HỮU ÍCH DÀNH CHO KHÁCH HÀNG (ĐÃ ẨN BẢNG JSON KỸ THUẬT) -->
+                <div class="ai-tips-card">
+                    <div class="ai-tips-header">
+                        <span>💡</span>
+                        <span>Lợi ích khi lưu sở thích:</span>
                     </div>
-                    <pre id="json-preview"></pre>
+                    <ul class="ai-tips-list">
+                        <li><strong>An toàn thực phẩm:</strong> Tự động lọc bỏ các món gây dị ứng (tôm, cua, đậu phộng, sữa...).</li>
+                        <li><strong>Chuẩn khẩu vị:</strong> Ưu tiên hiển thị các nhà hàng phục vụ món bạn yêu thích lên đầu.</li>
+                        <li><strong>Tiết kiệm chi tiêu:</strong> Gợi ý các địa điểm vừa vặn với mức ngân sách mong muốn.</li>
+                    </ul>
                 </div>
+                <!-- Hidden JSON preview phục vụ kiểm thử ngầm -->
+                <pre id="json-preview" style="display:none;"></pre>
             </aside>
         </form>
     </div>
