@@ -140,6 +140,52 @@ function checkAdminRouteGuard() {
 }
 
 /**
+ * Xử lý đăng nhập tài khoản Quản trị viên
+ */
+async function handleAdminLogin(event) {
+    if (event) event.preventDefault();
+    const emailInput = document.getElementById('admin-login-email');
+    const passwordInput = document.getElementById('admin-login-password');
+    if (!emailInput || !passwordInput) return;
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    try {
+        // Gửi request tới Backend API /api/auth/login nếu có server đang chạy
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account: email, password: password })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            const roles = data.user?.roles || [];
+            if (!roles.includes('admin')) {
+                alert('Tài khoản này không có quyền Quản trị viên (Admin).');
+                return;
+            }
+            if (data.tokens?.access_token) {
+                localStorage.setItem('auth_token', data.tokens.access_token);
+            }
+        }
+    } catch (_) {
+        // Fallback xử lý offline client-side
+    }
+
+    if ((email === 'admin@foodai.vn' || email === 'admin.master@foodai.vn') && password === 'admin123') {
+        currentRole = 'admin';
+        localStorage.setItem(DEMO_ROLE_KEY, 'admin');
+        document.getElementById('guard-401').classList.remove('active');
+        document.getElementById('guard-403').classList.remove('active');
+        loadAllAdminData();
+        showToast('Đăng nhập Quản trị viên thành công!', 'success');
+    } else {
+        alert('Email hoặc mật khẩu không chính xác! Gợi ý: admin@foodai.vn / admin123');
+    }
+}
+
+/**
  * Tiện ích chuyển đổi vai trò Demo Role Switcher phục vụ kiểm thử
  * @param {'admin' | 'user' | 'guest'} role 
  */

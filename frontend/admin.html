@@ -30,16 +30,27 @@
 
     <!-- Màn hình 401: Khách chưa đăng nhập -->
     <div class="access-denied-container" id="guard-401">
-        <div class="access-card">
+        <div class="access-card" style="max-width:440px;">
             <div class="access-icon-wrap access-icon-401">🔒</div>
-            <h2>Yêu cầu Đăng nhập (401 Unauthorized)</h2>
-            <p>
-                Bạn đang duyệt hệ thống với tư cách Khách (Guest).
-                Vui lòng đăng nhập bằng tài khoản Quản trị viên để truy cập bảng điều khiển hệ thống.
+            <h2>Đăng nhập Quản trị viên (Admin Portal)</h2>
+            <p style="margin-bottom:16px;">
+                Vui lòng nhập tài khoản Quản trị viên để truy cập bảng điều khiển hệ thống.
             </p>
+            <form onsubmit="handleAdminLogin(event)" style="display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:16px;">
+                <div>
+                    <label style="font-size:0.8rem;color:#cbd5e1;font-weight:600;display:block;margin-bottom:4px;">Email Quản trị viên</label>
+                    <input type="email" id="admin-login-email" value="admin@foodai.vn" required style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#0f172a;color:#ffffff;font-size:0.85rem;outline:none;">
+                </div>
+                <div>
+                    <label style="font-size:0.8rem;color:#cbd5e1;font-weight:600;display:block;margin-bottom:4px;">Mật khẩu</label>
+                    <input type="password" id="admin-login-password" value="admin123" required style="width:100%;height:38px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#0f172a;color:#ffffff;font-size:0.85rem;outline:none;">
+                </div>
+                <button type="submit" class="btn-access-primary" style="margin-top:6px;">
+                    Đăng nhập Bảng điều khiển →
+                </button>
+            </form>
             <div class="access-actions">
-                <a href="index.html" class="btn-access-primary">Đăng nhập tài khoản Quản trị viên (Admin)</a>
-                <a href="index.html" class="btn-access-secondary">Quay về Trang chủ Khách</a>
+                <a href="index.html" class="btn-access-secondary">← Quay về Trang chủ Khách</a>
             </div>
         </div>
     </div>
