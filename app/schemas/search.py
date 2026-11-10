@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -60,3 +60,56 @@ class SessionHistoryResponse(BaseModel):
     """Schema toàn bộ lịch sử tin nhắn của một phiên chat theo thời gian thực"""
     session: SessionResponse
     messages: List[MessageResponse]
+
+
+# =====================================================================
+# SCHEMAS CHO SERVICE GEOCODING & SEARCH CRITERIA (TASK TSK-18)
+# =====================================================================
+
+class GeocodeRequest(BaseModel):
+    """Yêu cầu chuyển đổi tên khu vực / quận sang tọa độ GPS"""
+    location_name: str = Field(..., min_length=1, description="Tên địa danh, quận/huyện hoặc câu chat có chứa địa danh")
+    enable_online_fallback: bool = Field(True, description="Cho phép fallback sang OpenStreetMap khi không có trong từ điển nội bộ")
+
+
+class GeocodeResponse(BaseModel):
+    """Phản hồi kết quả Geocoding"""
+    location_name: str
+    latitude: float
+    longitude: float
+    formatted_address: str
+    is_found: bool
+    source: str
+
+
+class ExtractCriteriaRequest(BaseModel):
+    """Yêu cầu trích xuất tiêu chí và tọa độ từ câu chat tự nhiên"""
+    message: str = Field(..., min_length=1, description="Câu chat tự nhiên tiếng Việt")
+
+
+class SearchCriteriaCreateRequest(BaseModel):
+    """Yêu cầu lưu tiêu chí tìm kiếm kèm tọa độ GPS vào SearchCriteria"""
+    location_text: Optional[str] = Field(None, description="Tên khu vực / quận gốc")
+    latitude: Optional[float] = Field(None, description="Vĩ độ tâm tìm kiếm")
+    longitude: Optional[float] = Field(None, description="Kinh độ tâm tìm kiếm")
+    cuisine: Optional[str] = Field(None, description="Loại ẩm thực (lẩu, nướng, chay...)")
+    budget: Optional[int] = Field(None, description="Ngân sách dự kiến (VND)")
+    has_parking: Optional[bool] = Field(False, description="Yêu cầu bãi đỗ xe")
+    other_conditions: Optional[str] = Field(None, description="Điều kiện mở rộng định dạng JSON text")
+
+
+class SearchCriteriaResponse(BaseModel):
+    """Phản hồi tiêu chí tìm kiếm đã lưu trong CSDL"""
+    criteria_id: int
+    session_id: int
+    location_text: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    cuisine: Optional[str] = None
+    budget: Optional[int] = None
+    has_parking: Optional[bool] = False
+    other_conditions: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
