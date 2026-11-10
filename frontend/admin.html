@@ -273,6 +273,9 @@
                         <input type="text" id="venue-search-input" placeholder="Tìm kiếm tên quán ăn hoặc địa chỉ..." oninput="handleVenueSearch()">
                     </div>
                     <div class="toolbar-filters">
+                        <button type="button" onclick="openRestaurantModal()" style="height:40px;padding:0 16px;background:#e11d48;color:#ffffff;border:none;border-radius:9px;font-size:0.84rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+                            + Thêm Nhà Hàng Mới
+                        </button>
                         <select class="filter-select" id="venue-district-filter" onchange="handleVenueSearch()">
                             <option value="">Tất cả Quận</option>
                             <option value="Quận 1">Quận 1</option>
@@ -393,6 +396,99 @@
             </section>
 
         </main>
+    </div>
+
+        <!-- Modal Thêm / Chỉnh sửa Nhà hàng (FR-13) -->
+    <div class="admin-modal-backdrop" id="restaurant-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:2000;align-items:center;justify-content:center;padding:20px;">
+        <div class="admin-modal-card" style="background:#ffffff;border-radius:16px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);padding:24px 28px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:14px;margin-bottom:18px;">
+                <h3 id="modal-restaurant-title" style="font-size:1.15rem;font-weight:700;color:#0f172a;">Thêm Nhà Hàng Mới (FR-13)</h3>
+                <button type="button" onclick="closeRestaurantModal()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#64748b;">✕</button>
+            </div>
+            
+            <form id="restaurant-form" onsubmit="handleSaveRestaurant(event)">
+                <input type="hidden" id="form-venue-id">
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                    <div style="grid-column:1 / -1;">
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Tên Nhà Hàng *</label>
+                        <input type="text" id="form-venue-name" required placeholder="VD: Bếp Chay Hoa Khai" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div style="grid-column:1 / -1;">
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Địa Chỉ Đầy Đủ *</label>
+                        <input type="text" id="form-venue-address" required placeholder="VD: 45 Lê Thánh Tôn, Phường Bến Nghé, Quận 1, TP.HCM" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Vĩ Độ GPS (Latitude) *</label>
+                        <input type="number" step="0.000001" id="form-venue-lat" required placeholder="VD: 10.776500" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Kinh Độ GPS (Longitude) *</label>
+                        <input type="number" step="0.000001" id="form-venue-lng" required placeholder="VD: 106.700900" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Giá Thấp Nhất (VNĐ)</label>
+                        <input type="number" step="5000" id="form-venue-min-price" value="50000" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Giá Cao Nhất (VNĐ)</label>
+                        <input type="number" step="5000" id="form-venue-max-price" value="250000" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Thể Loại Ẩm Thực</label>
+                        <input type="text" id="form-venue-cuisine" placeholder="VD: Món Việt, Lẩu Nướng, Món Chay" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Giờ Mở Cửa</label>
+                        <input type="text" id="form-venue-hours" value="08:00 - 22:00" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">Trạng Thái Hiển Thị (FR-13)</label>
+                        <select id="form-venue-status" style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                            <option value="active">Đang hoạt động (Active)</option>
+                            <option value="inactive">Tạm ngưng (Inactive / Ẩn)</option>
+                            <option value="closed">Đã đóng cửa (Closed)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;color:#334155;">URL Ảnh Đại Diện</label>
+                        <input type="url" id="form-venue-image" placeholder="https://..." style="width:100%;height:38px;padding:0 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;outline:none;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:18px;">
+                    <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:6px;color:#334155;">Tiện Ích Nhà Hàng</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:0.82rem;color:#475569;">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="checkbox" id="form-amenity-parking"> Có bãi đỗ xe
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="checkbox" id="form-amenity-room"> Phòng VIP riêng
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="checkbox" id="form-amenity-outdoor"> Không gian ngoài trời
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="checkbox" id="form-amenity-vegan"> Có món ăn chay
+                        </label>
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:14px;border-top:1px solid #e2e8f0;">
+                    <button type="button" onclick="closeRestaurantModal()" style="padding:9px 16px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;color:#475569;">Hủy</button>
+                    <button type="submit" style="padding:9px 20px;background:#e11d48;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;color:#ffffff;">Lưu Thông Tin Nhà Hàng</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Toast Notifications Container -->

@@ -442,9 +442,9 @@ function renderVenuesTable(customList = null) {
         return;
     }
 
-    list.slice(0, 30).forEach(v => {
+    list.slice(0, 50).forEach(v => {
         const tr = document.createElement('tr');
-        const isHidden = v.status === 'hidden';
+        const isInactive = v.status === 'inactive' || v.status === 'hidden' || v.status === 'closed';
 
         tr.innerHTML = `
             <td>
@@ -453,47 +453,281 @@ function renderVenuesTable(customList = null) {
                     <div>
                         <div class="cell-name">${v.name}</div>
                         <div class="cell-sub">📍 ${v.address}</div>
+                        <div class="cell-sub" style="color:#6366f1;font-size:0.7rem;">GPS: ${Number(v.lat || v.latitude || 0).toFixed(4)}, ${Number(v.lng || v.longitude || 0).toFixed(4)}</div>
                     </div>
                 </div>
             </td>
             <td>
-                <strong>${v.cuisineLabel || 'Ẩm thực'}</strong><br>
-                <span class="cell-sub">${(v.priceMin || 50000).toLocaleString()}đ - ${(v.priceMax || 200000).toLocaleString()}đ</span>
+                <strong>${v.cuisineLabel || v.cuisine_type || 'Ẩm thực'}</strong><br>
+                <span class="cell-sub">${(v.priceMin || v.min_price || 50000).toLocaleString()}đ - ${(v.priceMax || v.max_price || 200000).toLocaleString()}đ</span><br>
+                <span class="cell-sub" style="color:#059669;">⏰ ${v.openHours || v.open_hours || '08:00 - 22:00'}</span>
             </td>
             <td>
-                <span style="color:#f59e0b;font-weight:700;">★ ${v.rating || 4.5}</span>
-                <span class="cell-sub">(${v.reviews || 100} đánh giá)</span>
+                <span style="color:#f59e0b;font-weight:700;">★ ${v.rating || v.avg_rating || 4.5}</span>
+                <span class="cell-sub">(${v.reviews || v.total_reviews || 100} đánh giá)</span>
             </td>
             <td>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;font-size:0.72rem;">
-                    ${v.parking ? '<span style="background:#e0f2fe;color:#0284c7;padding:1px 5px;border-radius:4px;">Đỗ xe</span>' : ''}
-                    ${v.private_room ? '<span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;">Phòng riêng</span>' : ''}
-                    ${v.vegetarian ? '<span style="background:#dcfce7;color:#15803d;padding:1px 5px;border-radius:4px;">Món chay</span>' : ''}
+                    ${v.parking || (v.amenities && v.amenities.has_parking) ? '<span style="background:#e0f2fe;color:#0284c7;padding:1px 5px;border-radius:4px;">Đỗ xe</span>' : ''}
+                    ${v.private_room || (v.amenities && v.amenities.has_private_room) ? '<span style="background:#f3e8ff;color:#7e22ce;padding:1px 5px;border-radius:4px;">Phòng VIP</span>' : ''}
+                    ${v.vegetarian || (v.amenities && v.amenities.vegetarian_support) ? '<span style="background:#dcfce7;color:#15803d;padding:1px 5px;border-radius:4px;">Món chay</span>' : ''}
                 </div>
             </td>
             <td>
-                <span class="status-badge ${isHidden ? 'status-hidden' : 'status-active'}">
-                    ${isHidden ? '👁 Ẩn' : '✓ Hiển thị'}
+                <span class="status-badge ${isInactive ? 'status-locked' : 'status-active'}">
+                    ${isInactive ? '⛔ Tạm ngưng' : '✓ Hoạt động'}
                 </span>
             </td>
             <td style="text-align:right;">
-                <button type="button" class="btn-action" onclick="toggleVenueVisibility(${v.id})">
-                    ${isHidden ? 'Hiện quán' : 'Ẩn quán'}
-                </button>
+                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                    <button type="button" class="btn-action" onclick="openRestaurantModal(${v.id})" title="Chỉnh sửa thông tin">
+                        ✏️ Sửa
+                    </button>
+                    <button type="button" class="btn-action" onclick="toggleVenueVisibility(${v.id})" title="Đổi trạng thái active/inactive">
+                        ${isInactive ? 'Kích hoạt' : 'Tạm ngưng'}
+                    </button>
+                    <button type="button" class="btn-action btn-lock" onclick="deleteRestaurant(${v.id})" title="Xóa vĩnh viễn">
+                        🗑️ Xóa
+                    </button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-function toggleVenueVisibility(venueId) {
+/**
+ * Đổi trạng thái active / inactive của nhà hàng (FR-13)
+ */
+async function toggleVenueVisibility(venueId) {
     const v = venuesData.find(item => item.id === venueId);
     if (!v) return;
 
-    v.status = v.status === 'hidden' ? 'active' : 'hidden';
+    const newStatus = (v.status === 'inactive' || v.status === 'hidden') ? 'active' : 'inactive';
+    v.status = newStatus;
+
+    // Gửi API backend nếu có token
+    try {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            await fetch(`/api/admin/restaurants/${venueId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+        }
+    } catch (_) {}
+
     localStorage.setItem(ADMIN_VENUES_KEY, JSON.stringify(venuesData));
     handleVenueSearch();
-    showToast(`Đã đổi trạng thái nhà hàng '${v.name}' thành: ${v.status === 'hidden' ? 'ẨN' : 'HIỂN THỊ'}`, 'success');
+    renderStatsOverview();
+    showToast(`Đã đổi trạng thái '${v.name}' sang: ${newStatus === 'active' ? 'HOẠT ĐỘNG' : 'TẠM NGƯNG'}`, 'success');
+}
+
+/**
+ * Mở Modal Form thêm mới hoặc chỉnh sửa Nhà hàng (FR-13)
+ */
+function openRestaurantModal(venueId = null) {
+    const modal = document.getElementById('restaurant-modal');
+    const title = document.getElementById('modal-restaurant-title');
+    const form = document.getElementById('restaurant-form');
+    if (!modal || !form) return;
+
+    form.reset();
+
+    if (venueId) {
+        // Chế độ chỉnh sửa
+        const v = venuesData.find(item => item.id === venueId);
+        if (!v) return;
+
+        title.innerText = `Chỉnh sửa Nhà hàng #${v.id} (FR-13)`;
+        document.getElementById('form-venue-id').value = v.id;
+        document.getElementById('form-venue-name').value = v.name || '';
+        document.getElementById('form-venue-address').value = v.address || '';
+        document.getElementById('form-venue-lat').value = v.lat || v.latitude || 10.7768;
+        document.getElementById('form-venue-lng').value = v.lng || v.longitude || 106.7008;
+        document.getElementById('form-venue-min-price').value = v.priceMin || v.min_price || 50000;
+        document.getElementById('form-venue-max-price').value = v.priceMax || v.max_price || 200000;
+        document.getElementById('form-venue-cuisine').value = v.cuisineLabel || v.cuisine_type || 'Món Việt';
+        document.getElementById('form-venue-hours').value = v.openHours || v.open_hours || '08:00 - 22:00';
+        document.getElementById('form-venue-status').value = v.status || 'active';
+        document.getElementById('form-venue-image').value = v.image || '';
+
+        document.getElementById('form-amenity-parking').checked = !!(v.parking || (v.amenities && v.amenities.has_parking));
+        document.getElementById('form-amenity-room').checked = !!(v.private_room || (v.amenities && v.amenities.has_private_room));
+        document.getElementById('form-amenity-outdoor').checked = !!(v.outdoor || (v.amenities && v.amenities.has_outdoor));
+        document.getElementById('form-amenity-vegan').checked = !!(v.vegetarian || (v.amenities && v.amenities.vegetarian_support));
+    } else {
+        // Chế độ thêm mới
+        title.innerText = 'Thêm Nhà Hàng Mới (FR-13)';
+        document.getElementById('form-venue-id').value = '';
+        document.getElementById('form-venue-lat').value = '10.776889';
+        document.getElementById('form-venue-lng').value = '106.700806';
+        document.getElementById('form-venue-min-price').value = '50000';
+        document.getElementById('form-venue-max-price').value = '250000';
+        document.getElementById('form-venue-hours').value = '08:00 - 22:00';
+        document.getElementById('form-venue-status').value = 'active';
+    }
+
+    modal.style.display = 'flex';
+}
+
+function closeRestaurantModal() {
+    const modal = document.getElementById('restaurant-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Xử lý lưu form Thêm mới / Cập nhật Nhà hàng (POST & PUT)
+ */
+async function handleSaveRestaurant(event) {
+    if (event) event.preventDefault();
+
+    const venueId = document.getElementById('form-venue-id').value;
+    const name = document.getElementById('form-venue-name').value.trim();
+    const address = document.getElementById('form-venue-address').value.trim();
+    const lat = parseFloat(document.getElementById('form-venue-lat').value);
+    const lng = parseFloat(document.getElementById('form-venue-lng').value);
+    const minPrice = parseFloat(document.getElementById('form-venue-min-price').value) || 0;
+    const maxPrice = parseFloat(document.getElementById('form-venue-max-price').value) || 0;
+    const cuisine = document.getElementById('form-venue-cuisine').value.trim() || 'Món Việt';
+    const hours = document.getElementById('form-venue-hours').value.trim() || '08:00 - 22:00';
+    const statusVal = document.getElementById('form-venue-status').value;
+    const imageUrl = document.getElementById('form-venue-image').value.trim();
+
+    const amenities = {
+        has_parking: document.getElementById('form-amenity-parking').checked,
+        has_private_room: document.getElementById('form-amenity-room').checked,
+        has_outdoor: document.getElementById('form-amenity-outdoor').checked,
+        vegetarian_support: document.getElementById('form-amenity-vegan').checked
+    };
+
+    if (maxPrice < minPrice) {
+        alert('Khoảng giá không hợp lệ: Giá cao nhất phải lớn hơn hoặc bằng giá thấp nhất!');
+        return;
+    }
+
+    const payload = {
+        name,
+        address,
+        latitude: lat,
+        longitude: lng,
+        min_price: minPrice,
+        max_price: maxPrice,
+        cuisine_type: cuisine,
+        open_hours: hours,
+        status: statusVal,
+        image_url: imageUrl || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80',
+        amenities
+    };
+
+    const token = localStorage.getItem('auth_token');
+
+    if (venueId) {
+        // Cập nhật nhà hàng hiện có (PUT)
+        const idNum = parseInt(venueId, 10);
+        const idx = venuesData.findIndex(v => v.id === idNum);
+        if (idx !== -1) {
+            venuesData[idx] = {
+                ...venuesData[idx],
+                name,
+                address,
+                lat,
+                lng,
+                priceMin: minPrice,
+                priceMax: maxPrice,
+                cuisineLabel: cuisine,
+                openHours: hours,
+                status: statusVal,
+                image: payload.image_url,
+                parking: amenities.has_parking,
+                private_room: amenities.has_private_room,
+                vegetarian: amenities.vegetarian_support
+            };
+        }
+
+        try {
+            if (token) {
+                await fetch(`/api/admin/restaurants/${idNum}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+            }
+        } catch (_) {}
+
+        showToast(`Đã cập nhật thông tin nhà hàng '${name}' thành công!`, 'success');
+    } else {
+        // Thêm mới nhà hàng (POST)
+        const newId = venuesData.length > 0 ? Math.max(...venuesData.map(v => v.id || 0)) + 1 : 1;
+        const newVenue = {
+            id: newId,
+            name,
+            address,
+            lat,
+            lng,
+            priceMin: minPrice,
+            priceMax: maxPrice,
+            rating: 5.0,
+            reviews: 1,
+            cuisineLabel: cuisine,
+            openHours: hours,
+            status: statusVal,
+            image: payload.image_url,
+            parking: amenities.has_parking,
+            private_room: amenities.has_private_room,
+            vegetarian: amenities.vegetarian_support
+        };
+        venuesData.unshift(newVenue);
+
+        try {
+            if (token) {
+                await fetch('/api/admin/restaurants', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+            }
+        } catch (_) {}
+
+        showToast(`Đã thêm mới nhà hàng '${name}' vào hệ thống!`, 'success');
+    }
+
+    localStorage.setItem(ADMIN_VENUES_KEY, JSON.stringify(venuesData));
+    closeRestaurantModal();
+    handleVenueSearch();
+    renderStatsOverview();
+}
+
+/**
+ * Xóa vĩnh viễn nhà hàng (DELETE - FR-13)
+ */
+async function deleteRestaurant(venueId) {
+    const v = venuesData.find(item => item.id === venueId);
+    if (!v) return;
+
+    if (!confirm(`Bạn có chắc chắn muốn XÓA VĨNH VIỄN nhà hàng '${v.name}' (ID=${venueId}) khỏi hệ thống? Thao tác này không thể hoàn tác.`)) {
+        return;
+    }
+
+    const token = localStorage.getItem('auth_token');
+    try {
+        if (token) {
+            await fetch(`/api/admin/restaurants/${venueId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+        }
+    } catch (_) {}
+
+    venuesData = venuesData.filter(item => item.id !== venueId);
+    localStorage.setItem(ADMIN_VENUES_KEY, JSON.stringify(venuesData));
+    handleVenueSearch();
+    renderStatsOverview();
+    showToast(`Đã xóa vĩnh viễn nhà hàng '${v.name}' thành công.`, 'error');
 }
 
 function handleVenueSearch() {
