@@ -24,9 +24,6 @@
             </p>
             <div class="access-actions">
                 <a href="index.html" class="btn-access-primary">← Quay về Trang chủ Khám phá</a>
-                <button type="button" class="btn-access-secondary" onclick="simulateRoleSwitch('admin')">
-                    🔑 Chuyển sang quyền Quản trị viên (Admin Demo)
-                </button>
             </div>
         </div>
     </div>
@@ -41,9 +38,7 @@
                 Vui lòng đăng nhập bằng tài khoản Quản trị viên để truy cập bảng điều khiển hệ thống.
             </p>
             <div class="access-actions">
-                <button type="button" class="btn-access-primary" onclick="simulateRoleSwitch('admin')">
-                    Đăng nhập tài khoản Quản trị viên (Admin)
-                </button>
+                <a href="index.html" class="btn-access-primary">Đăng nhập tài khoản Quản trị viên (Admin)</a>
                 <a href="index.html" class="btn-access-secondary">Quay về Trang chủ Khách</a>
             </div>
         </div>
@@ -387,22 +382,6 @@
             </section>
 
         </main>
-    </div>
-
-    <!-- =========================================================================
-         4. THANH ROLE SWITCHER DEMO (TIỆN ÍCH KIỂM THỬ ROUTE GUARD TRỰC QUAN)
-         ========================================================================= -->
-    <div class="demo-role-bar">
-        <span class="demo-role-label">Kiểm thử Route Guard:</span>
-        <button type="button" class="demo-role-btn active-admin" id="btn-role-admin" onclick="simulateRoleSwitch('admin')">
-            🟢 Quyền Admin
-        </button>
-        <button type="button" class="demo-role-btn" id="btn-role-user" onclick="simulateRoleSwitch('user')">
-            🟡 Quyền User (Thử 403)
-        </button>
-        <button type="button" class="demo-role-btn" id="btn-role-guest" onclick="simulateRoleSwitch('guest')">
-            ⚪ Khách (Thử 401)
-        </button>
     </div>
 
     <!-- Toast Notifications Container -->

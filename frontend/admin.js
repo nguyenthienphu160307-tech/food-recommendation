@@ -115,10 +115,7 @@ function checkAdminRouteGuard() {
     const guard403 = document.getElementById('guard-403');
     const userEmailSpan = document.getElementById('guard-user-email');
 
-    // Cập nhật trạng thái active trên thanh Role Switcher
-    document.querySelectorAll('.demo-role-btn').forEach(b => b.className = 'demo-role-btn');
-    const roleBtn = document.getElementById(`btn-role-${currentRole}`);
-    if (roleBtn) roleBtn.classList.add(`active-${currentRole}`);
+
 
     if (currentRole === 'guest') {
         // Chặn 401: Khách chưa đăng nhập
@@ -165,7 +162,8 @@ function simulateRoleSwitch(role) {
  */
 function adminLogout() {
     if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi Bảng điều khiển Quản trị?')) {
-        simulateRoleSwitch('guest');
+        localStorage.removeItem(DEMO_ROLE_KEY);
+        window.location.href = 'index.html';
     }
 }
 
