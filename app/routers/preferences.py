@@ -96,21 +96,28 @@ def get_user_preferences(
     )
 
 
+@router.post(
+    "/users/preferences",
+    response_model=UserPreferenceResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Khai báo sở thích ăn uống & dị ứng lần đầu (FR-04 / TE9C64E)"
+)
 @router.put(
     "/users/preferences",
     response_model=UserPreferenceResponse,
-    summary="Cập nhật sở thích ăn uống & dị ứng của người dùng (TE9C65C)"
+    summary="Cập nhật sở thích ăn uống & dị ứng của người dùng (FR-04 / TE9C64E)"
 )
-def update_user_preferences(
+def save_user_preferences(
     payload: UserPreferenceUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Cập nhật sở thích cá nhân:
+    Khai báo & cập nhật sở thích ăn uống cá nhân (FR-04):
     - Tự động chuẩn hóa diet_type (omnivore, vegetarian, vegan, halal, keto)
-    - Lưu danh sách allergies dưới dạng mảng JSON
-    - Cập nhật ngân sách trung bình và danh sách ẩm thực ưa thích
+    - Lưu danh sách allergies dưới dạng mảng JSON vào bảng user_preferences
+    - Lưu danh sách preferred_cuisines dưới dạng mảng JSON
+    - Cập nhật ngân sách ăn uống trung bình (avg_budget)
     """
     pref = get_or_create_user_preference(db, current_user.id)
 
