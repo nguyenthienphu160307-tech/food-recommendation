@@ -148,7 +148,7 @@
         .account-trigger span { font-size: 0.85rem; font-weight: 600; }
 
         .account-dropdown {
-            position: absolute; top: 50px; right: 0; min-width: 290px; width: auto; max-width: 360px;
+            position: absolute; top: 50px; right: 0; min-width: 320px; width: max-content; max-width: 400px;
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: 14px; box-shadow: var(--shadow-lg);
             padding: 10px; display: none; z-index: 1500;
@@ -419,7 +419,7 @@
             <div class="account-dropdown" id="account-dropdown">
                 <div class="dropdown-user-header">
                     <strong id="drop-user-name">Nguyễn Văn An</strong>
-                    <small id="drop-user-email" style="color:var(--text-muted);word-break:break-all;">user.demo@foodai.vn</small>
+                    <small id="drop-user-email" style="color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:0.82rem;">user.demo@foodai.vn</small>
                 </div>
                 <a href="/profile" class="dropdown-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -437,9 +437,9 @@
                 <div id="drop-auth-actions" style="display:flex;flex-direction:column;">
                     <a href="/login" class="dropdown-link" id="link-login" style="color:var(--brand-red);">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                        Đăng nhập
+                        Chuyển đổi tài khoản / Đăng nhập
                     </a>
-                    <a href="/register" class="dropdown-link" id="link-register">
+                    <a href="/register" class="dropdown-link" id="link-register" style="display:none;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                         Đăng ký tài khoản
                     </a>
@@ -1091,21 +1091,87 @@
             document.getElementById('account-dropdown').classList.toggle('open');
         }
 
-        function toggleAIDrawer() {
-            document.getElementById('ai-drawer').classList.toggle('open');
+        let currentChatSessionId = null;
+
+        async function initChatSessionIfNeeded() {
+            if (currentChatSessionId) return;
+
+            let authUser = null;
+            try {
+                const rawAuth = localStorage.getItem('smart_dining_user');
+                if (rawAuth) authUser = JSON.parse(rawAuth);
+            } catch (_) {}
+
+            const userId = authUser && authUser.id ? authUser.id : null;
+
+            try {
+                const res = await fetch('/api/chat/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentChatSessionId = data.session_id;
+                    console.log('Khởi tạo phiên Chat AI thành công! Session ID:', currentChatSessionId, '(User:', userId, ')');
+                }
+            } catch (err) {
+                console.warn('Chưa thể kết nối API chat session:', err);
+            }
         }
 
-        function sendDrawerMessage() {
+        async function toggleAIDrawer() {
+            const drawer = document.getElementById('ai-drawer');
+            drawer.classList.toggle('open');
+            if (drawer.classList.contains('open')) {
+                await initChatSessionIfNeeded();
+            }
+        }
+
+        async function sendDrawerMessage() {
             const input = document.getElementById('drawer-input');
             const text = input.value.trim();
             if (!text) return;
+
+            await initChatSessionIfNeeded();
+
             const feed = document.getElementById('ai-chat-feed');
             feed.innerHTML += `<div class="bubble bubble-user">${text}</div>`;
             input.value = '';
+            feed.scrollTop = feed.scrollHeight;
+
+            // 1. Lưu tin nhắn User vào CSDL theo thời gian thực (TSK-16)
+            if (currentChatSessionId) {
+                try {
+                    await fetch(`/api/chat/sessions/${currentChatSessionId}/messages`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: text, sender_type: 'user' })
+                    });
+                } catch (e) {
+                    console.warn('Lỗi lưu tin nhắn User:', e);
+                }
+            }
+
             executeAISearch(text);
-            setTimeout(() => {
-                feed.innerHTML += `<div class="bubble bubble-ai">Mình đã cập nhật danh sách các quán phù hợp với yêu cầu <strong>"${text}"</strong> ngay trên màn hình chính và bản đồ. Bạn có muốn lọc thêm theo mức giá hay khoảng cách không?</div>`;
+
+            setTimeout(async () => {
+                const aiResponse = `Mình đã phân tích yêu cầu <strong>"${text}"</strong> và cập nhật danh sách các quán phù hợp nhất ngay trên bản đồ và màn hình chính. Bạn có muốn lọc thêm theo mức giá hay khoảng cách không?`;
+                feed.innerHTML += `<div class="bubble bubble-ai">${aiResponse}</div>`;
                 feed.scrollTop = feed.scrollHeight;
+
+                // 2. Lưu câu trả lời của AI vào CSDL theo thời gian thực (TSK-16)
+                if (currentChatSessionId) {
+                    try {
+                        await fetch(`/api/chat/sessions/${currentChatSessionId}/messages`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ content: aiResponse, sender_type: 'ai' })
+                        });
+                    } catch (e) {
+                        console.warn('Lỗi lưu tin nhắn AI:', e);
+                    }
+                }
             }, 300);
         }
 

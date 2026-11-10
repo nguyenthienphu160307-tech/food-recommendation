@@ -1,4 +1,4 @@
-# Môi trường và Bảo mật (TUYỆT ĐỐI KHÔNG PUSH LÊN GIT)
+# Môi trường và Bảo mật 
 .env
 .env.local
 
@@ -8,7 +8,7 @@ __pycache__/
 *$py.class
 *.pyc
 
-# Virtual Environment (Môi trường ảo)
+# Virtual Environment 
 venv/
 .venv/
 env/
