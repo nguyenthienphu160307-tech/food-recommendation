@@ -17,6 +17,8 @@ class User(Base):
 
     # Quan hệ 1 - 1 với bảng UserProfiles
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    # Quan hệ 1 - 1 với bảng UserPreferences (Sở thích cá nhân & Dị ứng)
+    preference = relationship("UserPreference", back_populates="user", uselist=False, cascade="all, delete-orphan")
     # Quan hệ 1 - N với bảng UserRoles
     user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
 
@@ -86,3 +88,27 @@ class RevokedToken(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     revoked_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     expires_at = Column(DateTime, nullable=True)
+
+
+class UserPreference(Base):
+    """
+    Bảng lưu trữ sở thích ăn uống và thông tin dị ứng của người dùng (UserPreferences)
+    - Quản lý chế độ ăn (diet_type): omnivore, vegetarian, vegan, halal, keto
+    - Dị ứng thực phẩm (allergies): seafood, peanut, dairy, gluten... (lưu dạng JSON)
+    - Nhóm món ăn yêu thích (preferred_cuisines): Món Việt, Lẩu Nướng, Món Nhật... (lưu dạng JSON)
+    - Ngân sách trung bình (avg_budget)
+    Phục vụ tích hợp tự động vào bộ tiêu chí gợi ý mặc định (Task TE9C65C)
+    """
+    __tablename__ = "user_preferences"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    diet_type = Column(String(50), default="omnivore", nullable=False)   # 'omnivore', 'vegetarian', 'vegan', 'halal', 'keto'
+    allergies = Column(String(500), default="[]", nullable=False)        # JSON string list: ["seafood", "peanut"]
+    preferred_cuisines = Column(String(500), default="[]", nullable=False) # JSON string list: ["Món Việt", "Món Nhật"]
+    avg_budget = Column(Float, default=250000.0, nullable=True)          # Ngân sách trung bình (VNĐ)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User", back_populates="preference")
+

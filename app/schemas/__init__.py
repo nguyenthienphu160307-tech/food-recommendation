@@ -12,6 +12,14 @@ from .auth import (
     RefreshTokenResponse,
     LogoutRequest,
 )
+from .preferences import (
+    UserPreferenceBase,
+    UserPreferenceUpdate,
+    UserPreferenceResponse,
+    AppliedPreferencesSummary,
+    RecommendedRestaurantItem,
+    RecommendationResponse,
+)
 
 __all__ = [
     "SendOTPRequest",
@@ -26,4 +34,10 @@ __all__ = [
     "RefreshTokenRequest",
     "RefreshTokenResponse",
     "LogoutRequest",
+    "UserPreferenceBase",
+    "UserPreferenceUpdate",
+    "UserPreferenceResponse",
+    "AppliedPreferencesSummary",
+    "RecommendedRestaurantItem",
+    "RecommendationResponse",
 ]

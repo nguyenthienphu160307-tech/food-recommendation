@@ -671,6 +671,15 @@
         let savedIds = [1, 4];
         let mapComponent = null;
 
+        // Dữ liệu sở thích cá nhân & dị ứng người dùng (Task TE9C65C)
+        let userPreferences = {
+            diet_type: 'omnivore',
+            allergies: [],
+            preferred_cuisines: [],
+            avg_budget: null
+        };
+        let userPreferenceApplied = false;
+
         /**
          * Nạp thông tin hồ sơ người dùng từ LocalStorage để đồng bộ tên, ảnh đại diện
          * và tọa độ tìm kiếm mặc định (default_lat, default_lng).
@@ -695,6 +704,41 @@
                     currentPos.lng = parseFloat(prof.default_lng);
                     if (mapComponent) {
                         mapComponent.setUserPosition(currentPos.lat, currentPos.lng, false);
+                    }
+                }
+
+                // Tự động đọc Sở thích cá nhân & Dị ứng vào bộ lọc gợi ý mặc định (Task TE9C65C)
+                if (prof.diet_type || (prof.allergies && prof.allergies.length > 0) || prof.avg_budget) {
+                    userPreferences.diet_type = prof.diet_type || 'omnivore';
+                    userPreferences.allergies = Array.isArray(prof.allergies) ? prof.allergies : [];
+                    userPreferences.preferred_cuisines = Array.isArray(prof.preferred_cuisines) ? prof.preferred_cuisines : [];
+                    userPreferences.avg_budget = prof.avg_budget || null;
+                    userPreferenceApplied = true;
+
+                    // Nếu người dùng có chế độ ăn chay/thuần chay -> Tự động bật bộ lọc món chay
+                    if (userPreferences.diet_type === 'vegetarian' || userPreferences.diet_type === 'vegan') {
+                        activeAmenities.vegetarian = true;
+                        const btnVeg = document.getElementById('btn-vegan');
+                        if (btnVeg) btnVeg.classList.add('active');
+                    }
+
+                    // Tự động hiển thị Banner AI giải thích các tiêu chí đã áp dụng
+                    const banner = document.getElementById('ai-banner');
+                    const reasonEl = document.getElementById('ai-banner-reason');
+                    if (banner && reasonEl) {
+                        const reasons = [];
+                        if (userPreferences.diet_type === 'vegetarian') reasons.push('chế độ ăn chay (Vegetarian)');
+                        else if (userPreferences.diet_type === 'vegan') reasons.push('chế độ thuần chay (Vegan)');
+
+                        if (userPreferences.allergies.includes('seafood')) reasons.push('loại trừ dị ứng hải sản (Seafood)');
+                        if (userPreferences.allergies.includes('peanut')) reasons.push('cảnh báo dị ứng đậu phộng (Peanut)');
+                        if (userPreferences.allergies.includes('dairy')) reasons.push('chế phẩm bơ sữa (Dairy)');
+                        if (userPreferences.allergies.includes('gluten')) reasons.push('dị ứng gluten');
+
+                        if (reasons.length > 0) {
+                            banner.classList.add('visible');
+                            reasonEl.innerHTML = `<strong>Trợ lý AI đã tự động đọc hồ sơ cá nhân:</strong> Áp dụng tiêu chuẩn cho ${reasons.join(', ')} và ưu tiên các quán gần vị trí của bạn nhất.`;
+                        }
                     }
                 }
             } catch (_) {}
@@ -757,6 +801,25 @@
                 if (activeAmenities.private_room) list = list.filter(v => v.private_room);
                 if (activeAmenities.vegetarian) list = list.filter(v => v.vegetarian);
                 if (maxBudgetFilter) list = list.filter(v => v.priceMin <= maxBudgetFilter);
+
+                // Tự động bổ sung tiêu chí Sở thích cá nhân & Dị ứng (Task TE9C65C)
+                if (userPreferenceApplied) {
+                    // 1. Chế độ ăn chay / thuần chay: Chỉ giữ nhà hàng có món chay
+                    if (userPreferences.diet_type === 'vegetarian' || userPreferences.diet_type === 'vegan') {
+                        list = list.filter(v => v.vegetarian || (v.cuisineLabel && v.cuisineLabel.toLowerCase().includes('chay')));
+                    }
+                    // 2. Dị ứng hải sản: Loại trừ quán hải sản chuyên biệt
+                    if (userPreferences.allergies.includes('seafood')) {
+                        list = list.filter(v => {
+                            const nameLower = v.name.toLowerCase();
+                            const cuisineLower = (v.cuisineLabel || '').toLowerCase();
+                            const isSeafood = v.category === 'seafood' || cuisineLower.includes('hải sản') ||
+                                              nameLower.includes('hải sản') || nameLower.includes('quán ốc') ||
+                                              nameLower.includes('ốc ') || nameLower.includes('cua ');
+                            return !isSeafood;
+                        });
+                    }
+                }
             }
 
             list = list.map(v => {
@@ -813,7 +876,8 @@
                         <div class="venue-tags">
                             ${v.parking ? '<span class="venue-tag">Đỗ ô tô</span>' : ''}
                             ${v.private_room ? '<span class="venue-tag">Phòng riêng</span>' : ''}
-                            ${v.vegetarian ? '<span class="venue-tag">Món chay</span>' : ''}
+                            ${v.vegetarian ? '<span class="venue-tag" style="background:rgba(16,185,129,0.12);color:#059669;font-weight:600;">Món chay</span>' : ''}
+                            ${userPreferenceApplied && userPreferences.allergies.includes('seafood') ? '<span class="venue-tag" style="background:rgba(59,130,246,0.12);color:#2563eb;font-weight:600;">An toàn: Không hải sản</span>' : ''}
                         </div>
                     </div>
                 `;
