@@ -402,14 +402,13 @@
 
             <div class="account-trigger" onclick="toggleAccountDropdown()">
                 <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar">
-                <span id="nav-user-name">Nguyễn Văn An</span>
+                <span id="nav-user-name">Khách</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
 
             <div class="account-dropdown" id="account-dropdown">
-                <div class="dropdown-user-header">
-                    <strong id="drop-user-name">Nguyễn Văn An</strong>
-                    <small>user.demo@foodai.vn</small>
+                <div class="dropdown-user-header" id="dropdown-user-header">
+                    <strong id="drop-user-name">Chưa đăng nhập</strong>
                 </div>
                 <a href="profile.html" class="dropdown-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -424,9 +423,9 @@
                     Quán ăn yêu thích đã lưu
                 </div>
                 <div class="dropdown-divider"></div>
-                <div class="dropdown-link" onclick="openAuthModal()" style="color:var(--brand-red);">
+                <div class="dropdown-link" onclick="openAuthModal()" id="btn-auth-action" style="color:var(--brand-red);">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Chuyển đổi tài khoản / Đăng nhập
+                    <span>Đăng nhập</span>
                 </div>
             </div>
         </div>
@@ -435,11 +434,10 @@
     <div class="filter-ribbon">
         <div class="category-pills">
             <button class="filter-pill active" onclick="setCategory('all', this)">Tất cả</button>
-            <button class="filter-pill" onclick="setCategory('bbq', this)">Nướng BBQ</button>
-            <button class="filter-pill" onclick="setCategory('hotpot', this)">Lẩu</button>
-            <button class="filter-pill" onclick="setCategory('seafood', this)">Hải sản</button>
-            <button class="filter-pill" onclick="setCategory('vegan', this)">Đồ chay</button>
-            <button class="filter-pill" onclick="setCategory('japanese', this)">Nhật Bản</button>
+            <button class="filter-pill" onclick="setCategory('Món Việt', this)">Món Việt</button>
+            <button class="filter-pill" onclick="setCategory('Cơm tấm', this)">Cơm tấm</button>
+            <button class="filter-pill" onclick="setCategory('Món Chay', this)">Đồ chay</button>
+            <button class="filter-pill" onclick="setCategory('BBQ Hàn Quốc', this)">BBQ Hàn Quốc</button>
         </div>
 
         <div class="amenity-filters">
@@ -472,7 +470,8 @@
                 </select>
             </div>
 
-            <div class="cards-grid" id="venues-grid"></div>
+            <!-- Nơi chứa thẻ nhà hàng -->
+            <div class="cards-grid" id="venues-grid">Đang tải dữ liệu từ máy chủ...</div>
         </section>
 
         <aside class="map-column">
@@ -500,21 +499,25 @@
         <div class="modal-card" id="venue-modal-content"></div>
     </div>
 
+    <!-- Modal Đăng Nhập Mới Gọi API -->
     <div class="modal-backdrop" id="auth-modal" onclick="if(event.target===this) closeAuthModal()">
         <div class="modal-card" style="width:420px;">
             <h3 style="font-size:1.25rem;margin-bottom:6px;">Đăng nhập vào Smart Dining</h3>
             <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:20px;">Đồng bộ danh sách quán ăn yêu thích và hồ sơ cá nhân của bạn.</p>
+            
+            <div id="auth-error-msg" style="color: red; font-size: 0.85rem; margin-bottom: 10px; display: none;"></div>
+
             <div style="display:flex;flex-direction:column;gap:14px;">
                 <div>
                     <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px;">Email hoặc Số điện thoại</label>
-                    <input type="email" id="login-email" value="user.demo@foodai.vn" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
+                    <input type="text" id="login-email" placeholder="Nhập email/SĐT" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
                 </div>
                 <div>
                     <label style="font-size:0.82rem;font-weight:600;display:block;margin-bottom:6px;">Mật khẩu</label>
-                    <input type="password" value="12345678" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
+                    <input type="password" id="login-pass" placeholder="••••••••" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
                 </div>
-                <button type="button" class="btn-ai-ask" style="height:42px;justify-content:center;font-size:0.9rem;border-radius:8px;" onclick="closeAuthModal()">Đăng nhập</button>
-                <a href="profile.html" style="text-align:center;font-size:0.84rem;color:var(--brand-red);text-decoration:none;font-weight:600;">Đi tới trang Quản lý Hồ sơ cá nhân →</a>
+                <button type="button" id="btn-login" class="btn-ai-ask" style="height:42px;justify-content:center;font-size:0.9rem;border-radius:8px;" onclick="handleLoginSubmit()">Đăng nhập</button>
+                <a href="auth.html" style="text-align:center;font-size:0.84rem;color:var(--brand-red);text-decoration:none;font-weight:600;">Chưa có tài khoản? Đăng ký ngay →</a>
             </div>
         </div>
     </div>
@@ -541,114 +544,13 @@
     </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- NHÚNG FILE API.JS -->
+    <script src="api.js"></script>
+    
     <script>
-        const STORAGE_KEY = 'foodai_demo_profile_state';
-
-        const venues = [
-            {
-                id: 1,
-                name: "GoGi House — Thịt Nướng Hàn Quốc",
-                address: "189 Quang Trung, Phường 10, Quận Gò Vấp, TP.HCM",
-                lat: 10.8295, lng: 106.6728,
-                category: "bbq",
-                cuisineLabel: "Nướng Hàn Quốc",
-                priceMin: 199000, priceMax: 380000,
-                rating: 4.7, reviews: 342,
-                parking: true, private_room: true, vegetarian: false,
-                openHours: "10:00 - 22:00",
-                image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
-                menu: [
-                    { name: "Dẻ sườn bò Mỹ nướng sốt Galbi", price: 219000 },
-                    { name: "Ba chỉ bò Mỹ cuộn nấm kim châm", price: 169000 },
-                    { name: "Canh kim chi hải sản", price: 95000 }
-                ]
-            },
-            {
-                id: 2,
-                name: "Lẩu Nấm Ashima — Phan Văn Trị",
-                address: "366 Phan Văn Trị, Phường 5, Quận Gò Vấp, TP.HCM",
-                lat: 10.8214, lng: 106.6915,
-                category: "hotpot",
-                cuisineLabel: "Lẩu nấm thiên nhiên",
-                priceMin: 250000, priceMax: 450000,
-                rating: 4.8, reviews: 215,
-                parking: true, private_room: true, vegetarian: true,
-                openHours: "10:30 - 22:00",
-                image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80",
-                menu: [
-                    { name: "Set lẩu nấm quý thiên nhiên", price: 340000 },
-                    { name: "Nấm tùng nhung tươi", price: 145000 }
-                ]
-            },
-            {
-                id: 3,
-                name: "Quán Nướng Khói Sài Gòn",
-                address: "122 Nguyễn Gia Trí (D2), Phường 25, Quận Bình Thạnh, TP.HCM",
-                lat: 10.8028, lng: 106.7125,
-                category: "bbq",
-                cuisineLabel: "BBQ & Quán nướng",
-                priceMin: 140000, priceMax: 250000,
-                rating: 4.6, reviews: 418,
-                parking: true, private_room: false, vegetarian: false,
-                openHours: "16:00 - 23:30",
-                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80",
-                menu: [
-                    { name: "Bò tơ nướng tảng sốt trứng muối", price: 189000 },
-                    { name: "Hàu sữa Pháp nướng phô mai", price: 129000 }
-                ]
-            },
-            {
-                id: 4,
-                name: "Hum Garden & Vegetarian",
-                address: "32 Võ Văn Tần, Phường 6, Quận 3, TP.HCM",
-                lat: 10.7785, lng: 106.6912,
-                category: "vegan",
-                cuisineLabel: "Ẩm thực Chay cao cấp",
-                priceMin: 180000, priceMax: 390000,
-                rating: 4.9, reviews: 690,
-                parking: true, private_room: true, vegetarian: true,
-                openHours: "10:00 - 22:00",
-                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
-                menu: [
-                    { name: "Gỏi hoa chuối hạt điều", price: 125000 },
-                    { name: "Cơm chiên trái thơm hạt sen", price: 155000 }
-                ]
-            },
-            {
-                id: 5,
-                name: "Hải Sản Biển Đông — Lê Văn Thọ",
-                address: "412 Lê Văn Thọ, Phường 11, Quận Gò Vấp, TP.HCM",
-                lat: 10.8415, lng: 106.6598,
-                category: "seafood",
-                cuisineLabel: "Hải sản tươi sống",
-                priceMin: 220000, priceMax: 500000,
-                rating: 4.5, reviews: 187,
-                parking: true, private_room: true, vegetarian: false,
-                openHours: "10:00 - 23:00",
-                image: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=600&q=80",
-                menu: [
-                    { name: "Tôm càng xanh nướng mọi", price: 320000 },
-                    { name: "Cua thịt Cà Mau rang me", price: 390000 }
-                ]
-            },
-            {
-                id: 6,
-                name: "Sushi Hokkaido Sachi",
-                address: "172 Nguyễn Đình Chiểu, Quận 3, TP.HCM",
-                lat: 10.7801, lng: 106.6904,
-                category: "japanese",
-                cuisineLabel: "Sushi & Sashimi Nhật Bản",
-                priceMin: 300000, priceMax: 650000,
-                rating: 4.8, reviews: 512,
-                parking: true, private_room: true, vegetarian: true,
-                openHours: "10:30 - 22:30",
-                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80",
-                menu: [
-                    { name: "Set Sashimi Cá hồi & Bụng cá ngừ", price: 380000 },
-                    { name: "Mì Udon bò Wagyu", price: 210000 }
-                ]
-            }
-        ];
+        // Mảng rỗng chờ dữ liệu từ API Backend
+        let venues = [];
 
         let currentPos = { lat: 10.7860, lng: 106.7003 };
         let activeCategory = 'all';
@@ -658,35 +560,76 @@
         let mainMap, userMarker, venueMarkers = [];
 
         /**
-         * Nạp thông tin hồ sơ người dùng từ LocalStorage để đồng bộ tên, ảnh đại diện
-         * và tọa độ tìm kiếm mặc định (default_lat, default_lng).
+         * Kiểm tra đăng nhập và cập nhật UI Header
          */
-        function syncProfileData() {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return;
+        function checkAuthStatus() {
+            const userStr = localStorage.getItem("current_user");
+            const btnAuth = document.getElementById("btn-auth-action");
+            const dropHeader = document.getElementById("dropdown-user-header");
+
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('nav-user-name').innerText = user.full_name || "User";
+                dropHeader.innerHTML = `<strong>${user.full_name || "User"}</strong><small>${user.email}</small>`;
+                btnAuth.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Đăng xuất</span>`;
+                btnAuth.onclick = handleLogout;
+            } else {
+                document.getElementById('nav-user-name').innerText = "Khách";
+                dropHeader.innerHTML = `<strong>Chưa đăng nhập</strong>`;
+                btnAuth.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Đăng nhập</span>`;
+                btnAuth.onclick = openAuthModal;
+            }
+        }
+
+        async function handleLoginSubmit() {
+            const account = document.getElementById("login-email").value;
+            const pass = document.getElementById("login-pass").value;
+            const errorMsg = document.getElementById("auth-error-msg");
+            const btn = document.getElementById("btn-login");
+
+            errorMsg.style.display = "none";
+            btn.disabled = true;
+            btn.innerText = "Đang đăng nhập...";
+
             try {
-                const prof = JSON.parse(raw);
-                if (prof.full_name) {
-                    document.getElementById('nav-user-name').innerText = prof.full_name;
-                    document.getElementById('drop-user-name').innerText = prof.full_name;
-                }
-                if (prof.avatar_url) {
-                    document.getElementById('nav-user-avatar').src = prof.avatar_url;
-                }
-                if (prof.default_address) {
-                    document.getElementById('current-address-label').innerText = prof.default_address;
-                }
-                if (prof.default_lat && prof.default_lng) {
-                    currentPos.lat = parseFloat(prof.default_lat);
-                    currentPos.lng = parseFloat(prof.default_lng);
-                }
-            } catch (_) {}
+                // Gọi API Login đã viết trong js/api.js
+                await AuthAPI.login(account, pass);
+                closeAuthModal();
+                checkAuthStatus(); // Cập nhật lại UI Header
+            } catch (err) {
+                errorMsg.innerText = err.message;
+                errorMsg.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Đăng nhập";
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await AuthAPI.logout();
+            } catch (e) { console.error(e); } 
+            // Vẫn xóa token UI dù gọi API xịt
+            checkAuthStatus(); 
+            window.location.reload();
         }
 
         /**
-         * Khởi tạo bản đồ tương tác chính với 2 lớp Google Maps (Streets & Hybrid).
-         * Khi người dùng di chuyển ghim cá nhân, danh sách nhà hàng tự động tính lại khoảng cách.
+         * GỌI API BACKEND LẤY DANH SÁCH NHÀ HÀNG XUNG QUANH (Task TE9C651)
          */
+        async function fetchVenuesFromAPI() {
+            try {
+                document.getElementById('venues-grid').innerHTML = "Đang tìm kiếm nhà hàng quanh bạn...";
+                // Lấy bán kính mặc định là 15km
+                const data = await GeoAPI.findNearby(currentPos.lat, currentPos.lng, 15);
+                venues = data.restaurants || [];
+                renderVenues();
+            } catch (error) {
+                document.getElementById('venues-grid').innerHTML = `<div style="color:red;">Không thể kết nối đến Máy chủ Backend. Vui lòng đảm bảo FastAPI đang chạy ở cổng 8000.</div>`;
+                console.error("Lỗi API Geo:", error);
+            }
+        }
+
         function initMainMap() {
             mainMap = L.map('main-map').setView([currentPos.lat, currentPos.lng], 13);
 
@@ -720,32 +663,17 @@
             userMarker.on('dragend', (e) => {
                 const p = e.target.getLatLng();
                 currentPos = { lat: p.lat, lng: p.lng };
-                renderVenues();
+                fetchVenuesFromAPI(); // Gọi lại API khi đổi vị trí
             });
 
             mainMap.on('click', (e) => {
                 currentPos = { lat: e.latlng.lat, lng: e.latlng.lng };
                 userMarker.setLatLng([currentPos.lat, currentPos.lng]);
-                renderVenues();
+                fetchVenuesFromAPI(); // Gọi lại API khi đổi vị trí
             });
         }
 
-        /**
-         * Tính khoảng cách đường chim bay (km) giữa 2 tọa độ GPS theo công thức Haversine.
-         */
-        function calcDistanceKm(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) ** 2 +
-                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                      Math.sin(dLon / 2) ** 2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        }
 
-        /**
-         * Lọc, chấm điểm xếp hạng đa tiêu chí (Weighted Scoring) và đồng bộ danh sách thẻ với Marker trên bản đồ.
-         */
         function renderVenues(customList = null) {
             let list = customList ? [...customList] : [...venues];
 
@@ -753,39 +681,33 @@
                 if (activeCategory !== 'all') {
                     list = list.filter(v => v.category === activeCategory);
                 }
-                if (activeAmenities.parking) list = list.filter(v => v.parking);
-                if (activeAmenities.private_room) list = list.filter(v => v.private_room);
-                if (activeAmenities.vegetarian) list = list.filter(v => v.vegetarian);
-                if (maxBudgetFilter) list = list.filter(v => v.priceMin <= maxBudgetFilter);
+                // Các tính năng amenities có thể cần Backend hỗ trợ thêm, tạm filter frontend
             }
 
-            list = list.map(v => {
-                const dist = calcDistanceKm(currentPos.lat, currentPos.lng, v.lat, v.lng);
-                const distScore = Math.max(0, 1 - dist / 15);
-                const ratingScore = v.rating / 5;
-                const amenityScore = (v.parking ? 0.5 : 0) + (v.private_room ? 0.5 : 0);
-                const totalScore = Math.round((distScore * 0.4 + ratingScore * 0.4 + amenityScore * 0.2) * 100);
-                return { ...v, distanceKm: dist, matchScore: Math.min(99, Math.max(75, totalScore)) };
-            });
-
+            // Fallback sắp xếp nếu backend chưa trả về khoảng cách chuẩn hoặc user đổi filter
             const sortMode = document.getElementById('sort-mode').value;
-            if (sortMode === 'distance') list.sort((a, b) => a.distanceKm - b.distanceKm);
+            if (sortMode === 'distance') list.sort((a, b) => (a.distance_km || 0) - (b.distance_km || 0));
             else if (sortMode === 'rating') list.sort((a, b) => b.rating - a.rating);
-            else if (sortMode === 'price_asc') list.sort((a, b) => a.priceMin - b.priceMin);
-            else list.sort((a, b) => b.matchScore - a.matchScore);
 
             const grid = document.getElementById('venues-grid');
             grid.innerHTML = '';
+            
+            if (list.length === 0) {
+                 grid.innerHTML = "<p>Không tìm thấy nhà hàng nào phù hợp trong khu vực này.</p>";
+            }
 
             venueMarkers.forEach(m => mainMap.removeLayer(m));
             venueMarkers = [];
 
             list.forEach(v => {
                 const isSaved = savedIds.includes(v.id);
-                const travelMins = Math.max(4, Math.round(v.distanceKm * 3.2));
-
-                const m = L.marker([v.lat, v.lng]).addTo(mainMap)
-                    .bindPopup(`<strong>${v.name}</strong><br>${v.cuisineLabel} • ⭐ ${v.rating}<br>Cách ${v.distanceKm.toFixed(1)} km`);
+                const dist = v.distance_km || 0;
+                const travelMins = Math.max(4, Math.round(dist * 3.2));
+                // Lấy fallback ảnh nếu db chưa có
+                const imageUrl = v.image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
+                
+                const m = L.marker([v.latitude || v.lat, v.longitude || v.lng]).addTo(mainMap)
+                    .bindPopup(`<strong>${v.name}</strong><br>${v.category || ''} • ⭐ ${v.rating || 0}<br>Cách ${dist.toFixed(1)} km`);
                 venueMarkers.push(m);
 
                 const card = document.createElement('article');
@@ -793,8 +715,8 @@
                 card.onclick = () => openVenueModal(v);
                 card.innerHTML = `
                     <div class="venue-img-wrap">
-                        <img src="${v.image}" alt="${v.name}">
-                        <span class="match-badge">Phù hợp ${v.matchScore}%</span>
+                        <img src="${imageUrl}" alt="${v.name}">
+                        <span class="match-badge">⭐ ${v.rating || "Mới"}</span>
                         <button type="button" class="fav-btn ${isSaved ? 'saved' : ''}" onclick="toggleSaveVenue(event, ${v.id})">
                             ♥
                         </button>
@@ -802,15 +724,9 @@
                     <div class="venue-body">
                         <div class="venue-title-row">
                             <h3 class="venue-name">${v.name}</h3>
-                            <span class="rating-pill">★ ${v.rating}</span>
                         </div>
                         <div class="venue-meta">
-                            ${v.cuisineLabel} • ${v.distanceKm.toFixed(1)} km (~${travelMins} phút) • ${v.priceMin.toLocaleString()}đ - ${v.priceMax.toLocaleString()}đ
-                        </div>
-                        <div class="venue-tags">
-                            ${v.parking ? '<span class="venue-tag">Đỗ ô tô</span>' : ''}
-                            ${v.private_room ? '<span class="venue-tag">Phòng riêng</span>' : ''}
-                            ${v.vegetarian ? '<span class="venue-tag">Món chay</span>' : ''}
+                            ${v.category || "Nhà hàng"} • ${dist.toFixed(1)} km (~${travelMins} phút) <br> ${v.address}
                         </div>
                     </div>
                 `;
@@ -833,10 +749,6 @@
             renderVenues();
         }
 
-        /**
-         * Phân tích câu truy vấn ngôn ngữ tự nhiên (Rule-based NLP Fallback),
-         * bóc tách thực thể ẩm thực, tiện ích, ngân sách và sinh lời giải thích đề xuất.
-         */
         function executeAISearch(customPrompt = null) {
             const q = (customPrompt || document.getElementById('main-search-input').value).trim();
             document.getElementById('search-suggestions').classList.remove('open');
@@ -847,28 +759,16 @@
 
             const lower = q.toLowerCase();
             activeCategory = 'all';
-            if (lower.includes('nướng') || lower.includes('bbq')) activeCategory = 'bbq';
+            if (lower.includes('nướng') || lower.includes('bbq')) activeCategory = 'BBQ Hàn Quốc';
             else if (lower.includes('lẩu') || lower.includes('nấm')) activeCategory = 'hotpot';
-            else if (lower.includes('chay')) activeCategory = 'vegan';
+            else if (lower.includes('chay')) activeCategory = 'Món Chay';
             else if (lower.includes('hải sản')) activeCategory = 'seafood';
-            else if (lower.includes('sushi') || lower.includes('nhật')) activeCategory = 'japanese';
-
-            activeAmenities.parking = lower.includes('ô tô') || lower.includes('đậu xe') || lower.includes('đỗ xe');
-            activeAmenities.private_room = lower.includes('phòng riêng') || lower.includes('yên tĩnh');
-            activeAmenities.vegetarian = lower.includes('chay');
-
-            const priceMatch = lower.match(/(\d+)\s*(k|nghìn|triệu)/);
-            if (priceMatch) {
-                const val = parseInt(priceMatch[1]);
-                maxBudgetFilter = priceMatch[2] === 'triệu' ? (val * 1000000) / 4 : val * 1000;
-            } else {
-                maxBudgetFilter = null;
-            }
+            else if (lower.includes('việt')) activeCategory = 'Món Việt';
 
             const banner = document.getElementById('ai-banner');
             banner.classList.add('visible');
             document.getElementById('ai-banner-reason').innerText =
-                `Đã phân tích yêu cầu "${q}": Ưu tiên các địa điểm ${activeCategory !== 'all' ? 'nhóm ' + activeCategory.toUpperCase() : ''} ${activeAmenities.parking ? 'có bãi đỗ ô tô, ' : ''}${activeAmenities.private_room ? 'có phòng riêng, ' : ''}xếp hạng theo khoảng cách gần vị trí của bạn nhất.`;
+                `Đã phân tích yêu cầu "${q}": Ưu tiên các địa điểm ${activeCategory !== 'all' ? 'nhóm ' + activeCategory.toUpperCase() : ''}, xếp hạng theo khoảng cách gần vị trí của bạn nhất.`;
 
             renderVenues();
         }
@@ -898,7 +798,7 @@
             }
             const filtered = venues.filter(v =>
                 v.name.toLowerCase().includes(val.toLowerCase()) ||
-                v.cuisineLabel.toLowerCase().includes(val.toLowerCase())
+                (v.category && v.category.toLowerCase().includes(val.toLowerCase()))
             );
             renderVenues(filtered);
         }
@@ -906,25 +806,18 @@
         function openVenueModal(v) {
             const modal = document.getElementById('venue-modal');
             const box = document.getElementById('venue-modal-content');
-            const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentPos.lat},${currentPos.lng}&destination=${v.lat},${v.lng}&travelmode=two-wheeler`;
+            const lat = v.latitude || v.lat;
+            const lng = v.longitude || v.lng;
+            const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentPos.lat},${currentPos.lng}&destination=${lat},${lng}&travelmode=two-wheeler`;
+            const imageUrl = v.image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
 
             box.innerHTML = `
-                <img src="${v.image}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
+                <img src="${imageUrl}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
                 <h3 style="font-size:1.3rem;margin-bottom:4px;">${v.name}</h3>
-                <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:12px;">${v.address} • Giờ mở cửa: ${v.openHours}</p>
+                <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:12px;">${v.address}</p>
                 <div style="display:flex;gap:8px;margin-bottom:18px;">
-                    <span class="venue-tag">★ ${v.rating} (${v.reviews} đánh giá)</span>
-                    <span class="venue-tag">Cách ${v.distanceKm.toFixed(1)} km</span>
-                    <span class="venue-tag">${v.priceMin.toLocaleString()}đ - ${v.priceMax.toLocaleString()}đ/người</span>
-                </div>
-                <h4 style="font-size:0.95rem;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">Thực đơn nổi bật</h4>
-                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
-                    ${v.menu.map(m => `
-                        <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
-                            <span>${m.name}</span>
-                            <strong>${m.price.toLocaleString()}đ</strong>
-                        </div>
-                    `).join('')}
+                    <span class="venue-tag">★ ${v.rating || "Chưa có đánh giá"}</span>
+                    <span class="venue-tag">Cách ${(v.distance_km || 0).toFixed(1)} km</span>
                 </div>
                 <div style="display:flex;gap:10px;">
                     <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
@@ -961,7 +854,7 @@
                 currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 mainMap.setView([currentPos.lat, currentPos.lng], 15);
                 userMarker.setLatLng([currentPos.lat, currentPos.lng]);
-                renderVenues();
+                fetchVenuesFromAPI();
             });
         }
 
@@ -1012,10 +905,11 @@
             }
         });
 
+        // KHI TRANG TẢI XONG
         window.addEventListener('DOMContentLoaded', () => {
-            syncProfileData();
-            initMainMap();
-            renderVenues();
+            checkAuthStatus(); // Kiểm tra xem User đã đăng nhập chưa
+            initMainMap();     // Vẽ bản đồ
+            fetchVenuesFromAPI(); // Gọi Backend lấy dữ liệu nhà hàng đổ ra UI thay vì dùng mảng cứng
         });
     </script>
 </body>
