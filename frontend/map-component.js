@@ -2,7 +2,11 @@
  * ==============================================================================
  * MAP COMPONENT (Bản đồ số Web / Mobile)
  * Tích hợp Leaflet SDK + Google Maps Tiles (Streets & Satellite) + OpenStreetMap
- * Hỗ trợ điều khiển Zoom, Định tâm mặc định, Định vị GPS và Tương tác đa nền tảng
+ * Hỗ trợ:
+ * - Điều khiển Zoom, Định tâm mặc định, Định vị GPS
+ * - Vẽ vòng tròn bán kính tìm kiếm (1km, 3km, 5km, 10km)
+ * - Hiển thị Marker nhà hàng kèm khoảng cách chính xác & Popup thông tin chi tiết
+ * - Đồng bộ 2 chiều với danh sách quán (khi cuộn danh sách, hover hoặc click)
  * ==============================================================================
  */
 
@@ -10,22 +14,30 @@ class FoodAIMapComponent {
     /**
      * @param {Object} options Cấu hình khởi tạo bản đồ
      * @param {string} options.containerId ID thẻ chứa bản đồ (mặc định 'main-map')
-     * @param {Array<number>} options.defaultCenter Tọa độ trung tâm mặc định [lat, lng] (mặc định TP.HCM Q1 [10.776889, 106.700806])
+     * @param {Array<number>} options.defaultCenter Tọa độ trung tâm mặc định [lat, lng]
+     * @param {Array<number>} options.currentCenter Tọa độ hiện tại [lat, lng]
      * @param {number} options.defaultZoom Mức zoom mặc định (mặc định 13)
      * @param {number} options.minZoom Mức zoom nhỏ nhất (mặc định 5)
      * @param {number} options.maxZoom Mức zoom lớn nhất (mặc định 20)
+     * @param {number} options.defaultRadiusKm Bán kính tìm kiếm mặc định (1, 3, 5, 10 km; mặc định 5)
+     * @param {Array<number>} options.radiusOptions Danh sách mốc bán kính (mặc định [1, 3, 5, 10])
      * @param {Function} options.onLocationChange Callback khi đổi vị trí ghim cá nhân: fn({ lat, lng })
+     * @param {Function} options.onRadiusChange Callback khi đổi bán kính tìm kiếm: fn(radiusKm)
      * @param {Function} options.onVenueClick Callback khi bấm vào marker nhà hàng: fn(venue)
      */
     constructor(options = {}) {
         this.containerId = options.containerId || 'main-map';
-        this.defaultCenter = options.defaultCenter || [10.776889, 106.700806]; // Mặc định TP.HCM (Quận 1)
+        this.defaultCenter = options.defaultCenter || [10.776889, 106.700806];
         this.currentCenter = options.currentCenter || [...this.defaultCenter];
         this.defaultZoom = options.defaultZoom || 13;
         this.minZoom = options.minZoom || 5;
         this.maxZoom = options.maxZoom || 20;
 
+        this.searchRadiusKm = options.defaultRadiusKm !== undefined ? options.defaultRadiusKm : 5;
+        this.radiusOptions = options.radiusOptions || [1, 3, 5, 10];
+
         this.onLocationChange = options.onLocationChange || null;
+        this.onRadiusChange = options.onRadiusChange || null;
         this.onVenueClick = options.onVenueClick || null;
 
         // Trạng thái nội bộ
@@ -34,14 +46,40 @@ class FoodAIMapComponent {
         this.activeLayerName = 'googleStreets';
         this.userMarker = null;
         this.accuracyCircle = null;
+        this.radiusCircle = null;
+        this.radiusLabelMarker = null;
         this.venueMarkers = new Map(); // id -> L.Marker
+        this.venueDataMap = new Map(); // id -> venue
+        this.activeVenueId = null;
         this.isLocating = false;
 
         this.init();
     }
 
     /**
-     * Khởi tạo bản đồ Leaflet, các lớp bản đồ nền và các bộ điều khiển
+     * Tính khoảng cách đường chim bay chính xác (km) bằng công thức Haversine
+     */
+    static calcDistanceKm(lat1, lng1, lat2, lng2) {
+        const R = 6371.0;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    /**
+     * Định dạng khoảng cách gọn trên ghim bản đồ (VD: 650m hoặc 2.4km)
+     */
+    static formatPinDistance(km) {
+        if (km === undefined || km === null || isNaN(km)) return '';
+        if (km < 1) return `${Math.max(10, Math.round(km * 1000))}m`;
+        return `${km.toFixed(1)}km`;
+    }
+
+    /**
+     * Khởi tạo bản đồ Leaflet, các lớp bản đồ nền, vòng tròn bán kính và bộ điều khiển
      */
     init() {
         const container = document.getElementById(this.containerId);
@@ -56,9 +94,9 @@ class FoodAIMapComponent {
             zoom: this.defaultZoom,
             minZoom: this.minZoom,
             maxZoom: this.maxZoom,
-            zoomControl: false, // Tắt zoom control mặc định để dùng custom UI đẹp mắt
+            zoomControl: false,
             attributionControl: true,
-            tap: true, // Tối ưu cảm ứng mobile
+            tap: true,
             touchZoom: true,
             scrollWheelZoom: true
         });
@@ -69,10 +107,14 @@ class FoodAIMapComponent {
         // 3. Khởi tạo Ghim vị trí người dùng (User Location Marker)
         this._initUserMarker();
 
-        // 4. Khởi tạo Bộ điều khiển giao diện (Zoom, Re-center, GPS, Layer Switcher, Scale)
+        // 4. Vẽ vòng tròn bán kính tìm kiếm ban đầu
+        this.drawRadiusCircle(false);
+
+        // 5. Khởi tạo Bộ điều khiển giao diện (Bán kính, Zoom, Re-center, GPS, Layer Switcher, Scale)
+        this._setupRadiusControl();
         this._setupCustomControls();
 
-        // 5. Lắng nghe sự kiện click trên bản đồ để cập nhật vị trí tìm kiếm
+        // 6. Lắng nghe sự kiện click trên bản đồ để cập nhật vị trí tìm kiếm
         this.map.on('click', (e) => {
             this.setUserPosition(e.latlng.lat, e.latlng.lng, true);
         });
@@ -86,13 +128,9 @@ class FoodAIMapComponent {
     }
 
     /**
-     * Cấu hình các lớp bản đồ nền:
-     * - Google Maps Streets (Đường phố tiếng Việt)
-     * - Google Maps Satellite / Hybrid (Vệ tinh có gắn nhãn)
-     * - OpenStreetMap (Bản đồ mở quốc tế)
+     * Cấu hình các lớp bản đồ nền: Google Streets, Google Hybrid, OpenStreetMap
      */
     _setupBaseLayers() {
-        // Google Maps Đường phố
         this.baseLayers['googleStreets'] = L.tileLayer(
             'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi',
             {
@@ -102,7 +140,6 @@ class FoodAIMapComponent {
             }
         );
 
-        // Google Maps Vệ tinh (Hybrid)
         this.baseLayers['googleHybrid'] = L.tileLayer(
             'https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}&hl=vi',
             {
@@ -112,7 +149,6 @@ class FoodAIMapComponent {
             }
         );
 
-        // OpenStreetMap Standard
         this.baseLayers['osm'] = L.tileLayer(
             'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             {
@@ -121,34 +157,26 @@ class FoodAIMapComponent {
             }
         );
 
-        // Mặc định nạp Google Streets
         this.baseLayers['googleStreets'].addTo(this.map);
     }
 
     /**
      * Chuyển đổi lớp bản đồ nền
-     * @param {'googleStreets' | 'googleHybrid' | 'osm'} layerKey 
+     * @param {'googleStreets' | 'googleHybrid' | 'osm'} layerKey
      */
     switchBaseLayer(layerKey) {
         if (!this.baseLayers[layerKey] || layerKey === this.activeLayerName) return;
 
-        // Gỡ lớp cũ
         if (this.baseLayers[this.activeLayerName]) {
             this.map.removeLayer(this.baseLayers[this.activeLayerName]);
         }
 
-        // Thêm lớp mới
         this.baseLayers[layerKey].addTo(this.map);
         this.activeLayerName = layerKey;
 
-        // Cập nhật trạng thái active trên UI switcher (nếu có)
         const buttons = document.querySelectorAll('.map-layer-btn');
         buttons.forEach(btn => {
-            if (btn.dataset.layer === layerKey) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
+            btn.classList.toggle('active', btn.dataset.layer === layerKey);
         });
     }
 
@@ -179,12 +207,11 @@ class FoodAIMapComponent {
                     📍 Vị trí tìm kiếm của bạn
                 </strong>
                 <p style="margin:4px 0 0;color:#6b7280;font-size:0.78rem;">
-                    Kéo thả ghim hoặc nhấp vào bất kỳ đâu trên bản đồ để đổi vị trí.
+                    Kéo thả ghim hoặc nhấp vào bản đồ để đổi tâm vòng tròn bán kính.
                 </p>
             </div>
         `);
 
-        // Lắng nghe khi kéo thả xong ghim vị trí
         this.userMarker.on('dragend', (e) => {
             const pos = e.target.getLatLng();
             this.setUserPosition(pos.lat, pos.lng, true);
@@ -192,22 +219,149 @@ class FoodAIMapComponent {
     }
 
     /**
+     * Bộ điều khiển chọn nhanh bán kính (1km, 3km, 5km, 10km) ở góc trên bên trái bản đồ
+     */
+    _setupRadiusControl() {
+        const RadiusControl = L.Control.extend({
+            options: { position: 'topleft' },
+            onAdd: () => {
+                const container = L.DomUtil.create('div', 'map-radius-control leaflet-bar');
+                L.DomEvent.disableClickPropagation(container);
+                L.DomEvent.disableScrollPropagation(container);
+
+                const buttonsHtml = this.radiusOptions.map(km => `
+                    <button type="button"
+                            class="radius-pill-btn ${this.searchRadiusKm === km ? 'active' : ''}"
+                            data-radius="${km}">
+                        ${km} km
+                    </button>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="map-radius-header">
+                        <span>🎯 Bán kính tìm kiếm</span>
+                        <span class="map-radius-count" id="map-radius-venue-count">0 quán</span>
+                    </div>
+                    <div class="map-radius-pills" id="map-radius-pills">
+                        ${buttonsHtml}
+                    </div>
+                `;
+
+                container.querySelectorAll('.radius-pill-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const km = parseFloat(btn.dataset.radius);
+                        this.setSearchRadius(km, true, true);
+                    });
+                });
+
+                return container;
+            }
+        });
+
+        this.map.addControl(new RadiusControl());
+    }
+
+    /**
+     * Vẽ hoặc cập nhật vòng tròn bán kính tìm kiếm quanh tâm hiện tại
+     * @param {boolean} fitBounds Tự động căn chỉnh khung nhìn vừa khít vòng tròn
+     */
+    drawRadiusCircle(fitBounds = false) {
+        if (!this.map) return;
+
+        if (this.radiusCircle) {
+            this.map.removeLayer(this.radiusCircle);
+            this.radiusCircle = null;
+        }
+        if (this.radiusLabelMarker) {
+            this.map.removeLayer(this.radiusLabelMarker);
+            this.radiusLabelMarker = null;
+        }
+
+        if (!this.searchRadiusKm || this.searchRadiusKm <= 0) return;
+
+        const [lat, lng] = this.currentCenter;
+        const radiusMeters = this.searchRadiusKm * 1000;
+
+        // Vẽ vòng tròn bán kính tìm kiếm
+        this.radiusCircle = L.circle([lat, lng], {
+            radius: radiusMeters,
+            color: '#e11d48',
+            weight: 2,
+            opacity: 0.8,
+            dashArray: '6, 6',
+            fillColor: '#e11d48',
+            fillOpacity: 0.08,
+            interactive: false
+        }).addTo(this.map);
+
+        // Gắn nhãn bán kính ngay mép trên vòng tròn (1 độ vĩ độ ~ 111.32 km)
+        const northEdgeLat = lat + (this.searchRadiusKm / 111.32);
+        this.radiusLabelMarker = L.marker([northEdgeLat, lng], {
+            interactive: false,
+            opacity: 0,
+            icon: L.divIcon({ className: '', iconSize: [0, 0] })
+        }).addTo(this.map);
+
+        this.radiusLabelMarker.bindTooltip(`Bán kính ${this.searchRadiusKm} km`, {
+            permanent: true,
+            direction: 'center',
+            className: 'radius-circle-label'
+        }).openTooltip();
+
+        if (fitBounds && this.radiusCircle) {
+            this.map.fitBounds(this.radiusCircle.getBounds(), {
+                padding: [30, 30],
+                maxZoom: 16,
+                animate: true
+            });
+        }
+    }
+
+    /**
+     * Thay đổi bán kính tìm kiếm (1km, 3km, 5km, 10km)
+     * @param {number} radiusKm Bán kính mới (km)
+     * @param {boolean} fitBounds Căn chỉnh zoom vừa với vòng tròn
+     * @param {boolean} triggerCallback Kích hoạt callback onRadiusChange
+     */
+    setSearchRadius(radiusKm, fitBounds = true, triggerCallback = true) {
+        this.searchRadiusKm = radiusKm;
+
+        // Đồng bộ trạng thái active trên các nút bán kính của bản đồ
+        document.querySelectorAll('.radius-pill-btn').forEach(btn => {
+            btn.classList.toggle('active', parseFloat(btn.dataset.radius) === radiusKm);
+        });
+
+        this.drawRadiusCircle(fitBounds);
+
+        if (triggerCallback && typeof this.onRadiusChange === 'function') {
+            this.onRadiusChange(radiusKm);
+        }
+    }
+
+    /**
+     * Cập nhật bộ đếm số lượng nhà hàng đang hiển thị trong vòng tròn bán kính
+     */
+    updateRadiusCount(count) {
+        const badge = document.getElementById('map-radius-venue-count');
+        if (badge) {
+            badge.innerText = `${count} quán`;
+        }
+    }
+
+    /**
      * Cài đặt các nút điều khiển tiện ích: Zoom In/Out, Re-center, GPS Locate, Layer switcher, Scale
      */
     _setupCustomControls() {
-        // Thước đo tỷ lệ (Scale Control) ở góc dưới bên trái
         L.control.scale({
             imperial: false,
             metric: true,
             position: 'bottomleft'
         }).addTo(this.map);
 
-        // Tạo Custom Control chứa các nút hành động (Góc trên bên phải)
         const ActionsControl = L.Control.extend({
             options: { position: 'topright' },
-            onAdd: (map) => {
+            onAdd: () => {
                 const container = L.DomUtil.create('div', 'custom-map-controls leaflet-bar');
-                // Ngăn chặn sự kiện click/scroll lan ra bản đồ
                 L.DomEvent.disableClickPropagation(container);
                 L.DomEvent.disableScrollPropagation(container);
 
@@ -269,7 +423,6 @@ class FoodAIMapComponent {
 
         this.map.addControl(new ActionsControl());
 
-        // Gắn sự kiện cho các nút điều khiển
         setTimeout(() => {
             const btnZoomIn = document.getElementById('map-btn-zoom-in');
             const btnZoomOut = document.getElementById('map-btn-zoom-out');
@@ -289,7 +442,6 @@ class FoodAIMapComponent {
                     layerMenu.classList.toggle('open');
                 };
 
-                // Đóng menu khi bấm ra ngoài
                 document.addEventListener('click', (e) => {
                     if (!layerMenu.contains(e.target) && e.target !== btnLayers) {
                         layerMenu.classList.remove('open');
@@ -307,44 +459,39 @@ class FoodAIMapComponent {
         }, 50);
     }
 
-    /**
-     * Phóng to bản đồ
-     */
     zoomIn() {
         if (this.map) this.map.zoomIn();
     }
 
-    /**
-     * Thu nhỏ bản đồ
-     */
     zoomOut() {
         if (this.map) this.map.zoomOut();
     }
 
     /**
-     * Định tâm bản đồ về tọa độ mặc định ban đầu (TP.HCM Q1)
+     * Định tâm bản đồ về tọa độ mặc định ban đầu
      */
     centerToDefault() {
         if (!this.map) return;
         this.setUserPosition(this.defaultCenter[0], this.defaultCenter[1], true);
-        this.map.flyTo(this.defaultCenter, this.defaultZoom, {
-            duration: 1.0,
-            easeLinearity: 0.25
-        });
+        if (this.radiusCircle) {
+            this.map.fitBounds(this.radiusCircle.getBounds(), { padding: [30, 30], maxZoom: 15, animate: true });
+        } else {
+            this.map.flyTo(this.defaultCenter, this.defaultZoom, { duration: 1.0, easeLinearity: 0.25 });
+        }
         this.showToast('Đã định tâm về tọa độ mặc định (TP.HCM)', 'info');
     }
 
     /**
-     * Cập nhật vị trí của người dùng
-     * @param {number} lat Vĩ độ
-     * @param {number} lng Kinh độ
-     * @param {boolean} triggerCallback Kích hoạt callback onLocationChange
+     * Cập nhật vị trí tâm tìm kiếm của người dùng và di chuyển vòng tròn bán kính
      */
     setUserPosition(lat, lng, triggerCallback = true) {
         this.currentCenter = [lat, lng];
         if (this.userMarker) {
             this.userMarker.setLatLng(this.currentCenter);
         }
+
+        // Di chuyển vòng tròn bán kính theo vị trí mới
+        this.drawRadiusCircle(false);
 
         if (triggerCallback && typeof this.onLocationChange === 'function') {
             this.onLocationChange({ lat, lng });
@@ -372,25 +519,25 @@ class FoodAIMapComponent {
                 const lng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
 
-                // Xóa vòng tròn độ chính xác cũ nếu có
                 if (this.accuracyCircle) {
                     this.map.removeLayer(this.accuracyCircle);
                 }
 
-                // Vẽ vòng tròn độ chính xác bán kính GPS
                 this.accuracyCircle = L.circle([lat, lng], {
                     radius: accuracy,
-                    color: '#e11d48',
-                    fillColor: '#e11d48',
+                    color: '#3b82f6',
+                    fillColor: '#3b82f6',
                     fillOpacity: 0.12,
-                    weight: 1
+                    weight: 1,
+                    interactive: false
                 }).addTo(this.map);
 
-                // Cập nhật vị trí ghim và bay mượt đến vị trí đó
                 this.setUserPosition(lat, lng, true);
-                this.map.flyTo([lat, lng], 15, {
-                    duration: 1.2
-                });
+                if (this.radiusCircle) {
+                    this.map.fitBounds(this.radiusCircle.getBounds(), { padding: [30, 30], maxZoom: 16, animate: true });
+                } else {
+                    this.map.flyTo([lat, lng], 15, { duration: 1.2 });
+                }
 
                 this.showToast(`Đã định vị thành công (Độ chính xác: ~${Math.round(accuracy)}m)`, 'success');
             },
@@ -413,7 +560,7 @@ class FoodAIMapComponent {
     }
 
     /**
-     * Hiển thị danh sách các quán ăn lên bản đồ dưới dạng Marker
+     * Hiển thị danh sách các quán ăn lên bản đồ dưới dạng Marker kèm khoảng cách chính xác & Popup chi tiết
      * @param {Array<Object>} venues Danh sách quán ăn
      */
     setVenueMarkers(venues = []) {
@@ -424,76 +571,155 @@ class FoodAIMapComponent {
             this.map.removeLayer(marker);
         });
         this.venueMarkers.clear();
+        this.venueDataMap.clear();
 
-        // Icon marker quán ăn chuẩn
-        const createVenueIcon = (rating, category) => {
+        // Icon marker quán ăn kèm khoảng cách chính xác
+        const createVenueIcon = (venue, distKm, isActive = false) => {
+            const cat = (venue.category || '').toLowerCase();
+            const cuisine = (venue.cuisineLabel || '').toLowerCase();
             let catEmoji = '🍽️';
-            if (category === 'bbq') catEmoji = '🥩';
-            else if (category === 'hotpot') catEmoji = '🍲';
-            else if (category === 'cafe') catEmoji = '☕';
-            else if (category === 'vegetarian') catEmoji = '🥗';
-            else if (category === 'western') catEmoji = '🍕';
+            if (cat.includes('bbq') || cuisine.includes('nướng')) catEmoji = '🥩';
+            else if (cat.includes('hotpot') || cuisine.includes('lẩu')) catEmoji = '🍲';
+            else if (cat.includes('cafe') || cuisine.includes('cà phê')) catEmoji = '☕';
+            else if (cat.includes('vegan') || cat.includes('chay') || cuisine.includes('chay')) catEmoji = '🥗';
+            else if (cat.includes('western') || cuisine.includes('âu')) catEmoji = '🍕';
+            else if (cat.includes('seafood') || cuisine.includes('hải sản')) catEmoji = '🦐';
+            else if (cat.includes('japanese') || cuisine.includes('nhật')) catEmoji = '🍣';
+
+            const distLabel = FoodAIMapComponent.formatPinDistance(distKm);
+            const ratingVal = Number(venue.rating || 4.5).toFixed(1);
 
             return L.divIcon({
-                className: 'venue-marker-pin',
+                className: `venue-marker-pin${isActive ? ' active-pin' : ''}`,
                 html: `
-                    <div class="pin-bubble">
+                    <div class="pin-bubble" data-venue-id="${venue.id}">
                         <span class="pin-emoji">${catEmoji}</span>
-                        <span class="pin-rating">★${rating}</span>
+                        <span class="pin-rating">★${ratingVal}</span>
+                        ${distLabel ? `<span class="pin-dist">${distLabel}</span>` : ''}
                     </div>
                     <div class="pin-arrow"></div>
                 `,
-                iconSize: [44, 46],
-                iconAnchor: [22, 44],
+                iconSize: [96, 46],
+                iconAnchor: [48, 44],
                 popupAnchor: [0, -42]
             });
         };
 
         venues.forEach((v) => {
-            if (!v.lat || !v.lng) return;
+            const lat = parseFloat(v.lat !== undefined ? v.lat : v.latitude);
+            const lng = parseFloat(v.lng !== undefined ? v.lng : v.longitude);
+            if (isNaN(lat) || isNaN(lng)) return;
 
-            const icon = createVenueIcon(v.rating, v.category);
-            const marker = L.marker([v.lat, v.lng], { icon }).addTo(this.map);
+            // Tính khoảng cách chính xác theo vị trí tâm hiện tại
+            const distKm = (v.distanceKm !== undefined)
+                ? v.distanceKm
+                : (v.distance_km !== undefined
+                    ? v.distance_km
+                    : FoodAIMapComponent.calcDistanceKm(this.currentCenter[0], this.currentCenter[1], lat, lng));
 
-            const travelMins = Math.max(3, Math.round((v.distanceKm || 1) * 3.2));
+            const isActive = this.activeVenueId === v.id;
+            const icon = createVenueIcon(v, distKm, isActive);
+            const marker = L.marker([lat, lng], {
+                icon,
+                zIndexOffset: isActive ? 850 : 0
+            }).addTo(this.map);
+
+            const travelMins = Math.max(2, Math.round(distKm * 3.2));
+            const exactDistText = distKm < 1
+                ? `${Math.round(distKm * 1000)} m`
+                : `${distKm.toFixed(2)} km`;
+            const imageUrl = v.image || v.image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
+            const priceMin = Number(v.priceMin || v.price_min || 50000);
+            const priceMax = Number(v.priceMax || v.price_max || 300000);
+            const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${this.currentCenter[0]},${this.currentCenter[1]}&destination=${lat},${lng}&travelmode=two-wheeler`;
+
             const popupContent = `
                 <div class="map-venue-popup">
                     <div class="popup-img-wrap">
-                        <img src="${v.image}" alt="${v.name}" loading="lazy">
-                        <span class="popup-rating">★ ${v.rating}</span>
+                        <img src="${imageUrl}" alt="${v.name}" loading="lazy">
+                        <span class="popup-rating">★ ${Number(v.rating || 4.5).toFixed(1)}</span>
+                        <span class="popup-dist-badge">📍 Cách ${exactDistText} • ~${travelMins}p</span>
                     </div>
                     <div class="popup-body">
                         <h4 class="popup-title">${v.name}</h4>
                         <div class="popup-meta">
-                            <span>📍 ${v.cuisineLabel || 'Ẩm thực'}</span>
-                            <span>•</span>
-                            <strong style="color:#e11d48;">${(v.distanceKm || 0).toFixed(1)} km</strong> (~${travelMins}p)
+                            <span>🍽️ ${v.cuisineLabel || v.category || 'Ẩm thực'}</span>
+                            ${v.openHours ? `<span>• 🕒 ${v.openHours}</span>` : ''}
                         </div>
-                        <div class="popup-address">${v.address}</div>
+                        <div class="popup-address" title="${v.address}">${v.address}</div>
                         <div class="popup-footer">
-                            <span class="popup-price">${(v.priceMin || 0).toLocaleString()}đ - ${(v.priceMax || 0).toLocaleString()}đ</span>
-                            <button type="button" class="popup-btn-detail" onclick="window.onMapPopupSelectVenue(${v.id})">
-                                Chi tiết →
-                            </button>
+                            <span class="popup-price">${priceMin.toLocaleString()}đ - ${priceMax.toLocaleString()}đ</span>
+                            <div class="popup-actions">
+                                <a href="${gmapsUrl}" target="_blank" class="popup-btn-directions" title="Chỉ đường Google Maps">
+                                    Chỉ đường ↗
+                                </a>
+                                <button type="button" class="popup-btn-detail" onclick="window.onMapPopupSelectVenue(${v.id})">
+                                    Chi tiết
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
 
             marker.bindPopup(popupContent, {
-                maxWidth: 290,
-                minWidth: 260,
+                maxWidth: 310,
+                minWidth: 275,
                 className: 'custom-venue-popup-wrapper'
             });
 
             marker.on('click', () => {
+                this.highlightVenue(v.id, { panTo: false, openPopup: false });
                 if (typeof this.onVenueClick === 'function') {
                     this.onVenueClick(v);
                 }
             });
 
             this.venueMarkers.set(v.id, marker);
+            this.venueDataMap.set(v.id, v);
         });
+
+        this.updateRadiusCount(this.venueMarkers.size);
+    }
+
+    /**
+     * Làm nổi bật marker của quán ăn khi người dùng cuộn danh sách hoặc hover thẻ quán
+     * @param {number|string} venueId ID quán ăn
+     * @param {Object} options { panTo: boolean, openPopup: boolean }
+     */
+    highlightVenue(venueId, options = { panTo: true, openPopup: false }) {
+        if (!this.map) return;
+
+        // Gỡ nổi bật khỏi marker trước đó
+        if (this.activeVenueId !== null && this.activeVenueId !== venueId) {
+            const prevMarker = this.venueMarkers.get(this.activeVenueId);
+            if (prevMarker) {
+                prevMarker.setZIndexOffset(0);
+                const el = prevMarker.getElement();
+                if (el) el.classList.remove('active-pin');
+            }
+        }
+
+        this.activeVenueId = venueId;
+        const marker = this.venueMarkers.get(venueId);
+        if (!marker) return;
+
+        marker.setZIndexOffset(850);
+        const el = marker.getElement();
+        if (el) el.classList.add('active-pin');
+
+        if (options.panTo) {
+            const latlng = marker.getLatLng();
+            // Pan mượt nếu ghim nằm ngoài khung nhìn hiện tại hoặc sát mép
+            const bounds = this.map.getBounds();
+            if (!bounds.pad(-0.12).contains(latlng)) {
+                this.map.panTo(latlng, { animate: true, duration: 0.45 });
+            }
+        }
+
+        if (options.openPopup) {
+            marker.openPopup();
+        }
     }
 
     /**
@@ -503,19 +729,17 @@ class FoodAIMapComponent {
     focusVenue(venueId) {
         const marker = this.venueMarkers.get(venueId);
         if (marker) {
+            this.highlightVenue(venueId, { panTo: false, openPopup: false });
             const latlng = marker.getLatLng();
             this.map.flyTo(latlng, Math.max(this.map.getZoom(), 15), {
-                duration: 0.8
+                duration: 0.75
             });
             setTimeout(() => {
                 marker.openPopup();
-            }, 600);
+            }, 500);
         }
     }
 
-    /**
-     * Kích hoạt vẽ lại bản đồ khi thay đổi kích thước container hoặc chuyển tab trên mobile
-     */
     invalidateSize() {
         if (this.map) {
             setTimeout(() => {
@@ -524,9 +748,6 @@ class FoodAIMapComponent {
         }
     }
 
-    /**
-     * Hiển thị thông báo Toast nhỏ trên màn hình
-     */
     showToast(message, type = 'info') {
         let toastContainer = document.getElementById('map-toast-container');
         if (!toastContainer) {
@@ -538,9 +759,7 @@ class FoodAIMapComponent {
 
         const toast = document.createElement('div');
         toast.className = `map-toast-item toast-${type}`;
-        toast.innerHTML = `
-            <span>${message}</span>
-        `;
+        toast.innerHTML = `<span>${message}</span>`;
         toastContainer.appendChild(toast);
 
         setTimeout(() => {
@@ -550,5 +769,4 @@ class FoodAIMapComponent {
     }
 }
 
-// Xuất ra phạm vi toàn cục để dùng trực tiếp trong file HTML
 window.FoodAIMapComponent = FoodAIMapComponent;
