@@ -1,4 +1,4 @@
-from .user import User, UserProfile, UserPreference, Role, UserRole, OTPStorage, RevokedToken
+from .user import User, UserProfile, Role, UserRole, OTPStorage
 from .restaurant import (
     Restaurant,
     RestaurantAmenity,
@@ -10,11 +10,9 @@ from .restaurant import (
 __all__ = [
     "User",
     "UserProfile",
-    "UserPreference",
     "Role",
     "UserRole",
     "OTPStorage",
-    "RevokedToken",
     "Restaurant",
     "RestaurantAmenity",
     "RestaurantMenu",

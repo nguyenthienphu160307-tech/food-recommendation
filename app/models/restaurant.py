@@ -58,11 +58,11 @@ class RestaurantAmenity(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     restaurant_id = Column(Integer, ForeignKey("restaurants.id", ondelete="CASCADE"), nullable=False, unique=True)
     
-    has_parking = Column(Boolean, default=False, nullable=False, index=True)         # Có chỗ đậu ô tô / xe máy
-    has_private_room = Column(Boolean, default=False, nullable=False, index=True)    # Có phòng riêng VIP
-    has_outdoor = Column(Boolean, default=False, nullable=False, index=True)         # Có không gian ngoài trời / sân vườn
+    has_parking = Column(Boolean, default=False, nullable=False, index=True)         # Có chỗ đậu ô tô
+    has_private_room = Column(Boolean, default=False, nullable=False, index=True)    # Có phòng riêng
+    has_outdoor = Column(Boolean, default=False, nullable=False, index=True)         # Có không gian ngoài trời
     pet_friendly = Column(Boolean, default=False, nullable=False, index=True)        # Thân thiện với thú cưng
-    vegetarian_support = Column(Boolean, default=False, nullable=False, index=True)  # Có món chay phục vụ
+    vegetarian_support = Column(Boolean, default=False, nullable=False, index=True)  # Có món chay
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
