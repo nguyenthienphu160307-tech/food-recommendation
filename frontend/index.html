@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Dining — Khám phá & Gợi ý địa điểm ẩm thực quanh bạn</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="map-component.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Design Tokens đồng bộ với trang Profile */
@@ -149,10 +148,20 @@
         .account-trigger span { font-size: 0.85rem; font-weight: 600; }
 
         .account-dropdown {
-            position: absolute; top: 50px; right: 0; width: 260px;
+            position: absolute; top: 50px; right: 0; min-width: 290px; width: auto; max-width: 360px;
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: 14px; box-shadow: var(--shadow-lg);
-            padding: 8px; display: none; z-index: 1500;
+            padding: 10px; display: none; z-index: 1500;
+        }
+        .account-dropdown .dropdown-user-header {
+            padding: 8px 12px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+        }
+        .account-dropdown .dropdown-user-header strong {
+            display: block; font-size: 0.95rem; font-weight: 700; margin-bottom: 3px;
+        }
+        .account-dropdown .dropdown-user-header small {
+            display: block; font-size: 0.8rem; color: var(--text-muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px;
         }
         .account-dropdown.open { display: block; }
         .dropdown-user-header {
@@ -410,21 +419,13 @@
             <div class="account-dropdown" id="account-dropdown">
                 <div class="dropdown-user-header">
                     <strong id="drop-user-name">Nguyễn Văn An</strong>
-                    <small>user.demo@foodai.vn</small>
+                    <small id="drop-user-email" style="color:var(--text-muted);word-break:break-all;">user.demo@foodai.vn</small>
                 </div>
-                <a href="preferences.html" class="dropdown-link" style="color:var(--brand-red);font-weight:600;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-                    Khai báo Sở thích ăn uống (FR-04)
-                </a>
-                <a href="profile.html" class="dropdown-link">
+                <a href="/profile" class="dropdown-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Chỉnh sửa hồ sơ cá nhân
                 </a>
-                <a href="admin.html" class="dropdown-link" style="color:#7c3aed;font-weight:600;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                    ⚡ Bảng Điều Khiển Quản Trị (Admin)
-                </a>
-                <a href="profile.html#location-section" class="dropdown-link">
+                <a href="/profile#location-section" class="dropdown-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     Địa chỉ & Tọa độ mặc định
                 </a>
@@ -433,9 +434,19 @@
                     Quán ăn yêu thích đã lưu
                 </div>
                 <div class="dropdown-divider"></div>
-                <div class="dropdown-link" onclick="openAuthModal()" style="color:var(--brand-red);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Chuyển đổi tài khoản / Đăng nhập
+                <div id="drop-auth-actions" style="display:flex;flex-direction:column;">
+                    <a href="/login" class="dropdown-link" id="link-login" style="color:var(--brand-red);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        Đăng nhập
+                    </a>
+                    <a href="/register" class="dropdown-link" id="link-register">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        Đăng ký tài khoản
+                    </a>
+                    <a href="javascript:void(0)" onclick="handleLogoutFromIndex()" class="dropdown-link" id="link-logout" style="display:none; color:var(--brand-red);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Đăng xuất tài khoản
+                    </a>
                 </div>
             </div>
         </div>
@@ -458,7 +469,7 @@
         </div>
     </div>
 
-    <main class="discovery-layout view-list">
+    <main class="discovery-layout">
         <section class="listings-column">
             <div class="ai-insight-banner" id="ai-banner">
                 <div class="ai-banner-top">
@@ -523,7 +534,7 @@
                     <input type="password" value="12345678" style="width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:8px;">
                 </div>
                 <button type="button" class="btn-ai-ask" style="height:42px;justify-content:center;font-size:0.9rem;border-radius:8px;" onclick="closeAuthModal()">Đăng nhập</button>
-                <a href="profile.html" style="text-align:center;font-size:0.84rem;color:var(--brand-red);text-decoration:none;font-weight:600;">Đi tới trang Quản lý Hồ sơ cá nhân →</a>
+                <a href="/profile" style="text-align:center;font-size:0.84rem;color:var(--brand-red);text-decoration:none;font-weight:600;">Đi tới trang Quản lý Hồ sơ cá nhân →</a>
             </div>
         </div>
     </div>
@@ -538,10 +549,8 @@
             <div class="footer-col">
                 <h4>Điều hướng nhanh</h4>
                 <a href="index.html">Khám phá nhà hàng</a>
-                <a href="preferences.html" style="color:var(--brand-red);font-weight:600;">Khai báo sở thích ăn uống (FR-04)</a>
-                <a href="profile.html">Hồ sơ cá nhân</a>
-                <a href="profile.html#location-section">Cài đặt vị trí mặc định</a>
-                <a href="admin.html" style="color:#7c3aed;font-weight:600;">Quản trị hệ thống (Admin Portal)</a>
+                <a href="/profile">Hồ sơ cá nhân</a>
+                <a href="/profile#location-section">Cài đặt vị trí mặc định</a>
             </div>
             <div class="footer-col">
                 <h4>Thông tin Dự án</h4>
@@ -552,12 +561,10 @@
     </footer>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="venues-data.js"></script>
-    <script src="map-component.js"></script>
     <script>
         const STORAGE_KEY = 'foodai_demo_profile_state';
 
-        const fallbackVenues = [
+        const venues = [
             {
                 id: 1,
                 name: "GoGi House — Thịt Nướng Hàn Quốc",
@@ -663,119 +670,128 @@
             }
         ];
 
-                // Ưu tiên nạp 50 nhà hàng thực tế từ CSDL seed
-        let venues = (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES) && SEED_VENUES.length > 0)
-            ? SEED_VENUES
-            : fallbackVenues;
-
-        // Tọa độ định tâm mặc định: Trung tâm TP.HCM (Quận 1: Nhà thờ Đức Bà / Chợ Bến Thành)
-        let currentPos = { lat: 10.776889, lng: 106.700806 };
+        let currentPos = { lat: 10.7860, lng: 106.7003 };
         let activeCategory = 'all';
         let activeAmenities = { parking: false, private_room: false, vegetarian: false };
         let maxBudgetFilter = null;
-        let savedIds = [1, 4];
-        let mapComponent = null;
-
-        // Dữ liệu sở thích cá nhân & dị ứng người dùng (Task TE9C65C)
-        let userPreferences = {
-            diet_type: 'omnivore',
-            allergies: [],
-            preferred_cuisines: [],
-            avg_budget: null
-        };
-        let userPreferenceApplied = false;
+        let savedIds = (function() {
+            try {
+                const raw = localStorage.getItem('smart_dining_saved_venues');
+                return raw ? JSON.parse(raw) : [1, 2];
+            } catch (_) { return [1, 2]; }
+        })();
+        let mainMap, userMarker, venueMarkers = [];
 
         /**
          * Nạp thông tin hồ sơ người dùng từ LocalStorage để đồng bộ tên, ảnh đại diện
          * và tọa độ tìm kiếm mặc định (default_lat, default_lng).
          */
         function syncProfileData() {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return;
+            let authUser = null;
             try {
-                const prof = JSON.parse(raw);
-                if (prof.full_name) {
-                    document.getElementById('nav-user-name').innerText = prof.full_name;
-                    document.getElementById('drop-user-name').innerText = prof.full_name;
-                }
-                if (prof.avatar_url) {
-                    document.getElementById('nav-user-avatar').src = prof.avatar_url;
-                }
-                if (prof.default_address) {
-                    document.getElementById('current-address-label').innerText = prof.default_address;
-                }
-                if (prof.default_lat && prof.default_lng) {
-                    currentPos.lat = parseFloat(prof.default_lat);
-                    currentPos.lng = parseFloat(prof.default_lng);
-                    if (mapComponent) {
-                        mapComponent.setUserPosition(currentPos.lat, currentPos.lng, false);
-                    }
-                }
-
-                // Tự động đọc Sở thích cá nhân & Dị ứng vào bộ lọc gợi ý mặc định (Task TE9C65C)
-                if (prof.diet_type || (prof.allergies && prof.allergies.length > 0) || prof.avg_budget) {
-                    userPreferences.diet_type = prof.diet_type || 'omnivore';
-                    userPreferences.allergies = Array.isArray(prof.allergies) ? prof.allergies : [];
-                    userPreferences.preferred_cuisines = Array.isArray(prof.preferred_cuisines) ? prof.preferred_cuisines : [];
-                    userPreferences.avg_budget = prof.avg_budget || null;
-                    userPreferenceApplied = true;
-
-                    // Nếu người dùng có chế độ ăn chay/thuần chay -> Tự động bật bộ lọc món chay
-                    if (userPreferences.diet_type === 'vegetarian' || userPreferences.diet_type === 'vegan') {
-                        activeAmenities.vegetarian = true;
-                        const btnVeg = document.getElementById('btn-vegan');
-                        if (btnVeg) btnVeg.classList.add('active');
-                    }
-
-                    // Tự động hiển thị Banner AI giải thích các tiêu chí đã áp dụng
-                    const banner = document.getElementById('ai-banner');
-                    const reasonEl = document.getElementById('ai-banner-reason');
-                    if (banner && reasonEl) {
-                        const reasons = [];
-                        if (userPreferences.diet_type === 'vegetarian') reasons.push('chế độ ăn chay (Vegetarian)');
-                        else if (userPreferences.diet_type === 'vegan') reasons.push('chế độ thuần chay (Vegan)');
-
-                        if (userPreferences.allergies.includes('seafood')) reasons.push('loại trừ dị ứng hải sản (Seafood)');
-                        if (userPreferences.allergies.includes('peanut')) reasons.push('cảnh báo dị ứng đậu phộng (Peanut)');
-                        if (userPreferences.allergies.includes('dairy')) reasons.push('chế phẩm bơ sữa (Dairy)');
-                        if (userPreferences.allergies.includes('gluten')) reasons.push('dị ứng gluten');
-
-                        if (reasons.length > 0) {
-                            banner.classList.add('visible');
-                            reasonEl.innerHTML = `<strong>Trợ lý AI đã tự động đọc hồ sơ cá nhân:</strong> Áp dụng tiêu chuẩn cho ${reasons.join(', ')} và ưu tiên các quán gần vị trí của bạn nhất.`;
-                        }
-                    }
-                }
+                const rawAuth = localStorage.getItem('smart_dining_user');
+                if (rawAuth) authUser = JSON.parse(rawAuth);
             } catch (_) {}
+
+            let prof = null;
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) prof = JSON.parse(raw);
+            } catch (_) {}
+
+            // Hợp nhất dữ liệu: ưu tiên tài khoản đã đăng ký/đăng nhập
+            const fullName = (authUser && authUser.full_name) || (prof && prof.full_name) || "Nguyễn Văn An";
+            const email = (authUser && authUser.email) || (prof && prof.email) || "user.demo@foodai.vn";
+            const avatarUrl = (prof && prof.avatar_url) || (authUser && authUser.avatar_url) || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80";
+
+            const navName = document.getElementById('nav-user-name');
+            if (navName) navName.innerText = fullName;
+
+            const dropName = document.getElementById('drop-user-name');
+            if (dropName) dropName.innerText = fullName;
+
+            const dropEmail = document.getElementById('drop-user-email');
+            if (dropEmail) dropEmail.innerText = email;
+
+            const navAvatar = document.getElementById('nav-user-avatar');
+            if (navAvatar && avatarUrl) navAvatar.src = avatarUrl;
+
+            const linkLogin = document.getElementById('link-login');
+            const linkRegister = document.getElementById('link-register');
+            const linkLogout = document.getElementById('link-logout');
+
+            if (authUser) {
+                if (linkLogin) linkLogin.style.display = 'none';
+                if (linkRegister) linkRegister.style.display = 'none';
+                if (linkLogout) linkLogout.style.display = 'flex';
+            } else {
+                if (linkLogin) linkLogin.style.display = 'flex';
+                if (linkRegister) linkRegister.style.display = 'flex';
+                if (linkLogout) linkLogout.style.display = 'none';
+            }
+
+            if (prof && prof.default_address) {
+                const addrLabel = document.getElementById('current-address-label');
+                if (addrLabel) addrLabel.innerText = prof.default_address;
+            }
+            if (prof && prof.default_lat && prof.default_lng) {
+                currentPos.lat = parseFloat(prof.default_lat);
+                currentPos.lng = parseFloat(prof.default_lng);
+            }
+        }
+
+        function handleLogoutFromIndex() {
+            localStorage.removeItem('smart_dining_user');
+            localStorage.removeItem('smart_dining_token');
+            localStorage.removeItem(STORAGE_KEY);
+            alert('Bạn đã đăng xuất tài khoản thành công!');
+            window.location.reload();
         }
 
         /**
          * Khởi tạo bản đồ tương tác chính với 2 lớp Google Maps (Streets & Hybrid).
          * Khi người dùng di chuyển ghim cá nhân, danh sách nhà hàng tự động tính lại khoảng cách.
          */
-                /**
-         * Khởi tạo Map Component (Leaflet + Google Maps / OSM)
-         * Cấu hình đầy đủ: lớp bản đồ nền, điều khiển zoom, định tâm mặc định và GPS.
-         */
         function initMainMap() {
-            mapComponent = new FoodAIMapComponent({
-                containerId: 'main-map',
-                defaultCenter: [10.776889, 106.700806],
-                currentCenter: [currentPos.lat, currentPos.lng],
-                defaultZoom: 13,
-                minZoom: 5,
+            mainMap = L.map('main-map').setView([currentPos.lat, currentPos.lng], 13);
+
+            const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
                 maxZoom: 20,
-                onLocationChange: (pos) => {
-                    currentPos = pos;
-                    renderVenues();
-                    const addrLabel = document.getElementById('current-address-label');
-                    if (addrLabel) {
-                        addrLabel.innerText = `Tọa độ: ${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}`;
-                    }
-                },
-                onVenueClick: (v) => {
-                    console.log('Quán ăn được chọn trên bản đồ:', v.name);
-                }
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: '© Google Maps'
+            });
+
+            const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}&hl=vi', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: '© Google Maps Satellite'
+            });
+
+            googleStreets.addTo(mainMap);
+            L.control.layers({
+                "Bản đồ Đường phố": googleStreets,
+                "Vệ tinh": googleHybrid
+            }).addTo(mainMap);
+
+            const userIcon = L.divIcon({
+                html: `<div style="width:18px;height:18px;background:#e11d48;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
+                className: ''
+            });
+
+            userMarker = L.marker([currentPos.lat, currentPos.lng], { icon: userIcon, draggable: true })
+                .addTo(mainMap)
+                .bindPopup("<strong>Vị trí tìm kiếm hiện tại</strong><br>Kéo thả hoặc nhấp bản đồ để đổi vị trí");
+
+            userMarker.on('dragend', (e) => {
+                const p = e.target.getLatLng();
+                currentPos = { lat: p.lat, lng: p.lng };
+                renderVenues();
+            });
+
+            mainMap.on('click', (e) => {
+                currentPos = { lat: e.latlng.lat, lng: e.latlng.lng };
+                userMarker.setLatLng([currentPos.lat, currentPos.lng]);
+                renderVenues();
             });
         }
 
@@ -806,25 +822,6 @@
                 if (activeAmenities.private_room) list = list.filter(v => v.private_room);
                 if (activeAmenities.vegetarian) list = list.filter(v => v.vegetarian);
                 if (maxBudgetFilter) list = list.filter(v => v.priceMin <= maxBudgetFilter);
-
-                // Tự động bổ sung tiêu chí Sở thích cá nhân & Dị ứng (Task TE9C65C)
-                if (userPreferenceApplied) {
-                    // 1. Chế độ ăn chay / thuần chay: Chỉ giữ nhà hàng có món chay
-                    if (userPreferences.diet_type === 'vegetarian' || userPreferences.diet_type === 'vegan') {
-                        list = list.filter(v => v.vegetarian || (v.cuisineLabel && v.cuisineLabel.toLowerCase().includes('chay')));
-                    }
-                    // 2. Dị ứng hải sản: Loại trừ quán hải sản chuyên biệt
-                    if (userPreferences.allergies.includes('seafood')) {
-                        list = list.filter(v => {
-                            const nameLower = v.name.toLowerCase();
-                            const cuisineLower = (v.cuisineLabel || '').toLowerCase();
-                            const isSeafood = v.category === 'seafood' || cuisineLower.includes('hải sản') ||
-                                              nameLower.includes('hải sản') || nameLower.includes('quán ốc') ||
-                                              nameLower.includes('ốc ') || nameLower.includes('cua ');
-                            return !isSeafood;
-                        });
-                    }
-                }
             }
 
             list = list.map(v => {
@@ -845,23 +842,20 @@
             const grid = document.getElementById('venues-grid');
             grid.innerHTML = '';
 
-                        // Đồng bộ marker trên bản đồ số qua Map Component
-            if (mapComponent) {
-                mapComponent.setVenueMarkers(list);
-            }
+            venueMarkers.forEach(m => mainMap.removeLayer(m));
+            venueMarkers = [];
 
             list.forEach(v => {
                 const isSaved = savedIds.includes(v.id);
                 const travelMins = Math.max(4, Math.round(v.distanceKm * 3.2));
 
+                const m = L.marker([v.lat, v.lng]).addTo(mainMap)
+                    .bindPopup(`<strong>${v.name}</strong><br>${v.cuisineLabel} • ⭐ ${v.rating}<br>Cách ${v.distanceKm.toFixed(1)} km`);
+                venueMarkers.push(m);
+
                 const card = document.createElement('article');
                 card.className = 'venue-card';
-                card.onclick = () => {
-                    openVenueModal(v);
-                    if (mapComponent) {
-                        mapComponent.focusVenue(v.id);
-                    }
-                };
+                card.onclick = () => openVenueModal(v);
                 card.innerHTML = `
                     <div class="venue-img-wrap">
                         <img src="${v.image}" alt="${v.name}">
@@ -881,8 +875,7 @@
                         <div class="venue-tags">
                             ${v.parking ? '<span class="venue-tag">Đỗ ô tô</span>' : ''}
                             ${v.private_room ? '<span class="venue-tag">Phòng riêng</span>' : ''}
-                            ${v.vegetarian ? '<span class="venue-tag" style="background:rgba(16,185,129,0.12);color:#059669;font-weight:600;">Món chay</span>' : ''}
-                            ${userPreferenceApplied && userPreferences.allergies.includes('seafood') ? '<span class="venue-tag" style="background:rgba(59,130,246,0.12);color:#2563eb;font-weight:600;">An toàn: Không hải sản</span>' : ''}
+                            ${v.vegetarian ? '<span class="venue-tag">Món chay</span>' : ''}
                         </div>
                     </div>
                 `;
@@ -1016,15 +1009,72 @@
 
         function toggleSaveVenue(e, id) {
             e.stopPropagation();
-            if (savedIds.includes(id)) savedIds = savedIds.filter(x => x !== id);
-            else savedIds.push(id);
+            const wasSaved = savedIds.includes(id);
+            if (wasSaved) {
+                savedIds = savedIds.filter(x => x !== id);
+            } else {
+                savedIds.push(id);
+            }
+            localStorage.setItem('smart_dining_saved_venues', JSON.stringify(savedIds));
             renderVenues();
+
+            // Hiển thị thông báo nhỏ
+            const venue = venues.find(v => v.id === id);
+            const name = venue ? venue.name : "quán ăn";
+            if (!wasSaved) {
+                alert('Đã lưu "' + name + '" vào danh sách Quán ăn yêu thích!');
+            } else {
+                alert('Đã bỏ lưu "' + name + '" khỏi danh sách yêu thích.');
+            }
         }
 
+        let isFilteringFavorites = false;
+
         function filterSavedVenues() {
-            const list = venues.filter(v => savedIds.includes(v.id));
             document.getElementById('account-dropdown').classList.remove('open');
+            isFilteringFavorites = true;
+
+            const list = venues.filter(v => savedIds.includes(v.id));
+
+            // Hiển thị thanh thông báo trạng thái lọc danh sách yêu thích
+            let favBanner = document.getElementById('fav-filter-banner');
+            if (!favBanner) {
+                favBanner = document.createElement('div');
+                favBanner.id = 'fav-filter-banner';
+                favBanner.style.cssText = 'background:var(--brand-red);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-radius:10px;margin:16px 28px;font-size:0.9rem;font-weight:600;box-shadow:var(--shadow-md);';
+                const mainLayout = document.querySelector('.main-layout') || document.querySelector('.venue-feed-wrapper');
+                if (mainLayout && mainLayout.parentElement) {
+                    mainLayout.parentElement.insertBefore(favBanner, mainLayout);
+                }
+            }
+
+            favBanner.style.display = 'flex';
+            favBanner.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                    <span>Danh sách Quán ăn Yêu thích đã lưu (${list.length} quán)</span>
+                </div>
+                <button type="button" onclick="resetFavoriteFilter()" style="background:#fff;color:var(--brand-red);border:none;padding:6px 14px;border-radius:6px;font-weight:700;font-size:0.82rem;cursor:pointer;">
+                    Xem tất cả quán
+                </button>
+            `;
+
+            if (list.length === 0) {
+                alert('Bạn chưa lưu quán ăn yêu thích nào! Hãy bấm vào biểu tượng Dấu trang (Bookmark) ở góc các thẻ quán để lưu lại.');
+            }
+
             renderVenues(list);
+
+            // Cuộn mượt xuống khu vực danh sách quán
+            const feed = document.querySelector('.venue-feed-wrapper');
+            if (feed) feed.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetFavoriteFilter() {
+            isFilteringFavorites = false;
+            const favBanner = document.getElementById('fav-filter-banner');
+            if (favBanner) favBanner.style.display = 'none';
+            renderVenues();
         }
 
         function locateUserGPS() {
@@ -1084,52 +1134,11 @@
             }
         });
 
-        
-        /**
-         * Callback khi người dùng click vào nút 'Chi tiết' trên Popup của Marker bản đồ
-         */
-        window.onMapPopupSelectVenue = function(venueId) {
-            const v = venues.find(item => item.id === venueId);
-            if (v) openVenueModal(v);
-        };
-
-        /**
-         * Chuyển đổi giữa chế độ xem Danh sách và Bản đồ trên màn hình di động (Mobile)
-         */
-        function switchMobileView(mode) {
-            const layout = document.querySelector('.discovery-layout');
-            const btnList = document.getElementById('btn-view-list');
-            const btnMap = document.getElementById('btn-view-map');
-            if (!layout) return;
-
-            if (mode === 'map') {
-                layout.classList.remove('view-list');
-                layout.classList.add('view-map');
-                if (btnList) btnList.classList.remove('active');
-                if (btnMap) btnMap.classList.add('active');
-                if (mapComponent) mapComponent.invalidateSize();
-            } else {
-                layout.classList.remove('view-map');
-                layout.classList.add('view-list');
-                if (btnList) btnList.classList.add('active');
-                if (btnMap) btnMap.classList.remove('active');
-            }
-        }
-
         window.addEventListener('DOMContentLoaded', () => {
             syncProfileData();
             initMainMap();
             renderVenues();
         });
     </script>
-    <!-- Thanh chuyển đổi xem Danh sách / Bản đồ trên Mobile -->
-    <div class="mobile-view-toggle-bar" id="mobile-view-toggle">
-        <button type="button" class="mobile-view-btn active" id="btn-view-list" onclick="switchMobileView('list')">
-            📋 Danh sách
-        </button>
-        <button type="button" class="mobile-view-btn" id="btn-view-map" onclick="switchMobileView('map')">
-            🗺️ Bản đồ
-        </button>
-    </div>
 </body>
 </html>

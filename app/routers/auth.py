@@ -11,8 +11,10 @@ from app.schemas.auth import (
     RegisterResponse,
     UserDataResponse,
     StandardResponse,
+    LoginRequest,
+    LoginResponse,
 )
-from app.core.security import hash_password, generate_otp
+from app.core.security import hash_password, verify_password, generate_otp
 from app.core.email import send_otp_email
 
 router = APIRouter(prefix="/api/auth", tags=["Xác thực & Tài khoản (Auth)"])
@@ -195,4 +197,61 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
             role=default_role.name,
             created_at=new_user.created_at
         )
+    )
+
+
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Đăng nhập tài khoản"
+)
+def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    """
+    API Đăng nhập tài khoản (PBI-02 / TSK-03):
+    1. Kiểm tra Email hoặc Số điện thoại.
+    2. Xác thực mật khẩu Bcrypt.
+    3. Kiểm tra trạng thái status == 'active'.
+    4. Cập nhật last_login.
+    5. Trả về thông tin người dùng và token.
+    """
+    filters = []
+    if payload.email:
+        filters.append(User.email == payload.email)
+    if payload.phone_number:
+        filters.append(User.phone_number == payload.phone_number)
+
+    user = db.query(User).filter(or_(*filters)).first()
+    if not user or not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tài khoản hoặc mật khẩu không chính xác."
+        )
+
+    if user.status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản của bạn đã bị khóa hoặc chưa kích hoạt. Vui lòng liên hệ quản trị viên."
+        )
+
+    # Cập nhật thời điểm đăng nhập gần nhất
+    user.last_login = datetime.utcnow()
+    db.commit()
+
+    # Lấy thông tin họ tên và role
+    full_name = user.profile.full_name if user.profile else "Người dùng"
+    role_name = user.user_roles[0].role.name if user.user_roles and user.user_roles[0].role else "user"
+
+    return LoginResponse(
+        message="Đăng nhập thành công!",
+        user=UserDataResponse(
+            id=user.id,
+            email=user.email,
+            phone_number=user.phone_number,
+            full_name=full_name,
+            status=user.status,
+            role=role_name,
+            created_at=user.created_at
+        ),
+        token=f"mock-jwt-token-{user.id}-{int(datetime.utcnow().timestamp())}"
     )

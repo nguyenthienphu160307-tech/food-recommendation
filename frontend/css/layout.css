@@ -1,0 +1,514 @@
+/* =====================================================================
+   SMART DINING - RESPONSIVE LAYOUT & NAVIGATION (TSK-12)
+   Desktop Navbar, Mobile Drawer, Responsive Breakpoints (NFR-06)
+   ===================================================================== */
+
+/* --- 1. HEADER & TOPBAR --- */
+.site-header {
+    background-color: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    transition: background-color var(--transition-base), border-color var(--transition-base);
+}
+
+.header-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+/* Brand Logo */
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.025em;
+    user-select: none;
+}
+
+.brand-logo-mark {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
+    color: #ffffff;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+}
+
+.brand-logo-mark svg {
+    width: 22px;
+    height: 22px;
+}
+
+.brand-logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-logo-title {
+    line-height: 1.15;
+}
+
+.brand-logo-tagline {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--brand-primary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Navigation Links (Desktop) */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    list-style: none;
+}
+
+.nav-link {
+    font-size: 0.925rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.nav-link:hover {
+    color: var(--brand-primary);
+    background-color: var(--brand-primary-light);
+}
+
+.nav-link.active {
+    color: var(--brand-primary);
+    font-weight: 700;
+}
+
+/* Header Actions (Auth & Theme) */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Theme Toggle Button */
+.btn-theme-toggle {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background-color: var(--bg-subtle);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-theme-toggle:hover {
+    border-color: var(--border-hover);
+    transform: rotate(15deg);
+}
+
+/* User Account Chip (Logged in) */
+.user-account-dropdown {
+    position: relative;
+}
+
+.user-chip-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 12px 4px 6px;
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.user-chip-btn:hover {
+    border-color: var(--border-hover);
+}
+
+.user-avatar-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--brand-primary);
+}
+
+.user-display-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 220px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 1010;
+}
+
+.user-dropdown-menu.is-open {
+    display: flex;
+}
+
+.user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: background-color var(--transition-fast);
+}
+
+.user-dropdown-item:hover {
+    background-color: var(--bg-subtle);
+    color: var(--brand-primary);
+}
+
+.user-dropdown-divider {
+    height: 1px;
+    background-color: var(--border);
+    margin: 4px 0;
+}
+
+/* Hamburger Menu Button (Mobile) */
+.hamburger-btn {
+    display: none;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background-color: var(--bg-subtle);
+    color: var(--text-primary);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+/* --- 2. MOBILE DRAWER NAVIGATION (NFR-06) --- */
+.mobile-drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-base);
+}
+
+.mobile-drawer-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 300px;
+    max-width: 85%;
+    height: 100%;
+    background-color: var(--bg-surface);
+    border-left: 1px solid var(--border);
+    z-index: 2010;
+    transform: translateX(100%);
+    transition: transform var(--transition-base);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.mobile-drawer-backdrop.is-open .mobile-drawer {
+    transform: translateX(0);
+}
+
+.drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+}
+
+.drawer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 32px;
+}
+
+.drawer-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: background-color var(--transition-fast);
+}
+
+.drawer-link:hover, .drawer-link.active {
+    background-color: var(--brand-primary-light);
+    color: var(--brand-primary);
+}
+
+.drawer-auth-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* --- 3. PAGE MAIN LAYOUT --- */
+.main-content {
+    flex: 1;
+    width: 100%;
+}
+
+/* Split Auth Page Container */
+.auth-page-container {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    align-items: stretch;
+}
+
+.auth-hero-side {
+    flex: 1;
+    background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 60px 48px;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-hero-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.12;
+    background-image: radial-gradient(#ffffff 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+}
+
+.auth-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 520px;
+}
+
+.auth-hero-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    letter-spacing: -0.03em;
+}
+
+.auth-hero-title span {
+    color: var(--brand-primary);
+}
+
+.auth-hero-desc {
+    font-size: 1.05rem;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.auth-feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.95rem;
+    color: #e2e8f0;
+}
+
+.auth-feature-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background-color: rgba(225, 29, 72, 0.2);
+    color: var(--brand-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.auth-form-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    background-color: var(--bg-page);
+}
+
+.auth-form-card {
+    width: 100%;
+    max-width: 460px;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 36px 32px;
+}
+
+.auth-form-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.auth-form-title {
+    font-size: 1.65rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.025em;
+    margin-bottom: 8px;
+}
+
+.auth-form-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* --- 4. SITE FOOTER --- */
+.site-footer {
+    background-color: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    padding: 40px 24px 24px;
+    margin-top: auto;
+}
+
+.footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.footer-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-nav {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+}
+
+.footer-nav a {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* --- 5. RESPONSIVE BREAKPOINTS (NFR-06) --- */
+@media (max-width: 1024px) {
+    .auth-hero-title {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-menu {
+        display: none;
+    }
+    .hamburger-btn {
+        display: flex;
+    }
+    .auth-page-container {
+        flex-direction: column;
+    }
+    .auth-hero-side {
+        padding: 40px 24px;
+    }
+    .auth-hero-title {
+        font-size: 1.75rem;
+    }
+    .auth-form-card {
+        padding: 24px 20px;
+        box-shadow: none;
+        border: none;
+        background: transparent;
+    }
+    .footer-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

@@ -251,58 +251,6 @@
         }
         .btn-primary:hover { background: var(--brand-red-hover); }
 
-        /* Preferences & Allergies Grid (TE9C65C) */
-        .pref-tag-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 12px;
-            margin-top: 8px;
-        }
-        .pref-check-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            background: var(--bg-subtle);
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            user-select: none;
-        }
-        .pref-check-card:hover {
-            border-color: var(--brand-red);
-        }
-        .pref-check-card input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--brand-red);
-            cursor: pointer;
-        }
-        .pref-check-label {
-            font-size: 0.86rem;
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-        .pref-check-desc {
-            font-size: 0.74rem;
-            color: var(--text-muted);
-            display: block;
-            margin-top: 2px;
-        }
-        .ai-pref-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(225, 29, 72, 0.08);
-            color: var(--brand-red);
-            border: 1px solid rgba(225, 29, 72, 0.2);
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 0.76rem;
-            font-weight: 600;
-        }
-
         /* Debug Payload Drawer */
         .dev-drawer-toggle {
             position: fixed; bottom: 20px; left: 20px;
@@ -354,7 +302,7 @@
 
     <header class="topbar">
         <div class="topbar-left">
-            <a href="index.html" class="logo">
+            <a href="/" class="logo">
                 <div class="logo-mark">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
@@ -363,9 +311,9 @@
                 <span>Smart Dining</span>
             </a>
             <nav class="nav-links">
-                <a href="index.html">Khám phá quán ăn</a>
-                <a href="index.html">Bản đồ quanh đây</a>
-                <a href="index.html">Đã lưu</a>
+                <a href="/">Khám phá quán ăn</a>
+                <a href="/">Bản đồ quanh đây</a>
+                <a href="/">Đã lưu</a>
                 <a href="profile.html" class="active">Tài khoản</a>
             </nav>
         </div>
@@ -388,7 +336,7 @@
     <div class="page-wrapper">
         <div class="page-header">
             <div class="breadcrumb">
-                <a href="index.html">Trang chủ</a>
+                <a href="/">Trang chủ</a>
                 <span>/</span>
                 <span>Cài đặt tài khoản</span>
             </div>
@@ -405,15 +353,11 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     Địa chỉ & Vị trí mặc định
                 </a>
-                <a href="#preferences-section" class="settings-nav-item">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
-                    Sở thích & Dị ứng (AI)
-                </a>
-                <a href="index.html" class="settings-nav-item">
+                <a href="/" class="settings-nav-item">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                     Quán ăn yêu thích
                 </a>
-                <a href="index.html" class="settings-nav-item">
+                <a href="/" class="settings-nav-item">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     Bảo mật & Đăng nhập
                 </a>
@@ -460,7 +404,7 @@
 
                             <div class="field-wrap">
                                 <label class="field-label">Địa chỉ Email</label>
-                                <input type="email" class="input-box input-readonly" value="user.demo@foodai.vn" readonly>
+                                <input type="email" id="profile-email" class="input-box input-readonly" value="user.demo@foodai.vn" readonly>
                             </div>
 
                             <div class="field-wrap">
@@ -534,129 +478,7 @@
                         <button type="button" class="btn-outline" onclick="resetDefaultProfile()">Đặt lại mặc định</button>
                         <button type="submit" class="btn-primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
-                            Lưu thông tin vị trí
-                        </button>
-                    </div>
-                </section>
-
-                <section class="section-card" id="preferences-section">
-                    <div class="section-header">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                                <h2>Sở thích ăn uống & Dị ứng thực phẩm (UserPreferences)</h2>
-                                <span class="ai-pref-badge">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                                    FR-04 / TE9C64E
-                                </span>
-                            </div>
-                            <p>Tùy chỉnh món yêu thích, dị ứng, chế độ ăn (chay, keto) và mức ngân sách trung bình. Trợ lý AI sẽ tự động phân tích và áp dụng vào bộ tiêu chí gợi ý quán ăn.</p>
-                        </div>
-                        <a href="preferences.html" class="btn-outline" style="text-decoration:none;font-size:0.8rem;white-space:nowrap;">
-                            Trang khai báo chi tiết (Onboarding) →
-                        </a>
-                    </div>
-
-                    <div class="section-body">
-                        <div class="form-grid">
-                            <div class="field-wrap">
-                                <label class="field-label" for="diet_type">Chế độ ăn uống (Diet Type)</label>
-                                <select id="diet_type" class="input-box">
-                                    <option value="omnivore">Ăn bình thường (Không kiêng cữ - Omnivore)</option>
-                                    <option value="vegetarian">Ăn chay (Vegetarian - Có dùng trứng/sữa)</option>
-                                    <option value="vegan">Thuần chay (Vegan - 100% thực vật)</option>
-                                    <option value="halal">Ẩm thực Hồi giáo (Halal)</option>
-                                    <option value="keto">Chế độ Ăn kiêng Keto</option>
-                                </select>
-                                <span class="field-help">Người ăn Chay/Thuần chay sẽ tự động được lọc các quán có hỗ trợ món chay.</span>
-                            </div>
-
-                            <div class="field-wrap">
-                                <label class="field-label" for="avg_budget">Ngân sách ăn uống ước tính mỗi bữa (VNĐ)</label>
-                                <input type="number" step="10000" min="0" id="avg_budget" class="input-box" placeholder="250000" value="250000">
-                                <span class="field-help">Dùng để tính điểm độ phù hợp (Match Score) theo khả năng chi tiêu.</span>
-                            </div>
-
-                            <div class="field-wrap span-2">
-                                <label class="field-label">Dị ứng thực phẩm (Allergies) — Hệ thống sẽ tự động loại trừ các quán có rủi ro:</label>
-                                <div class="pref-tag-grid" id="allergies-container">
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="allergies" value="seafood" id="allergy-seafood">
-                                        <div>
-                                            <span class="pref-check-label">🦐 Hải sản (Seafood)</span>
-                                            <span class="pref-check-desc">Tôm, cua, mực, nghêu, sò, ốc, cá hồi</span>
-                                        </div>
-                                    </label>
-
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="allergies" value="peanut" id="allergy-peanut">
-                                        <div>
-                                            <span class="pref-check-label">🥜 Đậu phộng & Hạt khô</span>
-                                            <span class="pref-check-desc">Lạc rang, hạt điều, quả óc chó, hạnh nhân</span>
-                                        </div>
-                                    </label>
-
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="allergies" value="dairy" id="allergy-dairy">
-                                        <div>
-                                            <span class="pref-check-label">🥛 Sữa & Chế phẩm bơ sữa</span>
-                                            <span class="pref-check-desc">Phô mai, bơ động vật, kem béo động vật</span>
-                                        </div>
-                                    </label>
-
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="allergies" value="gluten" id="allergy-gluten">
-                                        <div>
-                                            <span class="pref-check-label">🌾 Gluten & Bột mì</span>
-                                            <span class="pref-check-desc">Bánh mì lúa mì tươi, mì căn, sốt đậu nành</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="field-wrap span-2">
-                                <label class="field-label">Thể loại ẩm thực ưa thích (Preferred Cuisines) — AI sẽ tăng điểm gợi ý:</label>
-                                <div class="pref-tag-grid" id="cuisines-container">
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="preferred_cuisines" value="Món Việt" id="cuisine-viet">
-                                        <div>
-                                            <span class="pref-check-label">🍜 Món Việt truyền thống</span>
-                                            <span class="pref-check-desc">Cơm niêu, phở, bún chả, món dân dã</span>
-                                        </div>
-                                    </label>
-
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="preferred_cuisines" value="Lẩu Nướng" id="cuisine-bbq">
-                                        <div>
-                                            <span class="pref-check-label">🥩 Lẩu Nướng & BBQ</span>
-                                            <span class="pref-check-desc">Thịt nướng không khói, lẩu nấm, lẩu thái</span>
-                                        </div>
-                                    </label>
-
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="preferred_cuisines" value="Món Nhật" id="cuisine-japan">
-                                        <div>
-                                            <span class="pref-check-label">🍣 Món Nhật & Sushi</span>
-                                            <span class="pref-check-desc">Sashimi, sushi, ramen, mì udon</span>
-                                        </div>
-                                    </label>
-
-                                    <label class="pref-check-card">
-                                        <input type="checkbox" name="preferred_cuisines" value="Món Âu" id="cuisine-western">
-                                        <div>
-                                            <span class="pref-check-label">🍕 Món Âu & Pizza</span>
-                                            <span class="pref-check-desc">Pizza nướng củi, steak bò, mì Ý pasta</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="section-footer">
-                        <span style="font-size:0.8rem;color:var(--text-muted);">💡 Dữ liệu được lưu trữ tự động vào CSDL và đồng bộ thời gian thực sang Trang Tìm Kiếm.</span>
-                        <button type="submit" class="btn-primary">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
-                            Lưu tất cả thay đổi
+                            Lưu thay đổi
                         </button>
                     </div>
                 </section>
@@ -710,11 +532,7 @@
             date_of_birth: "2000-01-15",
             default_address: "11 Nguyễn Đình Chiểu, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh",
             default_lat: 10.7860000,
-            default_lng: 106.7003000,
-            diet_type: "omnivore",
-            allergies: [],
-            preferred_cuisines: ["Món Việt", "Lẩu Nướng"],
-            avg_budget: 250000
+            default_lng: 106.7003000
         };
 
         let profileMap, profileMarker;
@@ -724,8 +542,25 @@
          * và mount bản đồ tại tọa độ mặc định của người dùng.
          */
         function loadUserProfile() {
+            let authUser = null;
+            try {
+                const rawAuth = localStorage.getItem('smart_dining_user');
+                if (rawAuth) authUser = JSON.parse(rawAuth);
+            } catch (_) {}
+
             const saved = localStorage.getItem(STORAGE_KEY);
             const data = saved ? JSON.parse(saved) : defaultProfileData;
+
+            if (authUser) {
+                if (authUser.full_name) data.full_name = authUser.full_name;
+                if (authUser.email) {
+                    const emailEl = document.getElementById('profile-email');
+                    if (emailEl) emailEl.value = authUser.email;
+                }
+            } else if (data.email) {
+                const emailEl = document.getElementById('profile-email');
+                if (emailEl) emailEl.value = data.email;
+            }
 
             document.getElementById('full_name').value = data.full_name;
             document.getElementById('avatar_url').value = data.avatar_url;
@@ -735,23 +570,7 @@
             document.getElementById('default_lat').value = Number(data.default_lat).toFixed(7);
             document.getElementById('default_lng').value = Number(data.default_lng).toFixed(7);
 
-            // Nạp sở thích ăn uống & dị ứng (TE9C65C)
-            if (document.getElementById('diet_type')) {
-                document.getElementById('diet_type').value = data.diet_type || 'omnivore';
-            }
-            if (document.getElementById('avg_budget')) {
-                document.getElementById('avg_budget').value = data.avg_budget || 250000;
-            }
-            const allergies = data.allergies || [];
-            document.querySelectorAll('input[name="allergies"]').forEach(cb => {
-                cb.checked = allergies.includes(cb.value);
-            });
-            const cuisines = data.preferred_cuisines || [];
-            document.querySelectorAll('input[name="preferred_cuisines"]').forEach(cb => {
-                cb.checked = cuisines.includes(cb.value);
-            });
-
-            syncHeaderAndInspector(data, "GET /api/users/profile & preferences (200 OK)");
+            syncHeaderAndInspector(data, "GET /api/users/profile (200 OK)");
             initMap(data.default_lat, data.default_lng);
         }
 
@@ -866,11 +685,6 @@
          */
         async function handleSaveProfile(e) {
             e.preventDefault();
-            const selectedAllergies = Array.from(document.querySelectorAll('input[name="allergies"]:checked')).map(cb => cb.value);
-            const selectedCuisines = Array.from(document.querySelectorAll('input[name="preferred_cuisines"]:checked')).map(cb => cb.value);
-            const dietType = document.getElementById('diet_type') ? document.getElementById('diet_type').value : 'omnivore';
-            const avgBudget = document.getElementById('avg_budget') ? parseFloat(document.getElementById('avg_budget').value) : 250000;
-
             const payload = {
                 full_name: document.getElementById('full_name').value.trim(),
                 avatar_url: document.getElementById('avatar_url').value.trim(),
@@ -881,31 +695,40 @@
                 default_lng: parseFloat(document.getElementById('default_lng').value)
             };
 
-            const prefPayload = {
-                diet_type: dietType,
-                allergies: selectedAllergies,
-                preferred_cuisines: selectedCuisines,
-                avg_budget: avgBudget
-            };
+            let authUser = null;
+            try {
+                const rawAuth = localStorage.getItem('smart_dining_user');
+                if (rawAuth) authUser = JSON.parse(rawAuth);
+            } catch (_) {}
 
-            const fullRecord = { profile_id: 2, user_id: 2, ...payload, ...prefPayload };
+            const email = authUser && authUser.email ? authUser.email : null;
+            const userId = authUser && authUser.id ? authUser.id : null;
+            payload.email = email;
+            payload.user_id = userId;
+
+            const fullRecord = { profile_id: 1, user_id: userId || 1, email: email, ...payload };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(fullRecord));
 
-            try {
-                const token = localStorage.getItem('foodai_access_token');
-                const headers = { 'Content-Type': 'application/json' };
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-
-                await fetch('http://localhost:8000/api/users/preferences', {
-                    method: 'PUT',
-                    headers: headers,
-                    body: JSON.stringify(prefPayload)
-                });
-            } catch (_) {
-                // Fallback an toàn về LocalStorage khi chạy tĩnh qua Live Server
+            if (authUser) {
+                authUser.full_name = payload.full_name;
+                localStorage.setItem('smart_dining_user', JSON.stringify(authUser));
             }
 
-            syncHeaderAndInspector(fullRecord, "PUT /api/users/preferences (200 OK)");
+            try {
+                const res = await fetch('/api/users/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const savedData = await res.json();
+                    syncHeaderAndInspector(savedData, "PUT /api/users/profile (200 OK)");
+                } else {
+                    syncHeaderAndInspector(fullRecord, "PUT /api/users/profile (Local Saved)");
+                }
+            } catch (_) {
+                syncHeaderAndInspector(fullRecord, "PUT /api/users/profile (Local Fallback)");
+            }
 
             const toast = document.getElementById('toast-msg');
             toast.style.display = 'flex';

@@ -63,3 +63,27 @@ class StandardResponse(BaseModel):
     """Phản hồi thông báo chung chuẩn tiếng Việt"""
     message: str
     detail: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    """Schema dữ liệu gửi lên khi đăng nhập"""
+    email: Optional[str] = Field(None, description="Địa chỉ Email đăng nhập")
+    phone_number: Optional[str] = Field(None, description="Số điện thoại đăng nhập")
+    password: str = Field(..., min_length=1, description="Mật khẩu tài khoản")
+
+    @model_validator(mode="after")
+    def check_login_input(self):
+        if not self.email and not self.phone_number:
+            raise ValueError("Vui lòng cung cấp ít nhất Email hoặc Số điện thoại để đăng nhập.")
+        if self.email:
+            self.email = self.email.strip().lower()
+        if self.phone_number:
+            self.phone_number = self.phone_number.strip()
+        return self
+
+
+class LoginResponse(BaseModel):
+    """Phản hồi HTTP 200 cho API đăng nhập thành công"""
+    message: str
+    user: UserDataResponse
+    token: Optional[str] = None
