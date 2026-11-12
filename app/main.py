@@ -4,107 +4,21 @@ from sqlalchemy import text
 
 from app.core.database import engine, Base, get_db
 import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
-from app.routers import auth_router
-from app.routers import geo
-from backend.profile_api import app as profile_app
+from app.routers import auth_router, restaurant_router
 
-app.include_router(geo.router)
-app.mount("/profile-service", profile_app)
-# Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage)
+# Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, ...)
 Base.metadata.create_all(bind=engine)
 
 # Khởi tạo ứng dụng FastAPI
 app = FastAPI(
     title="Smart Dining - Hệ thống Gợi ý Địa điểm Ăn uống theo Vị trí",
-    description="Backend API phục vụ Hệ thống Smart Dining - Module 1 (Auth & User) - Task TSK-02",
+    description="Backend API phục vụ Hệ thống Smart Dining - Module 1 (Auth) & Module 4 (Restaurants)",
     version="1.0.0"
 )
 
-# Đăng ký Router
+# Đăng ký các Router
 app.include_router(auth_router)
-app.include_router(admin_router)
-app.include_router(preferences_router)
-
-
-@app.on_event("startup")
-def init_default_data():
-    """Khởi tạo tài khoản Quản trị viên (admin@foodai.vn) và User chuẩn (user.demo@foodai.vn)"""
-    from app.core.database import SessionLocal
-    from app.models import User, UserProfile, UserPreference, Role, UserRole
-    from app.core.security import hash_password
-
-    db = SessionLocal()
-    try:
-        role_user = db.query(Role).filter(Role.name == "user").first()
-        if not role_user:
-            role_user = Role(name="user", description="Người dùng hệ thống")
-            db.add(role_user)
-
-        role_admin = db.query(Role).filter(Role.name == "admin").first()
-        if not role_admin:
-            role_admin = Role(name="admin", description="Quản trị viên hệ thống")
-            db.add(role_admin)
-
-        db.commit()
-        if role_user: db.refresh(role_user)
-        if role_admin: db.refresh(role_admin)
-
-        # Đảm bảo tài khoản Admin
-        admin = db.query(User).filter(User.email == "admin@foodai.vn").first()
-        if not admin:
-            admin = User(
-                email="admin@foodai.vn",
-                phone_number="0909999888",
-                hashed_password=hash_password("admin123"),
-                status="active"
-            )
-            db.add(admin)
-            db.commit()
-            db.refresh(admin)
-
-            prof_admin = UserProfile(
-                user_id=admin.id,
-                full_name="Quản trị viên FoodAI",
-                default_address="11 Nguyễn Đình Chiểu, Phường Đa Kao, Quận 1, TP.HCM",
-                default_lat=10.7860,
-                default_lng=106.7003
-            )
-            ur_admin = UserRole(user_id=admin.id, role_id=role_admin.id)
-            db.add_all([prof_admin, ur_admin])
-            db.commit()
-
-        # Đảm bảo tài khoản Người dùng Demo kèm UserPreferences
-        demo = db.query(User).filter(User.email == "user.demo@foodai.vn").first()
-        if not demo:
-            demo = User(
-                email="user.demo@foodai.vn",
-                phone_number="0901111222",
-                hashed_password=hash_password("user123"),
-                status="active"
-            )
-            db.add(demo)
-            db.commit()
-            db.refresh(demo)
-
-            prof_demo = UserProfile(
-                user_id=demo.id,
-                full_name="Nguyễn Văn An",
-                default_address="11 Nguyễn Đình Chiểu, Phường Đa Kao, Quận 1, TP.HCM",
-                default_lat=10.7860,
-                default_lng=106.7003
-            )
-            ur_demo = UserRole(user_id=demo.id, role_id=role_user.id)
-            pref_demo = UserPreference(
-                user_id=demo.id,
-                diet_type="omnivore",
-                allergies="[]",
-                preferred_cuisines='["Món Việt", "Lẩu Nướng"]',
-                avg_budget=250000.0
-            )
-            db.add_all([prof_demo, ur_demo, pref_demo])
-            db.commit()
-    finally:
-        db.close()
+app.include_router(restaurant_router)
 
 
 @app.get("/", tags=["Hệ thống"])

@@ -1,5 +1,4 @@
 from .auth import router as auth_router
-from .admin import admin_router
-from .preferences import router as preferences_router
+from .restaurant import router as restaurant_router
 
-__all__ = ["auth_router", "admin_router", "preferences_router"]
+__all__ = ["auth_router", "restaurant_router"]

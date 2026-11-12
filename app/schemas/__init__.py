@@ -5,13 +5,11 @@ from .auth import (
     RegisterResponse,
     StandardResponse,
 )
-from .preferences import (
-    UserPreferenceBase,
-    UserPreferenceUpdate,
-    UserPreferenceResponse,
-    AppliedPreferencesSummary,
-    RecommendedRestaurantItem,
-    RecommendationResponse,
+from .restaurant import (
+    AmenityResponse,
+    RestaurantListItemResponse,
+    PaginationMetadata,
+    RestaurantListResponse,
 )
 
 __all__ = [
@@ -20,17 +18,8 @@ __all__ = [
     "UserDataResponse",
     "RegisterResponse",
     "StandardResponse",
-    "LoginRequest",
-    "TokenResponse",
-    "UserInfoResponse",
-    "LoginResponse",
-    "RefreshTokenRequest",
-    "RefreshTokenResponse",
-    "LogoutRequest",
-    "UserPreferenceBase",
-    "UserPreferenceUpdate",
-    "UserPreferenceResponse",
-    "AppliedPreferencesSummary",
-    "RecommendedRestaurantItem",
-    "RecommendationResponse",
+    "AmenityResponse",
+    "RestaurantListItemResponse",
+    "PaginationMetadata",
+    "RestaurantListResponse",
 ]
