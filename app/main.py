@@ -1,4 +1,3 @@
-# filepath: app/main.py
 import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,14 +6,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.core.database import engine, Base, get_db
-import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
-from app.routers import auth_router, restaurant_router, user_router, search_router
-
-# Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, SearchCriteria, ...)
-try:
-    Base.metadata.create_all(bind=engine)
-except Exception as e:
-    print(f"[CANH BAO] Khong the tu dong khoi tao database: {e}")
+import app.models
+from app.routers import auth_router, profile_router, geo_router, ai_search_router
+# Tự động tạo bảng CSDL
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Smart Dining - Hệ thống Gợi ý Địa điểm Ăn uống theo Vị trí",
@@ -32,6 +27,7 @@ app.include_router(search_router)
 app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(geo_router)
+app.include_router(ai_search_router)
 
 # Mount thư mục frontend để chạy trực tiếp HTML trên cổng 8000
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
