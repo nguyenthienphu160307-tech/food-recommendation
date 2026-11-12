@@ -96,6 +96,9 @@ class SearchCriteriaCreateRequest(BaseModel):
     budget: Optional[int] = Field(None, description="Ngân sách dự kiến (VND)")
     has_parking: Optional[bool] = Field(False, description="Yêu cầu bãi đỗ xe")
     other_conditions: Optional[str] = Field(None, description="Điều kiện mở rộng định dạng JSON text")
+    # TSK-20: ID người dùng để áp dụng cài đặt quyền riêng tư (tùy chọn)
+    user_id: Optional[int] = Field(None, description="ID người dùng để áp dụng cơ chế bảo vệ quyền riêng tư GPS")
+    is_obfuscated: Optional[bool] = Field(False, description="Đánh dấu tọa độ đã được làm mờ theo cơ chế BR-08")
 
 
 class SearchCriteriaResponse(BaseModel):
@@ -109,7 +112,41 @@ class SearchCriteriaResponse(BaseModel):
     budget: Optional[int] = None
     has_parking: Optional[bool] = False
     other_conditions: Optional[str] = None
+    # TSK-20: Trả về trạng thái đã làm mờ tọa độ hay chưa
+    is_obfuscated: Optional[bool] = False
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+# =====================================================================
+# SCHEMAS QUYỀN RIÊNG TƯ VỊ TRÍ GPS (TASK TSK-20 / BR-08, NFR-07)
+# =====================================================================
+
+class PrivacySettingsResponse(BaseModel):
+    """Phản hồi cài đặt quyền riêng tư vị trí GPS hiện tại của người dùng"""
+    user_id: int
+    share_exact_location: bool = False
+    auto_purge_location: bool = True
+    profile_exists: bool = True
+
+
+class PrivacySettingsUpdateRequest(BaseModel):
+    """Yêu cầu cập nhật cài đặt quyền riêng tư vị trí GPS"""
+    user_id: int = Field(..., description="ID người dùng cần cập nhật cài đặt")
+    share_exact_location: Optional[bool] = Field(
+        None,
+        description="True = chia sẻ tọa độ chính xác; False (mặc định) = chỉ chia sẻ khu vực xấp xỉ ~1,1km"
+    )
+    auto_purge_location: Optional[bool] = Field(
+        None,
+        description="True (mặc định) = tự động xóa log tọa độ sau khi đóng phiên chat"
+    )
+
+
+class PurgeLocationResponse(BaseModel):
+    """Phản hồi sau khi thực hiện xóa log tọa độ của một phiên chat"""
+    session_id: int
+    purged_count: int
+    message: str

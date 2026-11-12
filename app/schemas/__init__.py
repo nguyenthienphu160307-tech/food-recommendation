@@ -26,6 +26,9 @@ from .search import (
     ExtractCriteriaRequest,
     SearchCriteriaCreateRequest,
     SearchCriteriaResponse,
+    PrivacySettingsResponse,
+    PrivacySettingsUpdateRequest,
+    PurgeLocationResponse,
 )
 
 __all__ = [
@@ -51,4 +54,7 @@ __all__ = [
     "ExtractCriteriaRequest",
     "SearchCriteriaCreateRequest",
     "SearchCriteriaResponse",
+    "PrivacySettingsResponse",
+    "PrivacySettingsUpdateRequest",
+    "PurgeLocationResponse",
 ]
