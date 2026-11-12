@@ -1,10 +1,12 @@
-from .user import User, UserProfile, Role, UserRole, OTPStorage
-from .restaurant import (
+from .user import User, UserProfile, Role, UserRole, OTPStorage, RevokedToken
+from .interaction import (
     Restaurant,
-    RestaurantAmenity,
-    RestaurantMenu,
-    MenuItem,
-    RestaurantImage,
+    SearchSession,
+    SearchMessage,
+    SearchCriteria,
+    RestaurantReview,
+    UserFavorite,
+    Notification,
 )
 
 __all__ = [
@@ -13,9 +15,12 @@ __all__ = [
     "Role",
     "UserRole",
     "OTPStorage",
+    "RevokedToken",
     "Restaurant",
-    "RestaurantAmenity",
-    "RestaurantMenu",
-    "MenuItem",
-    "RestaurantImage",
+    "SearchSession",
+    "SearchMessage",
+    "SearchCriteria",
+    "RestaurantReview",
+    "UserFavorite",
+    "Notification",
 ]
