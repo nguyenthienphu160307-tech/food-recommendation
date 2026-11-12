@@ -7,9 +7,11 @@ from .auth import (
     LoginRequest,
     LoginResponse,
 )
+
 from .restaurant import (
     AmenityResponse,
     RestaurantListItemResponse,
+    RestaurantDetailResponse,
     PaginationMetadata,
     RestaurantListResponse,
 )
@@ -41,6 +43,7 @@ __all__ = [
     "LoginResponse",
     "AmenityResponse",
     "RestaurantListItemResponse",
+    "RestaurantDetailResponse",
     "PaginationMetadata",
     "RestaurantListResponse",
     "CreateSessionRequest",

@@ -1,5 +1,5 @@
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AmenityResponse(BaseModel):
@@ -10,8 +10,7 @@ class AmenityResponse(BaseModel):
     pet_friendly: bool = Field(False, description="Thân thiện với thú cưng")
     vegetarian_support: bool = Field(False, description="Có hỗ trợ món chay")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RestaurantListItemResponse(BaseModel):
@@ -33,8 +32,7 @@ class RestaurantListItemResponse(BaseModel):
     cover_image_url: Optional[str] = Field(None, description="Đường dẫn ảnh bìa (is_cover=True)")
     amenities: Optional[AmenityResponse] = Field(None, description="Các cờ tiện ích chính")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginationMetadata(BaseModel):
@@ -49,3 +47,43 @@ class RestaurantListResponse(BaseModel):
     """Phản hồi danh sách nhà hàng kèm phân trang chuẩn RESTful"""
     data: List[RestaurantListItemResponse]
     pagination: PaginationMetadata
+
+
+class MenuItemResponse(BaseModel):
+    """Một món ăn trong thực đơn"""
+    id: int
+    name: str
+    description: Optional[str] = None
+    price: float
+    image_url: Optional[str] = None
+    is_available: bool = True
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MenuCategoryResponse(BaseModel):
+    """Nhóm món (Khai vị, Món chính, Đồ uống...) kèm danh sách món"""
+    id: int
+    name: str
+    description: Optional[str] = None
+    display_order: int = 0
+    items: List[MenuItemResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RestaurantImageResponse(BaseModel):
+    """Một ảnh trong thư viện ảnh của nhà hàng"""
+    id: int
+    image_url: str
+    caption: Optional[str] = None
+    is_cover: bool = False
+    display_order: int = 0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RestaurantDetailResponse(RestaurantListItemResponse):
+    """Chi tiết một nhà hàng: thông tin cơ bản + thực đơn + thư viện ảnh"""
+    menus: List[MenuCategoryResponse] = []
+    images: List[RestaurantImageResponse] = []

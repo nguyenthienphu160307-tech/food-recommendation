@@ -36,7 +36,7 @@ from app.services.privacy_service import LocationPrivacyService
 from app.services.chat_session_service import ChatSessionService
 from app.routers.search import save_session_criteria, purge_session_location
 from app.schemas.search import SearchCriteriaCreateRequest
-from app.routers.user import get_privacy_settings, update_privacy_settings
+from app.routers.users import get_privacy_settings, update_privacy_settings
 from app.schemas.search import PrivacySettingsUpdateRequest
 
 Base.metadata.create_all(bind=test_engine)

@@ -7,7 +7,7 @@ from .restaurant import (
     RestaurantImage,
 )
 from .search import SearchSession, SearchMessage, SearchCriteria
-
+from app.models.restaurant import Restaurant
 __all__ = [
     "User",
     "UserProfile",

@@ -1,10 +1,11 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-
+from app.routers import auth_router, restaurant_router, geo_router, users_router
 from app.core.database import engine, Base, get_db
 import app.models
 from app.routers import auth_router, profile_router, geo_router, ai_search_router
@@ -20,8 +21,8 @@ app = FastAPI(
 # Đăng ký các Router API
 app.include_router(auth_router)
 app.include_router(restaurant_router)
-app.include_router(user_router)
-app.include_router(search_router)
+app.include_router(users_router)
+app.include_router(ai_search_router)
 
 # Gắn các router API vào hệ thống
 app.include_router(auth_router)
@@ -38,7 +39,7 @@ if os.path.isdir(frontend_dir):
 # Các route phục vụ Giao diện Người dùng (Frontend UI - TSK-12)
 @app.get("/", tags=["Frontend UI"], summary="Trang chủ khám phá ẩm thực")
 def serve_home_page():
-    index_file = os.path.join(FRONTEND_DIR, "index.html")
+    index_file = os.path.join(frontend_dir, "index.html")
     if os.path.exists(index_file):
         return FileResponse(index_file)
     return {
