@@ -148,7 +148,7 @@
         .account-trigger span { font-size: 0.85rem; font-weight: 600; }
 
         .account-dropdown {
-            position: absolute; top: 50px; right: 0; min-width: 290px; width: auto; max-width: 360px;
+            position: absolute; top: 50px; right: 0; min-width: 320px; width: max-content; max-width: 400px;
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: 14px; box-shadow: var(--shadow-lg);
             padding: 10px; display: none; z-index: 1500;
@@ -417,8 +417,9 @@
             </div>
 
             <div class="account-dropdown" id="account-dropdown">
-                <div class="dropdown-user-header" id="dropdown-user-header">
-                    <strong id="drop-user-name">Chưa đăng nhập</strong>
+                <div class="dropdown-user-header">
+                    <strong id="drop-user-name">Nguyễn Văn An</strong>
+                    <small id="drop-user-email" style="color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:0.82rem;">user.demo@foodai.vn</small>
                 </div>
                 <a href="/profile" class="dropdown-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -433,9 +434,19 @@
                     Quán ăn yêu thích đã lưu
                 </div>
                 <div class="dropdown-divider"></div>
-                <div class="dropdown-link" onclick="openAuthModal()" id="btn-auth-action" style="color:var(--brand-red);">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    <span>Đăng nhập</span>
+                <div id="drop-auth-actions" style="display:flex;flex-direction:column;">
+                    <a href="/login" class="dropdown-link" id="link-login" style="color:var(--brand-red);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        Chuyển đổi tài khoản / Đăng nhập
+                    </a>
+                    <a href="/register" class="dropdown-link" id="link-register" style="display:none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        Đăng ký tài khoản
+                    </a>
+                    <a href="javascript:void(0)" onclick="handleLogoutFromIndex()" class="dropdown-link" id="link-logout" style="display:none; color:var(--brand-red);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Đăng xuất tài khoản
+                    </a>
                 </div>
             </div>
         </div>
@@ -559,8 +570,113 @@
     <script src="api.js"></script>
     
     <script>
-        // Mảng rỗng chờ dữ liệu từ API Backend
-        let venues = [];
+        const STORAGE_KEY = 'foodai_demo_profile_state';
+
+        let venues = [
+            {
+                id: 1,
+                name: "GoGi House — Thịt Nướng Hàn Quốc",
+                address: "189 Quang Trung, Phường 10, Quận Gò Vấp, TP.HCM",
+                lat: 10.8295, lng: 106.6728,
+                category: "bbq",
+                cuisineLabel: "Nướng Hàn Quốc",
+                priceMin: 199000, priceMax: 380000,
+                rating: 4.7, reviews: 342,
+                parking: true, private_room: true, vegetarian: false,
+                openHours: "10:00 - 22:00",
+                image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Dẻ sườn bò Mỹ nướng sốt Galbi", price: 219000 },
+                    { name: "Ba chỉ bò Mỹ cuộn nấm kim châm", price: 169000 },
+                    { name: "Canh kim chi hải sản", price: 95000 }
+                ]
+            },
+            {
+                id: 2,
+                name: "Lẩu Nấm Ashima — Phan Văn Trị",
+                address: "366 Phan Văn Trị, Phường 5, Quận Gò Vấp, TP.HCM",
+                lat: 10.8214, lng: 106.6915,
+                category: "hotpot",
+                cuisineLabel: "Lẩu nấm thiên nhiên",
+                priceMin: 250000, priceMax: 450000,
+                rating: 4.8, reviews: 215,
+                parking: true, private_room: true, vegetarian: true,
+                openHours: "10:30 - 22:00",
+                image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Set lẩu nấm quý thiên nhiên", price: 340000 },
+                    { name: "Nấm tùng nhung tươi", price: 145000 }
+                ]
+            },
+            {
+                id: 3,
+                name: "Quán Nướng Khói Sài Gòn",
+                address: "122 Nguyễn Gia Trí (D2), Phường 25, Quận Bình Thạnh, TP.HCM",
+                lat: 10.8028, lng: 106.7125,
+                category: "bbq",
+                cuisineLabel: "BBQ & Quán nướng",
+                priceMin: 140000, priceMax: 250000,
+                rating: 4.6, reviews: 418,
+                parking: true, private_room: false, vegetarian: false,
+                openHours: "16:00 - 23:30",
+                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Bò tơ nướng tảng sốt trứng muối", price: 189000 },
+                    { name: "Hàu sữa Pháp nướng phô mai", price: 129000 }
+                ]
+            },
+            {
+                id: 4,
+                name: "Hum Garden & Vegetarian",
+                address: "32 Võ Văn Tần, Phường 6, Quận 3, TP.HCM",
+                lat: 10.7785, lng: 106.6912,
+                category: "vegan",
+                cuisineLabel: "Ẩm thực Chay cao cấp",
+                priceMin: 180000, priceMax: 390000,
+                rating: 4.9, reviews: 690,
+                parking: true, private_room: true, vegetarian: true,
+                openHours: "10:00 - 22:00",
+                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Gỏi hoa chuối hạt điều", price: 125000 },
+                    { name: "Cơm chiên trái thơm hạt sen", price: 155000 }
+                ]
+            },
+            {
+                id: 5,
+                name: "Hải Sản Biển Đông — Lê Văn Thọ",
+                address: "412 Lê Văn Thọ, Phường 11, Quận Gò Vấp, TP.HCM",
+                lat: 10.8415, lng: 106.6598,
+                category: "seafood",
+                cuisineLabel: "Hải sản tươi sống",
+                priceMin: 220000, priceMax: 500000,
+                rating: 4.5, reviews: 187,
+                parking: true, private_room: true, vegetarian: false,
+                openHours: "10:00 - 23:00",
+                image: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Tôm càng xanh nướng mọi", price: 320000 },
+                    { name: "Cua thịt Cà Mau rang me", price: 390000 }
+                ]
+            },
+            {
+                id: 6,
+                name: "Sushi Hokkaido Sachi",
+                address: "172 Nguyễn Đình Chiểu, Quận 3, TP.HCM",
+                lat: 10.7801, lng: 106.6904,
+                category: "japanese",
+                cuisineLabel: "Sushi & Sashimi Nhật Bản",
+                priceMin: 300000, priceMax: 650000,
+                rating: 4.8, reviews: 512,
+                parking: true, private_room: true, vegetarian: true,
+                openHours: "10:30 - 22:30",
+                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Set Sashimi Cá hồi & Bụng cá ngừ", price: 380000 },
+                    { name: "Mì Udon bò Wagyu", price: 210000 }
+                ]
+            }
+        ];
 
         let currentPos = { lat: 10.7860, lng: 106.7003 };
         let activeCategory = 'all';
@@ -934,21 +1050,87 @@
             document.getElementById('account-dropdown').classList.toggle('open');
         }
 
-        function toggleAIDrawer() {
-            document.getElementById('ai-drawer').classList.toggle('open');
+        let currentChatSessionId = null;
+
+        async function initChatSessionIfNeeded() {
+            if (currentChatSessionId) return;
+
+            let authUser = null;
+            try {
+                const rawAuth = localStorage.getItem('smart_dining_user');
+                if (rawAuth) authUser = JSON.parse(rawAuth);
+            } catch (_) {}
+
+            const userId = authUser && authUser.id ? authUser.id : null;
+
+            try {
+                const res = await fetch('/api/chat/sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentChatSessionId = data.session_id;
+                    console.log('Khởi tạo phiên Chat AI thành công! Session ID:', currentChatSessionId, '(User:', userId, ')');
+                }
+            } catch (err) {
+                console.warn('Chưa thể kết nối API chat session:', err);
+            }
         }
 
-        function sendDrawerMessage() {
+        async function toggleAIDrawer() {
+            const drawer = document.getElementById('ai-drawer');
+            drawer.classList.toggle('open');
+            if (drawer.classList.contains('open')) {
+                await initChatSessionIfNeeded();
+            }
+        }
+
+        async function sendDrawerMessage() {
             const input = document.getElementById('drawer-input');
             const text = input.value.trim();
             if (!text) return;
+
+            await initChatSessionIfNeeded();
+
             const feed = document.getElementById('ai-chat-feed');
             feed.innerHTML += `<div class="bubble bubble-user">${text}</div>`;
             input.value = '';
+            feed.scrollTop = feed.scrollHeight;
+
+            // 1. Lưu tin nhắn User vào CSDL theo thời gian thực (TSK-16)
+            if (currentChatSessionId) {
+                try {
+                    await fetch(`/api/chat/sessions/${currentChatSessionId}/messages`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: text, sender_type: 'user' })
+                    });
+                } catch (e) {
+                    console.warn('Lỗi lưu tin nhắn User:', e);
+                }
+            }
+
             executeAISearch(text);
-            setTimeout(() => {
-                feed.innerHTML += `<div class="bubble bubble-ai">Mình đã cập nhật danh sách các quán phù hợp với yêu cầu <strong>"${text}"</strong> ngay trên màn hình chính và bản đồ. Bạn có muốn lọc thêm theo mức giá hay khoảng cách không?</div>`;
+
+            setTimeout(async () => {
+                const aiResponse = `Mình đã phân tích yêu cầu <strong>"${text}"</strong> và cập nhật danh sách các quán phù hợp nhất ngay trên bản đồ và màn hình chính. Bạn có muốn lọc thêm theo mức giá hay khoảng cách không?`;
+                feed.innerHTML += `<div class="bubble bubble-ai">${aiResponse}</div>`;
                 feed.scrollTop = feed.scrollHeight;
+
+                // 2. Lưu câu trả lời của AI vào CSDL theo thời gian thực (TSK-16)
+                if (currentChatSessionId) {
+                    try {
+                        await fetch(`/api/chat/sessions/${currentChatSessionId}/messages`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ content: aiResponse, sender_type: 'ai' })
+                        });
+                    } catch (e) {
+                        console.warn('Lỗi lưu tin nhắn AI:', e);
+                    }
+                }
             }, 300);
         }
 
@@ -977,11 +1159,75 @@
             }
         });
 
-        // KHI TRANG TẢI XONG
-        window.addEventListener('DOMContentLoaded', () => {
-            checkAuthStatus(); // Kiểm tra xem User đã đăng nhập chưa
-            initMainMap();     // Vẽ bản đồ
-            fetchVenuesFromAPI(); // Gọi Backend lấy dữ liệu nhà hàng đổ ra UI thay vì dùng mảng cứng
+
+        /**
+         * TỰ ĐỘNG GỌI BACKEND API (Module 4 - Task TSK-09 / TE9C652)
+         * Lấy danh sách nhà hàng thời gian thực từ CSDL MySQL thông qua GET /api/restaurants
+         */
+        async function fetchRestaurantsFromAPI() {
+            try {
+                const res = await fetch('/api/restaurants?page=1&limit=50&status_filter=all');
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && json.data && json.data.length > 0) {
+                        console.log(`[BE API] Đã gọi thành công GET /api/restaurants (${json.data.length} nhà hàng từ CSDL)`);
+                        const apiVenues = json.data.map(item => {
+                            const am = item.amenities || {};
+                            let cat = "other";
+                            const cuisineLower = (item.cuisine_type || '').toLowerCase();
+                            if (cuisineLower.includes('nướng') || cuisineLower.includes('bbq')) cat = 'bbq';
+                            else if (cuisineLower.includes('lẩu') || cuisineLower.includes('hotpot')) cat = 'hotpot';
+                            else if (cuisineLower.includes('cà phê') || cuisineLower.includes('cafe')) cat = 'cafe';
+                            else if (cuisineLower.includes('chay') || cuisineLower.includes('vegan')) cat = 'vegan';
+
+                            return {
+                                id: item.id,
+                                name: item.name,
+                                address: item.address,
+                                lat: parseFloat(item.latitude) || 10.8231,
+                                lng: parseFloat(item.longitude) || 106.6900,
+                                category: cat,
+                                cuisineLabel: item.cuisine_type || 'Ẩm thực phong phú',
+                                priceMin: item.min_price || 50000,
+                                priceMax: item.max_price || 300000,
+                                rating: item.avg_rating || 4.5,
+                                reviews: item.total_reviews || 0,
+                                parking: !!am.has_parking,
+                                private_room: !!am.has_private_room,
+                                vegetarian: !!am.vegetarian_support,
+                                openHours: item.open_hours || "09:00 - 22:00",
+                                image: item.cover_image_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80",
+                                menu: [
+                                    { name: "Món đặc sản tuyển chọn", price: item.min_price || 95000 },
+                                    { name: "Combo ẩm thực trọn gói", price: item.max_price || 250000 }
+                                ]
+                            };
+                        });
+                        venues = apiVenues;
+                        renderVenues();
+                    }
+                }
+            } catch (err) {
+                console.warn('[BE API] Không thể tải /api/restaurants, dùng danh sách mẫu cục bộ:', err);
+            }
+        }
+
+        async function closeCurrentChatSession() {
+            if (currentChatSessionId) {
+                try {
+                    await fetch(`/api/chat/sessions/${currentChatSessionId}/close`, { method: 'PUT' });
+                    console.log('[BE API] Đã đóng phiên Chat AI:', currentChatSessionId);
+                } catch (e) {
+                    console.warn('Lỗi đóng phiên chat:', e);
+                }
+                currentChatSessionId = null;
+            }
+        }
+        window.addEventListener('DOMContentLoaded', async () => {
+            syncProfileData();
+            initMainMap();
+            renderVenues();
+            await fetchRestaurantsFromAPI();
         });
     </script>
 </body>

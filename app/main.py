@@ -7,26 +7,23 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.core.database import engine, Base, get_db
-import app.models
-# CHỈ IMPORT 3 ROUTER NÀY (ĐÃ BỎ auth, profile, geo THỪA)
-from app.routers import auth_router, profile_router, geo_router
+import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
+from app.routers import auth_router, restaurant_router, user_router, search_router
 
-# Tự động tạo bảng CSDL
+# Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, ...)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Smart Dining - Hệ thống Gợi ý Địa điểm Ăn uống theo Vị trí",
-    description="Backend API phục vụ Hệ thống Smart Dining",
+    description="Backend API phục vụ Hệ thống Smart Dining - Module 1 (Auth), Module 2 (AI Chat) & Module 4 (Restaurants)",
     version="1.0.0"
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Đăng ký các Router API
+app.include_router(auth_router)
+app.include_router(restaurant_router)
+app.include_router(user_router)
+app.include_router(search_router)
 
 # Gắn các router API vào hệ thống
 app.include_router(auth_router)

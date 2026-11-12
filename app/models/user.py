@@ -19,6 +19,8 @@ class User(Base):
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     # Quan hệ 1 - N với bảng UserRoles
     user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
+    # Quan hệ 1 - N với bảng SearchSessions (Module 2)
+    search_sessions = relationship("SearchSession", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserProfile(Base):

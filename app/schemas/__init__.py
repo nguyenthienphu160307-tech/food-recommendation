@@ -14,6 +14,15 @@ from .restaurant import (
     RestaurantListResponse,
 )
 
+from .search import (
+    CreateSessionRequest,
+    SessionResponse,
+    CloseSessionResponse,
+    SendMessageRequest,
+    MessageResponse,
+    SessionHistoryResponse,
+)
+
 __all__ = [
     "SendOTPRequest",
     "RegisterRequest",
@@ -26,4 +35,10 @@ __all__ = [
     "RestaurantListItemResponse",
     "PaginationMetadata",
     "RestaurantListResponse",
+    "CreateSessionRequest",
+    "SessionResponse",
+    "CloseSessionResponse",
+    "SendMessageRequest",
+    "MessageResponse",
+    "SessionHistoryResponse",
 ]

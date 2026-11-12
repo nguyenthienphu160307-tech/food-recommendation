@@ -541,7 +541,7 @@
          * Khởi tạo dữ liệu form từ LocalStorage (hoặc fallback về default state)
          * và mount bản đồ tại tọa độ mặc định của người dùng.
          */
-        function loadUserProfile() {
+        async function loadUserProfile() {
             let authUser = null;
             try {
                 const rawAuth = localStorage.getItem('smart_dining_user');
@@ -549,7 +549,22 @@
             } catch (_) {}
 
             const saved = localStorage.getItem(STORAGE_KEY);
-            const data = saved ? JSON.parse(saved) : defaultProfileData;
+            let data = saved ? JSON.parse(saved) : defaultProfileData;
+
+            // Tự động gọi GET /api/users/profile từ Backend API (Module 1 / TSK-04)
+            const queryEmail = (authUser && authUser.email) ? authUser.email : (data.email || null);
+            if (queryEmail) {
+                try {
+                    const res = await fetch(`/api/users/profile?email=${encodeURIComponent(queryEmail)}`);
+                    if (res.ok) {
+                        const apiData = await res.json();
+                        data = { ...data, ...apiData };
+                        console.log('[BE API] Nạp hồ sơ thành công từ GET /api/users/profile:', apiData);
+                    }
+                } catch (e) {
+                    console.warn('[BE API] Chưa thể kết nối GET /api/users/profile, dùng dữ liệu lưu tạm:', e);
+                }
+            }
 
             if (authUser) {
                 if (authUser.full_name) data.full_name = authUser.full_name;
@@ -759,7 +774,7 @@
             document.getElementById('theme-label').innerText = isDark ? 'Giao diện Tối' : 'Giao diện Sáng';
         }
 
-        window.addEventListener('DOMContentLoaded', loadUserProfile);
+        window.addEventListener('DOMContentLoaded', async () => { await loadUserProfile(); });
     </script>
 </body>
 </html>
