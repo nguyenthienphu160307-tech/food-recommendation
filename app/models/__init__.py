@@ -6,7 +6,7 @@ from .restaurant import (
     MenuItem,
     RestaurantImage,
 )
-from .search import SearchSession, SearchMessage
+from .search import SearchSession, SearchMessage, SearchCriteria
 
 __all__ = [
     "User",
@@ -22,4 +22,5 @@ __all__ = [
     "RestaurantImage",
     "SearchSession",
     "SearchMessage",
+    "SearchCriteria",
 ]

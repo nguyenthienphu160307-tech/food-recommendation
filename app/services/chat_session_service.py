@@ -4,15 +4,16 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.models.user import User
-from app.models.search import SearchSession, SearchMessage
+from app.models.search import SearchSession, SearchMessage, SearchCriteria
 
 
 class ChatSessionService:
     """
-    Tầng Service / Repository xử lý nghiệp vụ Phiên Chat AI (TSK-16):
+    Tầng Service / Repository xử lý nghiệp vụ Phiên Chat AI & Tiêu chí Tìm kiếm (TSK-16, TSK-18):
     - Khởi tạo phiên cho cả User đã đăng nhập và Khách vãng lai (user_id = NULL).
     - Lưu trữ và truy vấn tin nhắn hội thoại theo thời gian thực.
     - Quản lý vòng đời phiên chat (active, closed).
+    - Lưu trữ và truy xuất tiêu chí tìm kiếm kèm tọa độ Geocoding (SearchCriteria).
     """
 
     @staticmethod
@@ -103,7 +104,6 @@ class ChatSessionService:
         Lấy toàn bộ lịch sử tin nhắn trong phiên theo thứ tự thời gian tăng dần (created_at ASC):
         - Phục vụ cung cấp ngữ cảnh đầy đủ cho LLM (Multi-turn Context).
         """
-        # Xác thực phiên tồn tại
         ChatSessionService.get_session(db, session_id)
 
         return (
@@ -124,3 +124,47 @@ class ChatSessionService:
         if user_id is not None:
             query = query.filter(SearchSession.user_id == user_id)
         return query.order_by(SearchSession.session_id.desc()).limit(limit).all()
+
+    @staticmethod
+    def save_criteria(
+        db: Session,
+        session_id: int,
+        location_text: Optional[str] = None,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        cuisine: Optional[str] = None,
+        budget: Optional[int] = None,
+        has_parking: Optional[bool] = False,
+        other_conditions: Optional[str] = None,
+    ) -> SearchCriteria:
+        """
+        Lưu hoặc cập nhật tiêu chí tìm kiếm kèm tọa độ GPS vào bảng SearchCriteria (TSK-18).
+        """
+        ChatSessionService.get_session(db, session_id)
+
+        new_criteria = SearchCriteria(
+            session_id=session_id,
+            location_text=location_text,
+            latitude=latitude,
+            longitude=longitude,
+            cuisine=cuisine,
+            budget=budget,
+            has_parking=has_parking,
+            other_conditions=other_conditions,
+            created_at=datetime.utcnow()
+        )
+        db.add(new_criteria)
+        db.commit()
+        db.refresh(new_criteria)
+        return new_criteria
+
+    @staticmethod
+    def get_latest_criteria(db: Session, session_id: int) -> Optional[SearchCriteria]:
+        """Lấy tiêu chí tìm kiếm mới nhất của một phiên chat"""
+        ChatSessionService.get_session(db, session_id)
+        return (
+            db.query(SearchCriteria)
+            .filter(SearchCriteria.session_id == session_id)
+            .order_by(SearchCriteria.criteria_id.desc())
+            .first()
+        )

@@ -1,9 +1,11 @@
+import json
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.services.chat_session_service import ChatSessionService
+from app.services.geocoding_service import GeocodingService
 from app.schemas.search import (
     CreateSessionRequest,
     SessionResponse,
@@ -11,16 +13,21 @@ from app.schemas.search import (
     SendMessageRequest,
     MessageResponse,
     SessionHistoryResponse,
+    GeocodeRequest,
+    GeocodeResponse,
+    ExtractCriteriaRequest,
+    SearchCriteriaCreateRequest,
+    SearchCriteriaResponse,
 )
 
-router = APIRouter(prefix="/api/chat", tags=["Trợ lý Chat AI & Phiên tìm kiếm (Module 2)"])
+router = APIRouter(prefix="/api/chat", tags=["Trợ lý Chat AI & Geocoding (Module 2 & 3)"])
 
 
 @router.post(
     "/sessions",
     response_model=SessionResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Khởi tạo phiên Chat AI mới (User & Guest)"
+    summary="Khởi tạo phiên Chat AI mới (User & Guest - TSK-16)"
 )
 def create_session(
     payload: Optional[CreateSessionRequest] = None,
@@ -155,3 +162,137 @@ def list_sessions(
         )
         for s in sessions
     ]
+
+
+# =====================================================================
+# API GEOCODING & TIÊU CHÍ TÌM KIẾM (TASK TSK-18 / PBI-08)
+# =====================================================================
+
+@router.post(
+    "/geocode",
+    response_model=GeocodeResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Chuyển đổi tên khu vực/quận sang tọa độ GPS (TSK-18)"
+)
+def geocode_location(payload: GeocodeRequest):
+    """
+    API Service Geocoding (Task TSK-18 / PBI-08):
+    - Nhận tên địa danh/quận/huyện hoặc trích xuất từ câu tự nhiên.
+    - Tra cứu qua Từ điển Tọa độ Nội bộ siêu tốc (< 10ms).
+    - Hỗ trợ fallback trực tuyến qua OpenStreetMap khi cần.
+    - Trả về cặp tọa độ chuẩn (latitude, longitude) và địa chỉ chuẩn hóa.
+    """
+    # Nếu người dùng truyền vào cả câu dài (ví dụ: "Tìm quán ở Bình Thạnh"), tự động bóc tách tên địa danh
+    extracted_name = GeocodingService.extract_location_from_text(payload.location_name)
+    query_target = extracted_name if extracted_name else payload.location_name
+
+    res = GeocodingService.geocode(
+        location_name=query_target,
+        enable_online_fallback=payload.enable_online_fallback
+    )
+
+    return GeocodeResponse(
+        location_name=res["location_name"],
+        latitude=res["latitude"],
+        longitude=res["longitude"],
+        formatted_address=res["formatted_address"],
+        is_found=res["is_found"],
+        source=res["source"]
+    )
+
+
+@router.post(
+    "/extract",
+    summary="Bóc tách toàn diện tiêu chí (Địa danh, Tọa độ, Ẩm thực, Ngân sách, Tiện ích) từ câu chat"
+)
+def extract_criteria_from_chat(payload: ExtractCriteriaRequest):
+    """
+    API bóc tách thực thể ngôn ngữ tự nhiên:
+    - Nhận câu chat tiếng Việt.
+    - Trích xuất: địa danh, tọa độ GPS (geocoding), món ăn, ngân sách, chỗ đậu xe.
+    """
+    criteria_data = GeocodingService.extract_full_criteria(payload.message)
+    return {
+        "status": "success",
+        "raw_message": payload.message,
+        "criteria": criteria_data
+    }
+
+
+@router.post(
+    "/sessions/{session_id}/criteria",
+    response_model=SearchCriteriaResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Lưu hoặc cập nhật tiêu chí tìm kiếm kèm tọa độ GPS vào SearchCriteria (TSK-18)"
+)
+def save_session_criteria(
+    session_id: int,
+    payload: SearchCriteriaCreateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Lưu tiêu chí tìm kiếm vào bảng `SearchCriteria`:
+    - Nếu có `location_text` nhưng thiếu `latitude`/`longitude`, tự động gọi GeocodingService để bù tọa độ.
+    - Gắn liền với `session_id` để làm tâm bán kính cho Module 3 & 4.
+    """
+    lat = payload.latitude
+    lng = payload.longitude
+
+    # Tự động Geocode nếu chưa có tọa độ
+    if payload.location_text and (lat is None or lng is None):
+        geo = GeocodingService.geocode(payload.location_text)
+        lat = geo["latitude"]
+        lng = geo["longitude"]
+
+    crit_obj = ChatSessionService.save_criteria(
+        db=db,
+        session_id=session_id,
+        location_text=payload.location_text,
+        latitude=lat,
+        longitude=lng,
+        cuisine=payload.cuisine,
+        budget=payload.budget,
+        has_parking=payload.has_parking,
+        other_conditions=payload.other_conditions
+    )
+
+    return SearchCriteriaResponse(
+        criteria_id=crit_obj.criteria_id,
+        session_id=crit_obj.session_id,
+        location_text=crit_obj.location_text,
+        latitude=crit_obj.latitude,
+        longitude=crit_obj.longitude,
+        cuisine=crit_obj.cuisine,
+        budget=crit_obj.budget,
+        has_parking=crit_obj.has_parking,
+        other_conditions=crit_obj.other_conditions,
+        created_at=crit_obj.created_at
+    )
+
+
+@router.get(
+    "/sessions/{session_id}/criteria",
+    response_model=Optional[SearchCriteriaResponse],
+    summary="Lấy tiêu chí tìm kiếm mới nhất của phiên chat"
+)
+def get_session_criteria(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """Truy vấn tiêu chí tìm kiếm hiện tại của phiên chat từ bảng `SearchCriteria`"""
+    crit_obj = ChatSessionService.get_latest_criteria(db, session_id)
+    if not crit_obj:
+        return None
+
+    return SearchCriteriaResponse(
+        criteria_id=crit_obj.criteria_id,
+        session_id=crit_obj.session_id,
+        location_text=crit_obj.location_text,
+        latitude=crit_obj.latitude,
+        longitude=crit_obj.longitude,
+        cuisine=crit_obj.cuisine,
+        budget=crit_obj.budget,
+        has_parking=crit_obj.has_parking,
+        other_conditions=crit_obj.other_conditions,
+        created_at=crit_obj.created_at
+    )

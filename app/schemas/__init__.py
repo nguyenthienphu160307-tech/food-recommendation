@@ -21,6 +21,11 @@ from .search import (
     SendMessageRequest,
     MessageResponse,
     SessionHistoryResponse,
+    GeocodeRequest,
+    GeocodeResponse,
+    ExtractCriteriaRequest,
+    SearchCriteriaCreateRequest,
+    SearchCriteriaResponse,
 )
 
 __all__ = [
@@ -41,4 +46,9 @@ __all__ = [
     "SendMessageRequest",
     "MessageResponse",
     "SessionHistoryResponse",
+    "GeocodeRequest",
+    "GeocodeResponse",
+    "ExtractCriteriaRequest",
+    "SearchCriteriaCreateRequest",
+    "SearchCriteriaResponse",
 ]

@@ -10,8 +10,11 @@ from app.core.database import engine, Base, get_db
 import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
 from app.routers import auth_router, restaurant_router, user_router, search_router
 
-# Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, ...)
-Base.metadata.create_all(bind=engine)
+# Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, SearchCriteria, ...)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"[CANH BAO] Khong the tu dong khoi tao database: {e}")
 
 app = FastAPI(
     title="Smart Dining - Hệ thống Gợi ý Địa điểm Ăn uống theo Vị trí",

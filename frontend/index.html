@@ -1112,14 +1112,59 @@
                 }
             }
 
+            // 2. Gọi Service Geocoding & Bóc tách tiêu chí ăn uống (TSK-18)
+            let geocodedInfo = null;
+            try {
+                const extRes = await fetch('/api/chat/extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                if (extRes.ok) {
+                    const extData = await extRes.json();
+                    geocodedInfo = extData.criteria;
+
+                    // Lưu SearchCriteria kèm tọa độ GPS vào CSDL
+                    if (currentChatSessionId && geocodedInfo) {
+                        await fetch(`/api/chat/sessions/${currentChatSessionId}/criteria`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                location_text: geocodedInfo.location_text,
+                                latitude: geocodedInfo.latitude,
+                                longitude: geocodedInfo.longitude,
+                                cuisine: geocodedInfo.cuisine,
+                                budget: geocodedInfo.budget,
+                                has_parking: geocodedInfo.has_parking,
+                                other_conditions: JSON.stringify(geocodedInfo.other_conditions || {})
+                            })
+                        });
+                    }
+
+                    // Nếu nhận diện được tọa độ tâm mới, di chuyển bản đồ đến khu vực đó
+                    if (geocodedInfo && geocodedInfo.latitude && geocodedInfo.longitude && mainMap) {
+                        mainMap.flyTo([geocodedInfo.latitude, geocodedInfo.longitude], 14, { duration: 1.2 });
+                        currentPos = { lat: geocodedInfo.latitude, lng: geocodedInfo.longitude };
+                    }
+                }
+            } catch (err) {
+                console.warn('Lỗi khi gọi Geocoding API:', err);
+            }
+
             executeAISearch(text);
 
             setTimeout(async () => {
-                const aiResponse = `Mình đã phân tích yêu cầu <strong>"${text}"</strong> và cập nhật danh sách các quán phù hợp nhất ngay trên bản đồ và màn hình chính. Bạn có muốn lọc thêm theo mức giá hay khoảng cách không?`;
+                let aiResponse = '';
+                if (geocodedInfo && geocodedInfo.location_text && geocodedInfo.latitude) {
+                    aiResponse = `Mình đã định vị khu vực <strong>${geocodedInfo.location_text}</strong> (GPS: ${geocodedInfo.latitude.toFixed(4)}, ${geocodedInfo.longitude.toFixed(4)}) và cập nhật các quán phù hợp nhất ngay trên bản đồ!`;
+                } else {
+                    aiResponse = `Mình đã phân tích yêu cầu <strong>"${text}"</strong> và cập nhật danh sách các quán phù hợp nhất ngay trên bản đồ và màn hình chính. Bạn có muốn lọc thêm theo mức giá hay khoảng cách không?`;
+                }
+
                 feed.innerHTML += `<div class="bubble bubble-ai">${aiResponse}</div>`;
                 feed.scrollTop = feed.scrollHeight;
 
-                // 2. Lưu câu trả lời của AI vào CSDL theo thời gian thực (TSK-16)
+                // 3. Lưu câu trả lời của AI vào CSDL theo thời gian thực (TSK-16)
                 if (currentChatSessionId) {
                     try {
                         await fetch(`/api/chat/sessions/${currentChatSessionId}/messages`, {
