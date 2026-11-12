@@ -3,7 +3,7 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from app.models.user import User
+from app.models.user import User, UserProfile
 from app.models.search import SearchSession, SearchMessage, SearchCriteria
 
 
@@ -57,6 +57,7 @@ class ChatSessionService:
         """
         Đóng phiên chat (chuyển status='closed'):
         - Dùng khi người dùng chọn xong quán hoặc kết thúc phiên hội thoại.
+        - TSK-20: Nếu người dùng bật auto_purge_location → tự động xóa tọa độ GPS tạm thời (NFR-07).
         """
         session_obj = ChatSessionService.get_session(db, session_id)
         if session_obj.status == "closed":
@@ -65,6 +66,20 @@ class ChatSessionService:
         session_obj.status = "closed"
         db.commit()
         db.refresh(session_obj)
+
+        # TSK-20: Auto-purge tọa độ tạm thời nếu là khách vãng lai hoặc người dùng bật auto_purge (NFR-07)
+        should_purge = True
+        if session_obj.user_id is not None:
+            profile = db.query(UserProfile).filter(
+                UserProfile.user_id == session_obj.user_id
+            ).first()
+            if profile and not profile.auto_purge_location:
+                should_purge = False
+
+        if should_purge:
+            from app.services.privacy_service import LocationPrivacyService
+            LocationPrivacyService.purge_session_location(session_id, db)
+
         return session_obj
 
     @staticmethod
@@ -136,9 +151,11 @@ class ChatSessionService:
         budget: Optional[int] = None,
         has_parking: Optional[bool] = False,
         other_conditions: Optional[str] = None,
+        is_obfuscated: bool = False,
     ) -> SearchCriteria:
         """
         Lưu hoặc cập nhật tiêu chí tìm kiếm kèm tọa độ GPS vào bảng SearchCriteria (TSK-18).
+        TSK-20: Thêm tham số is_obfuscated để đánh dấu tọa độ đã được làm mờ.
         """
         ChatSessionService.get_session(db, session_id)
 
@@ -151,6 +168,7 @@ class ChatSessionService:
             budget=budget,
             has_parking=has_parking,
             other_conditions=other_conditions,
+            is_obfuscated=is_obfuscated,
             created_at=datetime.utcnow()
         )
         db.add(new_criteria)

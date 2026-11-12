@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.chat_session_service import ChatSessionService
 from app.services.geocoding_service import GeocodingService
+from app.services.privacy_service import LocationPrivacyService
 from app.schemas.search import (
     CreateSessionRequest,
     SessionResponse,
@@ -18,6 +19,7 @@ from app.schemas.search import (
     ExtractCriteriaRequest,
     SearchCriteriaCreateRequest,
     SearchCriteriaResponse,
+    PurgeLocationResponse,
 )
 
 router = APIRouter(prefix="/api/chat", tags=["Trợ lý Chat AI & Geocoding (Module 2 & 3)"])
@@ -233,6 +235,7 @@ def save_session_criteria(
     """
     Lưu tiêu chí tìm kiếm vào bảng `SearchCriteria`:
     - Nếu có `location_text` nhưng thiếu `latitude`/`longitude`, tự động gọi GeocodingService để bù tọa độ.
+    - TSK-20: Tự động áp dụng cơ chế làm mờ tọa độ theo cài đặt quyền riêng tư của người dùng (BR-08).
     - Gắn liền với `session_id` để làm tâm bán kính cho Module 3 & 4.
     """
     lat = payload.latitude
@@ -244,6 +247,24 @@ def save_session_criteria(
         lat = geo["latitude"]
         lng = geo["longitude"]
 
+    # TSK-20: Áp dụng cơ chế bảo vệ quyền riêng tư GPS (BR-08)
+    # user_id lấy từ payload (nếu có) hoặc từ session
+    user_id = payload.user_id if payload.user_id else None
+    if user_id is None:
+        # Lấy user_id từ phiên chat nếu payload không truyền
+        try:
+            session_obj = ChatSessionService.get_session(db, session_id)
+            user_id = session_obj.user_id
+        except Exception:
+            user_id = None
+
+    privacy_result = LocationPrivacyService.apply_privacy_to_coordinates(
+        lat=lat, lng=lng, user_id=user_id, db=db
+    )
+    lat = privacy_result["latitude"]
+    lng = privacy_result["longitude"]
+    is_obfuscated = privacy_result["is_obfuscated"]
+
     crit_obj = ChatSessionService.save_criteria(
         db=db,
         session_id=session_id,
@@ -253,7 +274,8 @@ def save_session_criteria(
         cuisine=payload.cuisine,
         budget=payload.budget,
         has_parking=payload.has_parking,
-        other_conditions=payload.other_conditions
+        other_conditions=payload.other_conditions,
+        is_obfuscated=is_obfuscated,
     )
 
     return SearchCriteriaResponse(
@@ -266,7 +288,36 @@ def save_session_criteria(
         budget=crit_obj.budget,
         has_parking=crit_obj.has_parking,
         other_conditions=crit_obj.other_conditions,
+        is_obfuscated=crit_obj.is_obfuscated,
         created_at=crit_obj.created_at
+    )
+
+
+@router.post(
+    "/sessions/{session_id}/purge-location",
+    response_model=PurgeLocationResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xóa thủ công log tọa độ GPS tạm thời của phiên chat (TSK-20 / NFR-07)"
+)
+def purge_session_location(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Thủ công kích hoạt xóa tọa độ GPS tạm thời cho một phiên chat cụ thể (TSK-20):
+    - Chỉ xóa các bản ghi `SearchCriteria` có `is_obfuscated = True`.
+    - Trả về số lượng bản ghi đã được xóa tọa độ.
+    - Phù hợp với quy tắc NFR-07 (Data Minimization).
+    """
+    # Kiểm tra phiên tồn tại
+    ChatSessionService.get_session(db, session_id)
+
+    purged_count = LocationPrivacyService.purge_session_location(session_id, db)
+
+    return PurgeLocationResponse(
+        session_id=session_id,
+        purged_count=purged_count,
+        message=f"Đã xóa thành công tọa độ GPS của {purged_count} bản ghi trong phiên #{session_id}."
     )
 
 
@@ -294,5 +345,6 @@ def get_session_criteria(
         budget=crit_obj.budget,
         has_parking=crit_obj.has_parking,
         other_conditions=crit_obj.other_conditions,
+        is_obfuscated=getattr(crit_obj, "is_obfuscated", False),
         created_at=crit_obj.created_at
     )

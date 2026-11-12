@@ -6,6 +6,8 @@ from sqlalchemy import or_
 from app.core.database import get_db
 from app.models.user import User, UserProfile
 from app.schemas.user import UserProfileUpdateSchema, UserProfileResponseSchema
+from app.schemas.search import PrivacySettingsResponse, PrivacySettingsUpdateRequest
+from app.services.privacy_service import LocationPrivacyService
 
 router = APIRouter(prefix="/api/users", tags=["Hồ sơ người dùng (UserProfiles)"])
 
@@ -124,4 +126,83 @@ def update_user_profile(
         default_address=profile.default_address,
         default_lat=profile.default_lat,
         default_lng=profile.default_lng
+    )
+
+
+# =====================================================================
+# API QUYỀN RIÊNG TƯ VỊ TRÍ GPS (TASK TSK-20 / BR-08, NFR-07)
+# =====================================================================
+
+@router.get(
+    "/privacy",
+    response_model=PrivacySettingsResponse,
+    summary="Lấy cài đặt quyền riêng tư vị trí GPS hiện tại của người dùng (TSK-20)"
+)
+def get_privacy_settings(
+    user_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Trả về cài đặt quyền riêng tư vị trí GPS hiện tại của người dùng:
+    - `share_exact_location`: False (mặc định) = chỉ chia sẻ khu vực xấp xỉ ~1,1 km.
+    - `auto_purge_location`: True (mặc định) = tự động xóa log tọa độ sau khi đóng phiên.
+    """
+    # Kiểm tra user tồn tại
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy tài khoản người dùng với ID={user_id}."
+        )
+
+    settings = LocationPrivacyService.get_privacy_settings(user_id, db)
+    return PrivacySettingsResponse(
+        user_id=user_id,
+        share_exact_location=settings["share_exact_location"],
+        auto_purge_location=settings["auto_purge_location"],
+        profile_exists=settings["profile_exists"]
+    )
+
+
+@router.put(
+    "/privacy",
+    response_model=PrivacySettingsResponse,
+    summary="Cập nhật cài đặt quyền riêng tư vị trí GPS của người dùng (TSK-20)"
+)
+def update_privacy_settings(
+    payload: PrivacySettingsUpdateRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Cập nhật cài đặt quyền riêng tư vị trí GPS (TSK-20 / BR-08):
+    - Có thể cập nhật `share_exact_location` (chia sẻ chính xác vs xấp xỉ).
+    - Có thể cập nhật `auto_purge_location` (tự động xóa log tọa độ sau phiên).
+    - Chỉ truyền các trường muốn thay đổi; các trường còn lại giữ nguyên.
+    """
+    # Kiểm tra user tồn tại
+    user = db.query(User).filter(User.id == payload.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy tài khoản người dùng với ID={payload.user_id}."
+        )
+
+    try:
+        profile = LocationPrivacyService.update_privacy_settings(
+            user_id=payload.user_id,
+            share_exact_location=payload.share_exact_location,
+            auto_purge_location=payload.auto_purge_location,
+            db=db
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+    return PrivacySettingsResponse(
+        user_id=payload.user_id,
+        share_exact_location=profile.share_exact_location,
+        auto_purge_location=profile.auto_purge_location,
+        profile_exists=True
     )

@@ -776,5 +776,138 @@
 
         window.addEventListener('DOMContentLoaded', async () => { await loadUserProfile(); });
     </script>
+
+    <!-- ============================================================
+         TSK-20: Cài đặt Quyền riêng tư Vị trí GPS (BR-08, NFR-07)
+         ============================================================ -->
+    <div class="container" style="margin-top:2rem;margin-bottom:1rem;">
+      <div class="profile-card">
+        <div class="card-body" style="padding:2rem;">
+          <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:1.2rem;display:flex;align-items:center;gap:0.5rem;">
+            <span style="font-size:1.5rem;">🔐</span> Quyền riêng tư Vị trí GPS
+          </h2>
+          <p style="color:var(--text-muted,#6c757d);margin-bottom:1.5rem;font-size:0.95rem;">
+            Kiểm soát cách ứng dụng sử dụng và lưu trữ dữ liệu vị trí của bạn theo tiêu chuẩn BR-08 &amp; NFR-07.
+          </p>
+
+          <!-- Toggle 1: Chia sẻ vị trí chính xác -->
+          <div class="privacy-toggle-row" style="display:flex;align-items:flex-start;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--border-color,#e9ecef);">
+            <div style="flex:1;padding-right:1.5rem;">
+              <div style="font-weight:600;margin-bottom:0.3rem;">📍 Chia sẻ vị trí chính xác</div>
+              <div style="font-size:0.875rem;color:var(--text-muted,#6c757d);">
+                <strong>Tắt (mặc định):</strong> Hệ thống chỉ lưu khu vực xấp xỉ (~1,1 km), không lưu tọa độ GPS chính xác.<br>
+                <strong>Bật:</strong> Cho phép lưu tọa độ GPS đầy đủ để gợi ý quán ăn chính xác hơn.
+              </div>
+            </div>
+            <label class="privacy-switch" style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
+              <input type="checkbox" id="toggle-share-exact" onchange="onPrivacyToggleChange()" style="opacity:0;width:0;height:0;">
+              <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:28px;transition:.3s;"></span>
+              <style>
+                .privacy-switch input:checked + span { background: var(--brand-primary, #2563eb); }
+                .privacy-switch span:before {
+                  content:''; position:absolute; height:20px; width:20px; left:4px; bottom:4px;
+                  background:white; border-radius:50%; transition:.3s;
+                }
+                .privacy-switch input:checked + span:before { transform: translateX(24px); }
+              </style>
+            </label>
+          </div>
+
+          <!-- Toggle 2: Tự động xóa lịch sử vị trí -->
+          <div class="privacy-toggle-row" style="display:flex;align-items:flex-start;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--border-color,#e9ecef);">
+            <div style="flex:1;padding-right:1.5rem;">
+              <div style="font-weight:600;margin-bottom:0.3rem;">🗑️ Tự động xóa lịch sử vị trí</div>
+              <div style="font-size:0.875rem;color:var(--text-muted,#6c757d);">
+                <strong>Bật (mặc định):</strong> Tự động xóa log tọa độ GPS tạm thời sau mỗi phiên tìm kiếm kết thúc.<br>
+                <strong>Tắt:</strong> Giữ lại lịch sử vị trí để cải thiện gợi ý cá nhân hóa.
+              </div>
+            </div>
+            <label class="privacy-switch" style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;">
+              <input type="checkbox" id="toggle-auto-purge" onchange="onPrivacyToggleChange()" style="opacity:0;width:0;height:0;">
+              <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:28px;transition:.3s;"></span>
+            </label>
+          </div>
+
+          <!-- Trạng thái + Nút lưu -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-top:1.2rem;gap:1rem;flex-wrap:wrap;">
+            <span id="privacy-status-msg" style="font-size:0.875rem;color:var(--text-muted,#6c757d);"></span>
+            <button
+              onclick="savePrivacySettings()"
+              style="background:var(--brand-primary,#2563eb);color:#fff;border:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;cursor:pointer;transition:.2s;"
+              onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'"
+            >
+              💾 Lưu cài đặt quyền riêng tư
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    // ============================================================
+    //  TSK-20: Privacy Settings UI Logic
+    // ============================================================
+    async function loadPrivacySettings() {
+        const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+        if (!userId) return;
+        try {
+            const res = await fetch(`/api/users/privacy?user_id=${userId}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            document.getElementById('toggle-share-exact').checked = data.share_exact_location ?? false;
+            document.getElementById('toggle-auto-purge').checked   = data.auto_purge_location  ?? true;
+            document.getElementById('privacy-status-msg').textContent = 'Đã tải cài đặt quyền riêng tư.';
+        } catch (e) {
+            console.warn('[Privacy] Không thể tải cài đặt:', e);
+        }
+    }
+
+    function onPrivacyToggleChange() {
+        document.getElementById('privacy-status-msg').textContent = 'Có thay đổi chưa được lưu...';
+        document.getElementById('privacy-status-msg').style.color = '#f59e0b';
+    }
+
+    async function savePrivacySettings() {
+        const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+        if (!userId) {
+            alert('Bạn cần đăng nhập để lưu cài đặt quyền riêng tư.');
+            return;
+        }
+        const shareExact = document.getElementById('toggle-share-exact').checked;
+        const autoPurge  = document.getElementById('toggle-auto-purge').checked;
+        try {
+            const res = await fetch('/api/users/privacy', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: parseInt(userId),
+                    share_exact_location: shareExact,
+                    auto_purge_location: autoPurge
+                })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Lỗi không xác định');
+            }
+            const data = await res.json();
+            const msg = document.getElementById('privacy-status-msg');
+            msg.textContent = '✅ Đã lưu cài đặt quyền riêng tư thành công!';
+            msg.style.color = '#16a34a';
+            if (typeof showToast === 'function') {
+                showToast('Cài đặt quyền riêng tư đã được lưu!', 'success');
+            }
+        } catch (e) {
+            const msg = document.getElementById('privacy-status-msg');
+            msg.textContent = '❌ Lỗi: ' + e.message;
+            msg.style.color = '#dc2626';
+        }
+    }
+
+    // Tải cài đặt khi trang profile load xong
+    window.addEventListener('DOMContentLoaded', async () => {
+        await loadPrivacySettings();
+    });
+    </script>
+
 </body>
 </html>

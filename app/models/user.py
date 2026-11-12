@@ -35,6 +35,10 @@ class UserProfile(Base):
     default_lat = Column(Float, nullable=True)
     default_lng = Column(Float, nullable=True)
 
+    # TSK-20: Cài đặt quyền riêng tư vị trí GPS (BR-08, NFR-07)
+    share_exact_location = Column(Boolean, default=False, nullable=False)  # True = chia sẻ tọa độ chính xác; False = chỉ chia sẻ khu vực xấp xỉ
+    auto_purge_location = Column(Boolean, default=True, nullable=False)    # True = tự động xóa log tọa độ sau khi đóng phiên
+
     user = relationship("User", back_populates="profile")
 
 

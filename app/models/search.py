@@ -80,6 +80,8 @@ class SearchCriteria(Base):
     has_parking = Column(Boolean, nullable=True, default=False)
     other_conditions = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    # TSK-20: Đánh dấu tọa độ đã được làm mờ theo cơ chế bảo vệ quyền riêng tư (BR-08)
+    is_obfuscated = Column(Boolean, default=False, nullable=False)
 
     # Quan hệ N - 1 với SearchSessions
     session = relationship("SearchSession", back_populates="criteria")
