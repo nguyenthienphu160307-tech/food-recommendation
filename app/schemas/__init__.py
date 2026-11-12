@@ -5,6 +5,14 @@ from .auth import (
     RegisterResponse,
     StandardResponse,
 )
+from .preferences import (
+    UserPreferenceBase,
+    UserPreferenceUpdate,
+    UserPreferenceResponse,
+    AppliedPreferencesSummary,
+    RecommendedRestaurantItem,
+    RecommendationResponse,
+)
 
 __all__ = [
     "SendOTPRequest",
@@ -12,4 +20,17 @@ __all__ = [
     "UserDataResponse",
     "RegisterResponse",
     "StandardResponse",
+    "LoginRequest",
+    "TokenResponse",
+    "UserInfoResponse",
+    "LoginResponse",
+    "RefreshTokenRequest",
+    "RefreshTokenResponse",
+    "LogoutRequest",
+    "UserPreferenceBase",
+    "UserPreferenceUpdate",
+    "UserPreferenceResponse",
+    "AppliedPreferencesSummary",
+    "RecommendedRestaurantItem",
+    "RecommendationResponse",
 ]

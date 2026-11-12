@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khai báo Sở thích Ăn uống (FR-04) — FoodAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root[data-theme="light"] {
+            --bg-page: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --border-focus: #e11d48;
+            --brand-red: #e11d48;
+            --brand-red-hover: #be123c;
+            --brand-green: #10b981;
+            --brand-purple: #8b5cf6;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.06);
+            --code-bg: #0f172a;
+            --code-text: #38bdf8;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-page: #0b0f19;
+            --bg-surface: #131b2e;
+            --bg-subtle: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --border-hover: #475569;
+            --border-focus: #f43f5e;
+            --brand-red: #f43f5e;
+            --brand-red-hover: #e11d48;
+            --brand-green: #34d399;
+            --brand-purple: #a78bfa;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.55);
+            --code-bg: #030712;
+            --code-text: #7dd3fc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        /* Topbar Header */
+        .topbar {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            height: 68px;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 28px; }
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: var(--text-primary);
+            font-weight: 800; font-size: 1.25rem; letter-spacing: -0.03em;
+        }
+        .logo-mark {
+            width: 36px; height: 36px; background: var(--brand-red);
+            color: #ffffff; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a {
+            text-decoration: none; color: var(--text-secondary);
+            font-size: 0.9rem; font-weight: 500; transition: color 0.15s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--brand-red); font-weight: 600; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .icon-btn {
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            color: var(--text-primary); height: 38px; padding: 0 14px;
+            border-radius: 8px; display: inline-flex; align-items: center;
+            gap: 8px; font-size: 0.84rem; font-weight: 500; cursor: pointer;
+            transition: all 0.15s;
+        }
+        .icon-btn:hover { border-color: var(--text-muted); }
+
+        .user-chip {
+            display: flex; align-items: center; gap: 10px;
+            padding: 4px 12px 4px 5px; border: 1px solid var(--border);
+            border-radius: 999px; background: var(--bg-surface);
+        }
+        .user-chip img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+        .user-chip span { font-size: 0.85rem; font-weight: 600; }
+
+        /* Container */
+        .container {
+            max-width: 1080px; width: 100%;
+            margin: 36px auto; padding: 0 24px; flex: 1;
+        }
+
+        .hero-banner {
+            background: linear-gradient(135deg, rgba(225, 29, 72, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 32px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .hero-text h1 {
+            font-size: 1.7rem; font-weight: 800; letter-spacing: -0.025em; margin-bottom: 6px;
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+        .task-badge {
+            background: var(--brand-red); color: #ffffff;
+            font-size: 0.76rem; font-weight: 700; padding: 3px 10px;
+            border-radius: 999px; letter-spacing: 0.02em;
+        }
+        .hero-text p { font-size: 0.92rem; color: var(--text-secondary); max-width: 680px; line-height: 1.5; }
+
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 28px;
+            align-items: start;
+        }
+        @media (max-width: 960px) {
+            .form-layout { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+        }
+
+        .cards-column { display: flex; flex-direction: column; gap: 24px; }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: border-color 0.15s;
+        }
+        .card:hover { border-color: var(--border-hover); }
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .card-title-group { display: flex; align-items: center; gap: 12px; }
+        .card-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem;
+        }
+        .icon-diet { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+        .icon-allergy { background: rgba(225, 29, 72, 0.12); color: #e11d48; }
+        .icon-cuisine { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+        .icon-budget { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+
+        .card-header h2 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
+        .card-header p { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+        .card-body { padding: 24px; }
+
+        /* Grid Options */
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 12px;
+        }
+
+        /* Radio Card for Diet Type */
+        .diet-card {
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: var(--bg-subtle);
+            position: relative;
+            user-select: none;
+        }
+        .diet-card:hover { border-color: var(--brand-red); transform: translateY(-2px); }
+        .diet-card.selected {
+            border-color: var(--brand-red);
+            background: rgba(225, 29, 72, 0.05);
+            box-shadow: 0 0 0 1px var(--brand-red);
+        }
+        .diet-card-top {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+        }
+        .diet-emoji { font-size: 1.5rem; }
+        .radio-dot {
+            width: 18px; height: 18px; border-radius: 50%;
+            border: 2px solid var(--border-hover);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .diet-card.selected .radio-dot {
+            border-color: var(--brand-red);
+            background: var(--brand-red);
+        }
+        .diet-card.selected .radio-dot::after {
+            content: ''; width: 6px; height: 6px; background: #ffffff; border-radius: 50%;
+        }
+        .diet-name { font-weight: 700; font-size: 0.92rem; color: var(--text-primary); margin-bottom: 4px; }
+        .diet-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.35; }
+
+        /* Checkbox Card for Allergies & Cuisines */
+        .check-card {
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: var(--bg-subtle);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            user-select: none;
+        }
+        .check-card:hover { border-color: var(--border-focus); }
+        .check-card.checked {
+            border-color: var(--border-focus);
+            background: rgba(225, 29, 72, 0.04);
+        }
+        .check-card input[type="checkbox"] {
+            width: 18px; height: 18px; accent-color: var(--brand-red); cursor: pointer;
+        }
+        .check-label-row { flex: 1; }
+        .check-title { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
+        .check-sub { font-size: 0.76rem; color: var(--text-muted); display: block; margin-top: 2px; }
+
+        /* Allergy Tag Special Alert */
+        .allergy-alert-pill {
+            font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+            border-radius: 999px; background: rgba(225, 29, 72, 0.12);
+            color: var(--brand-red); margin-left: auto;
+        }
+
+        /* Budget Slider Controls */
+        .budget-display {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+        }
+        .budget-val-box {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.6rem;
+            font-weight: 700; color: var(--brand-red);
+        }
+        .budget-input-group {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .budget-input {
+            width: 160px; height: 40px; padding: 0 12px;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg-surface); color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600;
+        }
+        .slider-range {
+            width: 100%; height: 8px; -webkit-appearance: none;
+            background: var(--bg-subtle); border-radius: 999px; outline: none;
+            border: 1px solid var(--border); margin-bottom: 16px;
+        }
+        .slider-range::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 22px; height: 22px;
+            border-radius: 50%; background: var(--brand-red); cursor: pointer;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+        }
+        .budget-chips {
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .chip {
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            color: var(--text-secondary); padding: 6px 12px; border-radius: 999px;
+            font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+        }
+        .chip:hover, .chip.active {
+            background: var(--brand-red); color: #ffffff; border-color: var(--brand-red);
+        }
+
+        /* Sidebar Inspector & Summary */
+        .sidebar { position: sticky; top: 96px; display: flex; flex-direction: column; gap: 20px; }
+        .summary-card {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px; box-shadow: var(--shadow-sm);
+        }
+        .summary-card h3 {
+            font-size: 1.02rem; font-weight: 700; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .summary-item {
+            display: flex; justify-content: space-between; font-size: 0.84rem;
+            padding: 8px 0; border-bottom: 1px dashed var(--border);
+        }
+        .summary-item:last-child { border-bottom: none; }
+        .summary-item span:first-child { color: var(--text-muted); }
+        .summary-item span:last-child { font-weight: 600; text-align: right; }
+
+        .btn-submit-main {
+            width: 100%; height: 46px; background: var(--brand-red);
+            color: #ffffff; border: none; border-radius: 10px;
+            font-size: 0.95rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; transition: all 0.18s; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+        }
+        .btn-submit-main:hover {
+            background: var(--brand-red-hover); transform: translateY(-1px);
+        }
+
+        .btn-discover {
+            width: 100%; height: 42px; background: var(--bg-subtle);
+            color: var(--text-primary); border: 1px solid var(--border);
+            border-radius: 10px; font-size: 0.88rem; font-weight: 600;
+            text-decoration: none; display: flex; align-items: center;
+            justify-content: center; gap: 8px; transition: all 0.15s;
+        }
+        .btn-discover:hover { background: var(--border); }
+
+        .ai-tips-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+        }
+        .ai-tips-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        .ai-tips-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .ai-tips-list li {
+            position: relative;
+            padding-left: 18px;
+        }
+        .ai-tips-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--brand-green);
+            font-weight: 700;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px;
+            background: #0f172a; color: #ffffff; padding: 14px 20px;
+            border-radius: 10px; font-size: 0.88rem; font-weight: 600;
+            display: none; align-items: center; gap: 10px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4); z-index: 3000;
+        }
+
+        .site-footer {
+            background: var(--bg-surface); border-top: 1px solid var(--border);
+            padding: 24px 32px; margin-top: 60px; font-size: 0.82rem; color: var(--text-muted);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="topbar">
+        <div class="topbar-left">
+            <a href="index.html" class="logo">
+                <div class="logo-mark">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+                    </svg>
+                </div>
+                <span>FoodAI</span>
+            </a>
+            <nav class="nav-links">
+                <a href="index.html">Khám phá Quán ăn</a>
+                <a href="preferences.html" class="active">Khai báo Sở thích (FR-04)</a>
+                <a href="profile.html">Hồ sơ cá nhân</a>
+                <a href="admin.html">Quản trị Admin</a>
+            </nav>
+        </div>
+
+        <div class="topbar-right">
+            <button type="button" class="icon-btn" onclick="toggleTheme()" id="theme-btn">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-label">Giao diện Tối</span>
+            </button>
+            <div class="user-chip">
+                <img id="nav-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar">
+                <span id="nav-username">Nguyễn Văn An</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero-banner">
+            <div class="hero-text">
+                <h1>
+                    Khai báo Sở thích Ẩm thực cá nhân
+                    <span class="task-badge">TASK TE9C64E / FR-04</span>
+                </h1>
+                <p>
+                    Thiết lập khẩu vị, chế độ dinh dưỡng và các thành phần dị ứng của bạn.
+                    Khi tìm kiếm quán ăn, AI sẽ tự động đọc chế độ ăn và danh sách dị ứng để cá nhân hóa kết quả gợi ý.
+                </p>
+            </div>
+        </div>
+
+        <form id="preferences-form" class="form-layout" onsubmit="handleSavePreferences(event)">
+            <div class="cards-column">
+
+                <!-- 1. CHẾ ĐỘ ĂN UỐNG (DIET TYPE) -->
+                <section class="card" id="section-diet">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon icon-diet">🥗</div>
+                            <div>
+                                <h2>1. Chế độ ăn uống (Dietary Lifestyle)</h2>
+                                <p>Lựa chọn lối sống dinh dưỡng của bạn (lưu trường <code>diet_type</code>)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="option-grid">
+                            <div class="diet-card selected" onclick="selectDiet('omnivore', this)">
+                                <div class="diet-card-top">
+                                    <span class="diet-emoji">🍽️</span>
+                                    <div class="radio-dot"></div>
+                                </div>
+                                <div class="diet-name">Ăn bình thường (Omnivore)</div>
+                                <div class="diet-desc">Không kiêng cữ, thưởng thức trọn vẹn mọi phong cách ẩm thực.</div>
+                            </div>
+
+                            <div class="diet-card" onclick="selectDiet('vegetarian', this)">
+                                <div class="diet-card-top">
+                                    <span class="diet-emoji">🥗</span>
+                                    <div class="radio-dot"></div>
+                                </div>
+                                <div class="diet-name">Ăn chay (Vegetarian)</div>
+                                <div class="diet-desc">Không ăn thịt cá, có dùng trứng hoặc chế phẩm bơ sữa.</div>
+                            </div>
+
+                            <div class="diet-card" onclick="selectDiet('vegan', this)">
+                                <div class="diet-card-top">
+                                    <span class="diet-emoji">🌱</span>
+                                    <div class="radio-dot"></div>
+                                </div>
+                                <div class="diet-name">Thuần chay (Vegan)</div>
+                                <div class="diet-desc">100% từ thực vật tự nhiên, hoàn toàn không đụng động vật.</div>
+                            </div>
+
+                            <div class="diet-card" onclick="selectDiet('keto', this)">
+                                <div class="diet-card-top">
+                                    <span class="diet-emoji">🥩</span>
+                                    <div class="radio-dot"></div>
+                                </div>
+                                <div class="diet-name">Ăn kiêng Keto</div>
+                                <div class="diet-desc">Hạn chế tối đa tinh bột đường, ưu tiên chất béo và đạm lành mạnh.</div>
+                            </div>
+
+                            <div class="diet-card" onclick="selectDiet('halal', this)">
+                                <div class="diet-card-top">
+                                    <span class="diet-emoji">☪️</span>
+                                    <div class="radio-dot"></div>
+                                </div>
+                                <div class="diet-name">Ẩm thực Halal</div>
+                                <div class="diet-desc">Món ăn đạt chứng nhận tiêu chuẩn tôn giáo Hồi giáo.</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. DỊ ỨNG THỰC PHẨM (ALLERGIES) -->
+                <section class="card" id="section-allergies">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon icon-allergy">⚠️</div>
+                            <div>
+                                <h2>2. Cảnh báo Dị ứng Thực phẩm (Allergies Guard)</h2>
+                                <p>Hệ thống AI sẽ tự động loại trừ hoàn toàn các địa điểm chứa thành phần rủi ro</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="option-grid">
+                            <label class="check-card">
+                                <input type="checkbox" name="allergy" value="seafood" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🦐 Hải sản tươi sống</div>
+                                    <span class="check-sub">Tôm, Cua, Ghẹ, Mực, Ốc, Nghêu...</span>
+                                </div>
+                                <span class="allergy-alert-pill">Loại trừ</span>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="allergy" value="peanut" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🥜 Đậu phộng & Hạt khô</div>
+                                    <span class="check-sub">Lạc rang, hạt điều, hạnh nhân...</span>
+                                </div>
+                                <span class="allergy-alert-pill">Loại trừ</span>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="allergy" value="dairy" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🥛 Sữa & Chế phẩm bơ</div>
+                                    <span class="check-sub">Phô mai, bơ động vật, kem tươi...</span>
+                                </div>
+                                <span class="allergy-alert-pill">Loại trừ</span>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="allergy" value="gluten" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🌾 Gluten & Bột mì</div>
+                                    <span class="check-sub">Bánh mì lúa mì, mì căn, pasta...</span>
+                                </div>
+                                <span class="allergy-alert-pill">Loại trừ</span>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="allergy" value="egg" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🥚 Trứng gia cầm</div>
+                                    <span class="check-sub">Trứng gà, trứng vịt, sốt mayo tươi...</span>
+                                </div>
+                                <span class="allergy-alert-pill">Loại trừ</span>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="allergy" value="soy" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🫘 Đậu nành</div>
+                                    <span class="check-sub">Tàu hũ, nước tương đậu nành...</span>
+                                </div>
+                                <span class="allergy-alert-pill">Loại trừ</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. MÓN ĂN YÊU THÍCH (PREFERRED CUISINES) -->
+                <section class="card" id="section-cuisines">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon icon-cuisine">❤️</div>
+                            <div>
+                                <h2>3. Thể loại ẩm thực yêu thích (Preferred Cuisines)</h2>
+                                <p>AI sẽ ưu tiên cộng thêm điểm phù hợp (Match Score) khi gợi ý</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="option-grid">
+                            <label class="check-card">
+                                <input type="checkbox" name="cuisine" value="Món Việt" checked onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🍜 Món Việt truyền thống</div>
+                                    <span class="check-sub">Cơm niêu, phở, bún chả, món dân dã</span>
+                                </div>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="cuisine" value="Lẩu Nướng" checked onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🥩 Lẩu Nướng & BBQ</div>
+                                    <span class="check-sub">Nướng than hoa, lẩu nấm, lẩu thái</span>
+                                </div>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="cuisine" value="Món Nhật" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🍣 Sushi & Món Nhật</div>
+                                    <span class="check-sub">Sashimi cá hồi, mì udon, ramen</span>
+                                </div>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="cuisine" value="Món Hàn" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🥘 Ẩm thực Hàn Quốc</div>
+                                    <span class="check-sub">Thịt nướng sốt cay, kimbap, canh kim chi</span>
+                                </div>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="cuisine" value="Món Âu" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🍕 Pizza & Món Âu</div>
+                                    <span class="check-sub">Pizza lò củi, steak bò Mỹ, mì Ý</span>
+                                </div>
+                            </label>
+
+                            <label class="check-card">
+                                <input type="checkbox" name="cuisine" value="Món Chay" onchange="updateLiveJSON()">
+                                <div class="check-label-row">
+                                    <div class="check-title">🥗 Ẩm thực Chay thanh tịnh</div>
+                                    <span class="check-sub">Lẩu nấm dưỡng sinh, cơm gạo lứt</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. NGÂN SÁCH TRUNG BÌNH (AVERAGE BUDGET) -->
+                <section class="card" id="section-budget">
+                    <div class="card-header">
+                        <div class="card-title-group">
+                            <div class="card-icon icon-budget">💰</div>
+                            <div>
+                                <h2>4. Mức ngân sách ăn uống trung bình (Average Budget)</h2>
+                                <p>Ước tính chi phí một bữa ăn cho mỗi người (VNĐ)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="budget-display">
+                            <div>
+                                <span style="font-size:0.84rem;color:var(--text-muted);display:block;">Ngân sách lựa chọn:</span>
+                                <div class="budget-val-box" id="budget-text">250.000 đ</div>
+                            </div>
+                            <div class="budget-input-group">
+                                <input type="number" step="10000" min="50000" max="2000000" id="budget-input" class="budget-input" value="250000" oninput="syncBudgetFromInput()">
+                                <span style="font-size:0.86rem;font-weight:600;">VNĐ / người</span>
+                            </div>
+                        </div>
+
+                        <input type="range" class="slider-range" id="budget-slider" min="50000" max="1500000" step="10000" value="250000" oninput="syncBudgetFromSlider()">
+
+                        <div class="budget-chips">
+                            <button type="button" class="chip" onclick="setQuickBudget(100000)">100.000 đ (Bình dân)</button>
+                            <button type="button" class="chip active" onclick="setQuickBudget(250000)">250.000 đ (Phổ thông)</button>
+                            <button type="button" class="chip" onclick="setQuickBudget(500000)">500.000 đ (Hẹn hò / Tiệc)</button>
+                            <button type="button" class="chip" onclick="setQuickBudget(1000000)">1.000.000 đ+ (Cao cấp)</button>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- SIDEBAR: TỔNG KẾT & PREVIEW JSON -->
+            <aside class="sidebar">
+                <div class="summary-card">
+                    <h3>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        Tổng kết Sở thích (FR-04)
+                    </h3>
+                    <div class="summary-item">
+                        <span>Chế độ ăn:</span>
+                        <span id="sum-diet" style="color:var(--brand-green);">Ăn bình thường (Omnivore)</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Dị ứng thực phẩm:</span>
+                        <span id="sum-allergies" style="color:var(--brand-red);">Không có</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Món yêu thích:</span>
+                        <span id="sum-cuisines">Món Việt, Lẩu Nướng</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Ngân sách TB:</span>
+                        <span id="sum-budget" style="color:var(--brand-purple);">250.000 đ/người</span>
+                    </div>
+
+                    <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+                        <button type="submit" class="btn-submit-main">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Lưu Sở Thích Ẩm Thực
+                        </button>
+                        <a href="index.html" class="btn-discover">
+                            <span>Khám phá Nhà hàng ngay →</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- THÔNG TIN HỮU ÍCH DÀNH CHO KHÁCH HÀNG (ĐÃ ẨN BẢNG JSON KỸ THUẬT) -->
+                <div class="ai-tips-card">
+                    <div class="ai-tips-header">
+                        <span>💡</span>
+                        <span>Lợi ích khi lưu sở thích:</span>
+                    </div>
+                    <ul class="ai-tips-list">
+                        <li><strong>An toàn thực phẩm:</strong> Tự động lọc bỏ các món gây dị ứng (tôm, cua, đậu phộng, sữa...).</li>
+                        <li><strong>Chuẩn khẩu vị:</strong> Ưu tiên hiển thị các nhà hàng phục vụ món bạn yêu thích lên đầu.</li>
+                        <li><strong>Tiết kiệm chi tiêu:</strong> Gợi ý các địa điểm vừa vặn với mức ngân sách mong muốn.</li>
+                    </ul>
+                </div>
+                <!-- Hidden JSON preview phục vụ kiểm thử ngầm -->
+                <pre id="json-preview" style="display:none;"></pre>
+            </aside>
+        </form>
+    </div>
+
+    <div class="toast" id="toast-msg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="toast-text">Đã lưu sở thích ăn uống vào CSDL thành công!</span>
+    </div>
+
+    <footer class="site-footer">
+        <div>
+            <strong>FoodAI Vietnam</strong> — Phân hệ Khai báo Sở thích cá nhân (FR-04 / Task TE9C64E)
+        </div>
+        <div style="margin-top:4px;">
+            Đồng bộ dữ liệu JSON thời gian thực vào bảng <code>user_preferences</code> của CSDL hệ thống.
+        </div>
+    </footer>
+
+    <script>
+        const STORAGE_KEY = 'foodai_demo_profile_state';
+
+        let state = {
+            diet_type: 'omnivore',
+            allergies: [],
+            preferred_cuisines: ['Món Việt', 'Lẩu Nướng'],
+            avg_budget: 250000
+        };
+
+        function selectDiet(diet, el) {
+            state.diet_type = diet;
+            document.querySelectorAll('.diet-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            updateLiveJSON();
+        }
+
+        function syncBudgetFromSlider() {
+            const val = parseInt(document.getElementById('budget-slider').value);
+            state.avg_budget = val;
+            document.getElementById('budget-input').value = val;
+            document.getElementById('budget-text').innerText = val.toLocaleString('vi-VN') + ' đ';
+            updateChipState(val);
+            updateLiveJSON();
+        }
+
+        function syncBudgetFromInput() {
+            const val = parseInt(document.getElementById('budget-input').value) || 0;
+            state.avg_budget = val;
+            document.getElementById('budget-slider').value = Math.min(1500000, val);
+            document.getElementById('budget-text').innerText = val.toLocaleString('vi-VN') + ' đ';
+            updateChipState(val);
+            updateLiveJSON();
+        }
+
+        function setQuickBudget(val) {
+            state.avg_budget = val;
+            document.getElementById('budget-slider').value = val;
+            document.getElementById('budget-input').value = val;
+            document.getElementById('budget-text').innerText = val.toLocaleString('vi-VN') + ' đ';
+            updateChipState(val);
+            updateLiveJSON();
+        }
+
+        function updateChipState(val) {
+            document.querySelectorAll('.budget-chips .chip').forEach(btn => {
+                const bVal = parseInt(btn.getAttribute('onclick').match(/\d+/)[0]);
+                btn.classList.toggle('active', bVal === val);
+            });
+        }
+
+        function updateLiveJSON() {
+            // Read checkboxes
+            state.allergies = Array.from(document.querySelectorAll('input[name="allergy"]:checked')).map(cb => cb.value);
+            state.preferred_cuisines = Array.from(document.querySelectorAll('input[name="cuisine"]:checked')).map(cb => cb.value);
+
+            // Update summary
+            const dietMap = {
+                omnivore: 'Ăn bình thường (Omnivore)',
+                vegetarian: 'Ăn chay (Vegetarian)',
+                vegan: 'Thuần chay (Vegan)',
+                keto: 'Ăn kiêng Keto',
+                halal: 'Ẩm thực Halal'
+            };
+            document.getElementById('sum-diet').innerText = dietMap[state.diet_type] || state.diet_type;
+            document.getElementById('sum-allergies').innerText = state.allergies.length > 0 ? state.allergies.join(', ') : 'Không có';
+            document.getElementById('sum-cuisines').innerText = state.preferred_cuisines.length > 0 ? state.preferred_cuisines.join(', ') : 'Chưa chọn';
+            document.getElementById('sum-budget').innerText = state.avg_budget.toLocaleString('vi-VN') + ' đ/người';
+
+            // JSON preview formatted
+            const payload = {
+                diet_type: state.diet_type,
+                allergies: state.allergies,
+                preferred_cuisines: state.preferred_cuisines,
+                avg_budget: state.avg_budget
+            };
+            document.getElementById('json-preview').innerText = JSON.stringify(payload, null, 2);
+        }
+
+        async function handleSavePreferences(e) {
+            e.preventDefault();
+            updateLiveJSON();
+
+            const payload = {
+                diet_type: state.diet_type,
+                allergies: state.allergies,
+                preferred_cuisines: state.preferred_cuisines,
+                avg_budget: state.avg_budget
+            };
+
+            // 1. Lưu vào LocalStorage
+            let fullProf = {};
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) fullProf = JSON.parse(saved);
+            } catch (_) {}
+            fullProf = { ...fullProf, ...payload };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(fullProf));
+
+            // 2. Gửi request POST & PUT /api/users/preferences
+            try {
+                const token = localStorage.getItem('foodai_access_token');
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                await fetch('http://localhost:8000/api/users/preferences', {
+                    method: 'PUT',
+                    headers: headers,
+                    body: JSON.stringify(payload)
+                });
+            } catch (_) {}
+
+            showToast("Đã lưu sở thích ăn uống vào bảng user_preferences thành công!");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            document.getElementById('toast-text').innerText = msg;
+            toast.style.display = 'flex';
+            setTimeout(() => { toast.style.display = 'none'; }, 2800);
+        }
+
+        function loadExistingPreferences() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    const prof = JSON.parse(saved);
+                    if (prof.full_name) document.getElementById('nav-username').innerText = prof.full_name;
+                    if (prof.avatar_url) document.getElementById('nav-avatar').src = prof.avatar_url;
+
+                    if (prof.diet_type) {
+                        state.diet_type = prof.diet_type;
+                        document.querySelectorAll('.diet-card').forEach(card => {
+                            const fn = card.getAttribute('onclick') || '';
+                            card.classList.toggle('selected', fn.includes(`'${prof.diet_type}'`));
+                        });
+                    }
+
+                    if (Array.isArray(prof.allergies)) {
+                        state.allergies = prof.allergies;
+                        document.querySelectorAll('input[name="allergy"]').forEach(cb => {
+                            cb.checked = prof.allergies.includes(cb.value);
+                        });
+                    }
+
+                    if (Array.isArray(prof.preferred_cuisines)) {
+                        state.preferred_cuisines = prof.preferred_cuisines;
+                        document.querySelectorAll('input[name="cuisine"]').forEach(cb => {
+                            cb.checked = prof.preferred_cuisines.includes(cb.value);
+                        });
+                    }
+
+                    if (prof.avg_budget) {
+                        setQuickBudget(prof.avg_budget);
+                    }
+                }
+            } catch (_) {}
+            updateLiveJSON();
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            document.getElementById('theme-icon').innerText = next === 'dark' ? '☀️' : '🌙';
+            document.getElementById('theme-label').innerText = next === 'dark' ? 'Giao diện Sáng' : 'Giao diện Tối';
+        }
+
+        window.addEventListener('DOMContentLoaded', loadExistingPreferences);
+    </script>
+</body>
+</html>

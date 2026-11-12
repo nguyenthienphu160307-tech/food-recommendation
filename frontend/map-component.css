@@ -1,0 +1,445 @@
+/**
+ * ==============================================================================
+ * STYLES FOR MAP COMPONENT & MOBILE RESPONSIVE DISCOVERY
+ * ==============================================================================
+ */
+
+/* 1. Custom Controls Container */
+.custom-map-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 14px !important;
+    margin-right: 14px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    z-index: 1000;
+}
+
+.map-ctrl-group {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.map-ctrl-btn {
+    width: 42px;
+    height: 42px;
+    background: #ffffff;
+    border: none;
+    border-bottom: 1px solid #f1f3f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #374151;
+    transition: all 0.18s ease;
+    outline: none;
+    padding: 0;
+}
+
+.map-ctrl-btn:last-child {
+    border-bottom: none;
+}
+
+.map-ctrl-btn:hover {
+    background: #f8fafc;
+    color: #e11d48;
+}
+
+.map-ctrl-btn:active {
+    background: #f1f5f9;
+    transform: scale(0.96);
+}
+
+/* GPS Button animation */
+.map-ctrl-btn.locating svg {
+    animation: spin 1s linear infinite;
+    color: #e11d48;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Layer Switcher Dropdown */
+.map-layer-switcher {
+    position: relative;
+}
+
+.map-layer-menu {
+    position: absolute;
+    top: 0;
+    right: 50px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    width: 190px;
+    z-index: 1001;
+    animation: fadeInSlide 0.2s ease-out;
+}
+
+.map-layer-menu.open {
+    display: flex;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.map-layer-btn {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #4b5563;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+}
+
+.map-layer-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.map-layer-btn.active {
+    background: #fee2e2;
+    color: #e11d48;
+    font-weight: 600;
+}
+
+/* 2. User Marker with Pulsing Radar */
+.user-marker-container {
+    position: relative;
+    width: 28px;
+    height: 28px;
+}
+
+.user-pulse-ring {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(225, 29, 72, 0.35);
+    animation: pulseRadar 2s infinite ease-out;
+    pointer-events: none;
+}
+
+.user-center-dot {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    background: #e11d48;
+    border: 3.5px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes pulseRadar {
+    0% {
+        transform: scale(0.6);
+        opacity: 0.9;
+    }
+    70% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+}
+
+/* 3. Venue Markers */
+.venue-marker-pin {
+    background: transparent;
+    border: none;
+}
+
+.pin-bubble {
+    background: #111827;
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1.5px solid #ffffff;
+    transition: transform 0.18s;
+}
+
+.pin-bubble:hover {
+    transform: scale(1.12);
+    background: #e11d48;
+}
+
+.pin-emoji {
+    font-size: 0.88rem;
+}
+
+.pin-rating {
+    color: #fbbf24;
+}
+
+.pin-arrow {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 7px solid #111827;
+    margin: 0 auto;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+}
+
+/* 4. Custom Venue Popup inside Map */
+.custom-venue-popup-wrapper .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.custom-venue-popup-wrapper .leaflet-popup-content {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.map-venue-popup {
+    display: flex;
+    flex-direction: column;
+    font-family: inherit;
+}
+
+.popup-img-wrap {
+    position: relative;
+    height: 120px;
+    width: 100%;
+    background: #e5e7eb;
+}
+
+.popup-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.popup-rating {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(17, 24, 39, 0.85);
+    color: #fbbf24;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
+}
+
+.popup-body {
+    padding: 12px 14px;
+}
+
+.popup-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px;
+    line-height: 1.3;
+}
+
+.popup-meta {
+    font-size: 0.78rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.popup-address {
+    font-size: 0.74rem;
+    color: #9ca3af;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+}
+
+.popup-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.popup-price {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.popup-btn-detail {
+    background: #e11d48;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.popup-btn-detail:hover {
+    background: #be123c;
+}
+
+/* 5. Toast Notifications */
+.map-toast-container {
+    position: fixed;
+    top: 86px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.map-toast-item {
+    background: rgba(17, 24, 39, 0.92);
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.83rem;
+    font-weight: 500;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+    transition: opacity 0.3s, transform 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.map-toast-item.toast-success {
+    background: rgba(16, 185, 129, 0.94);
+}
+
+.map-toast-item.toast-warning {
+    background: rgba(245, 158, 11, 0.94);
+}
+
+.map-toast-item.fade-out {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 6. Mobile View Mode Toggle Bar */
+.mobile-view-toggle-bar {
+    display: none;
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #111827;
+    border-radius: 999px;
+    padding: 5px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 1500;
+    gap: 4px;
+}
+
+.mobile-view-btn {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s;
+}
+
+.mobile-view-btn.active {
+    background: #ffffff;
+    color: #111827;
+}
+
+/* Responsive Rules for Mobile & Tablet */
+@media (max-width: 900px) {
+    .mobile-view-toggle-bar {
+        display: flex;
+    }
+
+    /* Ở chế độ mặc định trên mobile: Hiển thị danh sách, ẩn map */
+    .discovery-layout.view-list .map-column {
+        display: none !important;
+    }
+
+    .discovery-layout.view-list .listings-column {
+        display: block !important;
+        padding-bottom: 80px; /* Chừa chỗ cho mobile toggle bar */
+    }
+
+    /* Khi người dùng chọn tab Bản đồ */
+    .discovery-layout.view-map .listings-column {
+        display: none !important;
+    }
+
+    .discovery-layout.view-map .map-column {
+        display: block !important;
+        position: fixed !important;
+        top: 64px !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        height: calc(100vh - 64px) !important;
+        width: 100vw !important;
+        z-index: 500;
+        border-left: none;
+    }
+
+    .discovery-layout.view-map #main-map {
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
