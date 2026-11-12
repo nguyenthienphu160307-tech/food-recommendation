@@ -11,7 +11,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=True)
     phone_number = Column(String(20), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=False)
-    status = Column(String(20), default="active", nullable=False)  # 'active', 'locked' (BR-07)
+    status = Column(String(20), default="active", nullable=False)  # 'active', 'locked'
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -19,11 +19,6 @@ class User(Base):
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     # Quan hệ 1 - N với bảng UserRoles
     user_roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan")
-
-    @property
-    def roles(self):
-        """Danh sách tên vai trò của người dùng (VD: ['user'], ['admin'])"""
-        return [ur.role.name for ur in self.user_roles if ur.role]
 
 
 class UserProfile(Base):
@@ -74,15 +69,3 @@ class OTPStorage(Base):
     expired_at = Column(DateTime, nullable=False)              # Thời điểm hết hạn (5 phút)
     is_used = Column(Boolean, default=False, nullable=False)   # Trạng thái đã dùng mã hay chưa
     created_at = Column(DateTime, default=datetime.utcnow)
-
-
-class RevokedToken(Base):
-    """Bảng lưu trữ danh sách Token đã bị thu hồi khi Đăng xuất (Logout)"""
-    __tablename__ = "revoked_tokens"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    token = Column(String(500), unique=True, index=True, nullable=False)
-    token_type = Column(String(20), default="access", nullable=False)  # 'access', 'refresh'
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    revoked_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    expires_at = Column(DateTime, nullable=True)

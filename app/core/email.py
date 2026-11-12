@@ -19,14 +19,10 @@ MAIL_FROM_NAME = os.getenv("MAIL_FROM_NAME", "Smart Dining")
 def send_otp_email(to_email: str, otp_code: str) -> bool:
     """
     Gửi mã OTP trực tiếp vào hòm thư cá nhân của người dùng qua máy chủ SMTP Gmail.
-    - Trong môi trường Development/Testing (chưa cấu hình thông tin Gmail thực tế), tự động mô phỏng thành công
-      để đảm bảo hệ thống phản hồi tức thì và không bị treo kết nối.
-    - Trong môi trường Production với tài khoản SMTP hợp lệ, kết nối an toàn TLS và gửi thư HTML chuẩn.
+    Không in OTP ra console, đảm bảo tính bảo mật và trải nghiệm thực tế.
     """
-    # Kiểm tra nếu là thông tin mẫu hoặc môi trường test
-    is_dummy = not MAIL_USERNAME or not MAIL_PASSWORD or "your_email" in MAIL_USERNAME or "example" in MAIL_USERNAME
-    if is_dummy or os.getenv("TESTING") == "1":
-        return True
+    if not MAIL_USERNAME or not MAIL_PASSWORD:
+        return False
 
     try:
         # 1. Tạo đối tượng MIME Email
@@ -84,9 +80,9 @@ def send_otp_email(to_email: str, otp_code: str) -> bool:
         part = MIMEText(html_content, "html", "utf-8")
         msg.attach(part)
 
-        # 3. Kết nối an toàn TLS tới máy chủ SMTP Gmail với timeout 5 giây
+        # 3. Kết nối an toàn TLS tới máy chủ SMTP Gmail và gửi thư
         context = ssl.create_default_context()
-        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT, timeout=5) as server:
+        with smtplib.SMTP(MAIL_SERVER, MAIL_PORT) as server:
             server.starttls(context=context)
             server.login(MAIL_USERNAME, MAIL_PASSWORD)
             server.sendmail(MAIL_FROM, to_email, msg.as_string())
