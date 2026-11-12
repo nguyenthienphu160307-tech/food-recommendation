@@ -4,44 +4,26 @@ Provides RESTful endpoints for retrieving and updating user profile metadata
 and default geolocation settings used by the recommendation engine.
 """
 
+# filepath: app/routers/profile_api.py
 from datetime import date
 from typing import Optional
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-app = FastAPI(
-    title="Smart Dining Service - User Profile API",
-    description="RESTful API quản lý hồ sơ người dùng và cấu hình tọa độ mặc định.",
-    version="1.0.0",
-)
-
-# Cho phép CORS toàn cục trên môi trường local/staging để Frontend tách rời gọi API
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+router = APIRouter(prefix="/api/users", tags=["User Profile"])
 
 
 class UserProfileUpdateSchema(BaseModel):
-    """Payload validation schema cho request cập nhật hồ sơ (PUT)."""
-
     full_name: str = Field(..., min_length=2, max_length=100)
-    avatar_url: Optional[str] = Field(None, max_length=255)
+    avatar_url: Optional[str] = Field(None, max_length=500)
     gender: Optional[str] = Field("Nam", max_length=20)
     date_of_birth: Optional[date] = Field(None)
     default_address: Optional[str] = Field(None, max_length=255)
-    # Giới hạn dải tọa độ chuẩn WGS84 (SRID 4326) để tránh lỗi khi truy vấn Spatial Index
     default_lat: Optional[float] = Field(None, ge=-90.0, le=90.0)
     default_lng: Optional[float] = Field(None, ge=-180.0, le=180.0)
 
 
 class UserProfileResponseSchema(UserProfileUpdateSchema):
-    """Schema trả về kết hợp dữ liệu từ bảng Users và UserProfiles (1-1)."""
-
     profile_id: int
     user_id: int
     email: str
@@ -49,8 +31,6 @@ class UserProfileResponseSchema(UserProfileUpdateSchema):
     status: str
 
 
-# In-memory store giả lập bản ghi từ bảng Users JOIN UserProfiles
-# Sẽ được thay thế bằng Dependency Injection (SQLAlchemy Session) khi kết nối MySQL
 MOCK_USER_PROFILE = {
     "profile_id": 2,
     "user_id": 2,
@@ -67,17 +47,15 @@ MOCK_USER_PROFILE = {
 }
 
 
-@app.get("/api/users/profile", response_model=UserProfileResponseSchema, tags=["User Profile"])
+@router.get("/profile", response_model=UserProfileResponseSchema)
 async def get_user_profile(user_id: int = 2):
-    """Truy xuất hồ sơ cá nhân theo user_id (mặc định lấy từ context xác thực)."""
     if user_id != MOCK_USER_PROFILE["user_id"]:
         raise HTTPException(status_code=404, detail="User profile not found.")
     return MOCK_USER_PROFILE
 
 
-@app.put("/api/users/profile", response_model=UserProfileResponseSchema, tags=["User Profile"])
+@router.put("/profile", response_model=UserProfileResponseSchema)
 async def update_user_profile(payload: UserProfileUpdateSchema, user_id: int = 2):
-    """Cập nhật thông tin cá nhân và vị trí mặc định phục vụ tính khoảng cách gợi ý."""
     if user_id != MOCK_USER_PROFILE["user_id"]:
         raise HTTPException(status_code=404, detail="User profile not found.")
 

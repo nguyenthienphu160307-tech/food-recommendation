@@ -1,13 +1,6 @@
+# filepath: app/models/__init__.py
 from .user import User, UserProfile, Role, UserRole, OTPStorage, RevokedToken
-from .interaction import (
-    Restaurant,
-    SearchSession,
-    SearchMessage,
-    SearchCriteria,
-    RestaurantReview,
-    UserFavorite,
-    Notification,
-)
+from .interaction import Restaurant
 
 __all__ = [
     "User",
@@ -17,10 +10,4 @@ __all__ = [
     "OTPStorage",
     "RevokedToken",
     "Restaurant",
-    "SearchSession",
-    "SearchMessage",
-    "SearchCriteria",
-    "RestaurantReview",
-    "UserFavorite",
-    "Notification",
 ]

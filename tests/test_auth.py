@@ -4,7 +4,6 @@ import os
 # Thêm thư mục gốc dự án vào sys.path để import app.* không bị lỗi
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Đảm bảo console Windows in tiếng Việt UTF-8 không bị lỗi charmap
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
