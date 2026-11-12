@@ -4,9 +4,9 @@ from sqlalchemy import Column, Integer, String, Float, DateTime
 from app.core.database import Base
 
 
-class Restaurant(Base):
-    """Bảng lưu trữ thông tin Nhà hàng & Tọa độ địa lý (Restaurants)"""
-    __tablename__ = "restaurants"
+class GeoRestaurant(Base):
+    """Bảng lưu trữ thông tin Nhà hàng & Tọa độ địa lý cho module Geo"""
+    __tablename__ = "geo_restaurants"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String(150), nullable=False, index=True)
@@ -23,3 +23,7 @@ class Restaurant(Base):
     status = Column(String(20), nullable=False, default="active")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# Alias giữ tương thích cho module geo
+Restaurant = GeoRestaurant

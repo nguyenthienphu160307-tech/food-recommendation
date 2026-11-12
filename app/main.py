@@ -1,13 +1,22 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from app.core.database import engine, Base, get_db
 import app.models
-from app.routers import auth_router, profile_router, geo_router, ai_search_router
+from app.routers import (
+    auth_router,
+    profile_router,
+    geo_router,
+    ai_search_router,
+    restaurant_router,
+    user_router,
+    search_router,
+)
 # Tự động tạo bảng CSDL
 Base.metadata.create_all(bind=engine)
 
@@ -22,17 +31,14 @@ app.include_router(auth_router)
 app.include_router(restaurant_router)
 app.include_router(user_router)
 app.include_router(search_router)
-
-# Gắn các router API vào hệ thống
-app.include_router(auth_router)
 app.include_router(profile_router)
 app.include_router(geo_router)
 app.include_router(ai_search_router)
 
 # Mount thư mục frontend để chạy trực tiếp HTML trên cổng 8000
-frontend_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
-if os.path.isdir(frontend_dir):
-    app.mount("/frontend", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+if os.path.isdir(FRONTEND_DIR):
+    app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
 
 
 # Các route phục vụ Giao diện Người dùng (Frontend UI - TSK-12)
