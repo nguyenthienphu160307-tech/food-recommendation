@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Hình ảnh Nhà hàng — Smart Dining Admin (TSK-28)</title>
+    <link rel="stylesheet" href="/static/css/design-system.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .admin-page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        /* Top Admin Header Bar */
+        .admin-header-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .admin-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .admin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: var(--brand-primary-light);
+            color: var(--brand-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Selector Bar */
+        .selector-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            background: var(--bg-subtle);
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .selector-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .selector-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+
+        .select-input {
+            width: 100%;
+            max-width: 380px;
+            padding: 0.65rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .select-input:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-val {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--brand-primary);
+            line-height: 1.2;
+        }
+
+        .stat-lbl {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Gallery Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .image-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .image-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-hover);
+        }
+
+        .image-card.is-cover-active {
+            border: 2px solid var(--brand-primary);
+        }
+
+        .image-thumb-box {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: #f1f5f9;
+            overflow: hidden;
+        }
+
+        .image-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover .image-thumb {
+            transform: scale(1.05);
+        }
+
+        .badge-cover {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            background: linear-gradient(135deg, #e11d48, #f43f5e);
+            color: white;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+        }
+
+        .badge-order {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: rgba(15, 23, 42, 0.75);
+            color: white;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            backdrop-filter: blur(4px);
+        }
+
+        .image-card-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .image-caption {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .image-url-preview {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 1rem;
+        }
+
+        .image-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+            gap: 0.5rem;
+        }
+
+        /* Buttons & Actions */
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--brand-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-primary-hover);
+        }
+
+        .btn-outline {
+            background: var(--bg-surface);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-subtle);
+            border-color: var(--border-hover);
+        }
+
+        .btn-cover-star {
+            background: var(--bg-surface);
+            border: 1px solid #f59e0b;
+            color: #d97706;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-cover-star:hover {
+            background: #fef3c7;
+        }
+
+        .btn-cover-active {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-md);
+            cursor: default;
+        }
+
+        .btn-icon {
+            padding: 0.45rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+
+        /* Modals & Upload Area */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-box {
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 540px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.25s ease;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.75rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 1.5rem 1.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.75rem;
+            background: var(--bg-subtle);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15);
+        }
+
+        /* Upload Dropzone */
+        .dropzone-box {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-md);
+            padding: 2rem 1.5rem;
+            text-align: center;
+            background: var(--bg-subtle);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .dropzone-box:hover, .dropzone-box.dragover {
+            border-color: var(--brand-primary);
+            background: var(--brand-primary-light);
+        }
+
+        .tab-btn-group {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.65rem 1.25rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            color: var(--brand-primary);
+            border-bottom-color: var(--brand-primary);
+        }
+
+        .empty-gallery-state {
+            text-align: center;
+            padding: 4rem 1.5rem;
+            color: var(--text-muted);
+            background: var(--bg-surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="header-brand">
+                <a href="/" class="brand-logo">
+                    <span class="brand-icon">🍽️</span>
+                    <span class="brand-text">Smart Dining</span>
+                </a>
+                <span class="admin-badge">Admin Module 6</span>
+            </div>
+
+            <nav class="header-nav">
+                <a href="/" class="nav-link">Khám phá</a>
+                <a href="/admin/menu" class="nav-link">Quản lý Thực đơn</a>
+                <a href="/admin/images" class="nav-link active">Quản lý Hình ảnh</a>
+                <a href="/profile" class="nav-link">Hồ sơ</a>
+            </nav>
+
+            <div class="header-actions">
+                <button type="button" class="btn-theme-toggle btn-icon" title="Đổi giao diện Sáng / Tối">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="admin-page-container">
+
+        <!-- Header Card -->
+        <div class="admin-header-card">
+            <div class="admin-title-row">
+                <div>
+                    <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.35rem;">
+                        Quản lý Thư viện Hình ảnh Nhà hàng
+                    </h1>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">
+                        Tải lên nhiều ảnh, chỉ định ảnh đại diện chính (is_cover) và sắp xếp thứ tự hiển thị (display_order) theo chuẩn TSK-28 / UC-06b.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button class="btn-action btn-outline" onclick="loadRestaurantImages()">
+                        ↻ Làm mới
+                    </button>
+                    <button class="btn-action btn-primary" onclick="openUploadModal()">
+                        + Thêm &amp; Tải Ảnh Lên
+                    </button>
+                </div>
+            </div>
+
+            <!-- Restaurant Selector Bar -->
+            <div class="selector-bar">
+                <div class="selector-group">
+                    <span class="selector-label">📍 Chọn Nhà hàng:</span>
+                    <select id="restaurant-select" class="select-input" onchange="onRestaurantChange()">
+                        <option value="">Đang tải danh sách nhà hàng...</option>
+                    </select>
+                </div>
+
+                <div id="restaurant-info-pill" style="font-size: 0.875rem; color: var(--text-muted);">
+                    <!-- Sẽ fill động qua JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-val" id="stat-total-images">0</div>
+                <div class="stat-lbl">Tổng số hình ảnh</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" style="color: #10b981;" id="stat-cover-status">Đã có</div>
+                <div class="stat-lbl">Trạng thái Ảnh bìa chính</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" style="color: #0284c7;" id="stat-upload-type">Local / Cloud</div>
+                <div class="stat-lbl">Hỗ trợ lưu trữ</div>
+            </div>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="gallery-grid" id="gallery-container">
+            <!-- Render động bằng JS -->
+        </div>
+
+    </main>
+
+    <!-- ============================================================
+         MODAL 1: THÊM / TẢI ẢNH LÊN (RestaurantImages)
+         ============================================================ -->
+    <div class="modal-overlay" id="upload-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title" id="upload-modal-title">Thêm Hình Ảnh Mới</h3>
+                <button class="btn-icon" onclick="closeUploadModal()">✕</button>
+            </div>
+
+            <div class="tab-btn-group" style="padding: 0 1.75rem; margin-top: 1rem;">
+                <button type="button" class="tab-btn active" id="tab-upload-btn" onclick="switchUploadTab('upload')">
+                    📁 Tải tệp từ máy tính
+                </button>
+                <button type="button" class="tab-btn" id="tab-url-btn" onclick="switchUploadTab('url')">
+                    🔗 Thêm bằng link URL
+                </button>
+            </div>
+
+            <!-- TAB 1: UPLOAD FILES -->
+            <div class="modal-body" id="tab-upload-content">
+                <div class="dropzone-box" id="dropzone" onclick="document.getElementById('file-input').click()">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📸</div>
+                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
+                        Nhấp hoặc kéo thả các tệp ảnh vào đây
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Hỗ trợ định dạng: .jpg, .jpeg, .png, .webp (Tối đa 10MB / file)
+                    </div>
+                    <input type="file" id="file-input" multiple accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+
+                <div id="file-preview-list" style="max-height: 160px; overflow-y: auto; font-size: 0.85rem; color: var(--text-secondary);">
+                    <!-- Danh sách file chọn -->
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="upload-is-cover">
+                        <span>Đặt ảnh đầu tiên làm Ảnh bìa chính (is_cover)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- TAB 2: ADD VIA URL -->
+            <div class="modal-body" id="tab-url-content" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Đường dẫn ảnh (URL) *</label>
+                    <input type="url" id="url-input" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Chú thích ảnh</label>
+                    <input type="text" id="url-caption" class="form-control" placeholder="VD: Không gian sân vườn thoáng đãng">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thứ tự hiển thị (display_order)</label>
+                    <input type="number" id="url-order" class="form-control" value="0" min="0">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="url-is-cover">
+                        <span>Đặt làm Ảnh bìa chính của nhà hàng</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-action btn-outline" onclick="closeUploadModal()">Hủy</button>
+                <button class="btn-action btn-primary" id="btn-save-image" onclick="submitImageForm()">
+                    Lưu hình ảnh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MODAL 2: CHỈNH SỬA ẢNH (Caption & Display Order)
+         ============================================================ -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">Chỉnh Sửa Thông Tin Ảnh</h3>
+                <button class="btn-icon" onclick="closeEditModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-image-id">
+                <div class="form-group">
+                    <label class="form-label">Chú thích ảnh</label>
+                    <input type="text" id="edit-caption" class="form-control" placeholder="Nhập chú thích mới...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thứ tự hiển thị (display_order)</label>
+                    <input type="number" id="edit-order" class="form-control" min="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action btn-outline" onclick="closeEditModal()">Hủy</button>
+                <button class="btn-action btn-primary" onclick="saveEditImage()">Cập nhật</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/main.js"></script>
+    <script>
+        let currentRestaurants = [];
+        let currentRestaurantId = null;
+        let currentImages = [];
+        let selectedFiles = [];
+        let activeTab = 'upload'; // 'upload' or 'url'
+
+        // Kiểm tra quyền hạn Admin trước khi tải trang (RBAC)
+        function checkAdminAccess() {
+            let authUser = null;
+            try {
+                const raw = localStorage.getItem('smart_dining_user');
+                if (raw) authUser = JSON.parse(raw);
+            } catch (_) {}
+
+            if (!authUser || authUser.role !== 'admin') {
+                const currentRole = authUser ? (authUser.role || 'user') : 'Khách vãng lai';
+                const userEmail = authUser ? authUser.email : 'Chưa đăng nhập';
+                
+                document.body.innerHTML = `
+                    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-page, #f8fafc); padding: 1.5rem; font-family: 'Inter', sans-serif;">
+                        <div style="max-width: 500px; width: 100%; background: var(--bg-surface, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 2.5rem 2rem; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.08);">
+                            <div style="font-size: 3.5rem; margin-bottom: 1rem;">🛡️⛔</div>
+                            <h2 style="font-size: 1.5rem; font-weight: 800; color: #ef4444; margin-bottom: 0.75rem;">Truy cập bị từ chối (403 Forbidden)</h2>
+                            <p style="color: var(--text-secondary, #475569); font-size: 0.95rem; margin-bottom: 1.25rem; line-height: 1.6;">
+                                Trang <strong>Quản lý Thư viện Hình ảnh</strong> là phân hệ nội bộ chỉ dành riêng cho tài khoản có vai trò <strong>Quản trị viên (Admin)</strong>.
+                            </p>
+                            <div style="background: var(--bg-subtle, #f1f5f9); border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: var(--text-muted, #64748b); margin-bottom: 1.5rem; text-align: left;">
+                                <div>• Tài khoản hiện tại: <strong>${userEmail}</strong></div>
+                                <div>• Vai trò hiện tại: <span style="color:#ef4444; font-weight:700;">${currentRole}</span> (Yêu cầu: <strong>admin</strong>)</div>
+                            </div>
+                            <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                                <a href="/" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem; border-radius: 8px; font-weight: 600; text-decoration: none; border: 1px solid var(--border, #e2e8f0); color: var(--text-primary, #0f172a); background: var(--bg-surface, #fff);">
+                                    ← Về Trang chủ
+                                </a>
+                                <a href="/login" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.25rem; border-radius: 8px; font-weight: 600; text-decoration: none; background: #e11d48; color: #fff;">
+                                    Đăng nhập với Admin
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return false;
+            }
+            return true;
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            initTheme();
+            if (!checkAdminAccess()) return;
+            setupDragAndDrop();
+            await loadRestaurants();
+        });
+
+        // 1. Tải danh sách nhà hàng
+        async function loadRestaurants() {
+            try {
+                const res = await fetch('/api/restaurants?limit=100');
+                if (!res.ok) throw new Error('Không thể tải danh sách nhà hàng.');
+                const result = await res.json();
+                currentRestaurants = result.data || [];
+
+                const select = document.getElementById('restaurant-select');
+                if (currentRestaurants.length === 0) {
+                    select.innerHTML = '<option value="">Không có nhà hàng nào</option>';
+                    return;
+                }
+
+                select.innerHTML = currentRestaurants.map(r => 
+                    `<option value="${r.id}">${r.name} (${r.cuisine_type || 'Ẩm thực'})</option>`
+                ).join('');
+
+                currentRestaurantId = currentRestaurants[0].id;
+                updateRestaurantPill();
+                await loadRestaurantImages();
+            } catch (err) {
+                showToast('error', err.message);
+            }
+        }
+
+        function onRestaurantChange() {
+            const select = document.getElementById('restaurant-select');
+            currentRestaurantId = parseInt(select.value);
+            updateRestaurantPill();
+            loadRestaurantImages();
+        }
+
+        function updateRestaurantPill() {
+            const r = currentRestaurants.find(x => x.id === currentRestaurantId);
+            const pill = document.getElementById('restaurant-info-pill');
+            if (r) {
+                pill.innerHTML = `<strong>${r.address}</strong> | ${r.cuisine_type || 'Ẩm thực'}`;
+            }
+        }
+
+        // 2. Tải thư viện ảnh của quán
+        async function loadRestaurantImages() {
+            if (!currentRestaurantId) return;
+            const container = document.getElementById('gallery-container');
+            container.innerHTML = '<div class="empty-gallery-state">⏳ Đang tải thư viện hình ảnh...</div>';
+
+            try {
+                const res = await fetch(`/api/restaurants/${currentRestaurantId}/images`);
+                if (!res.ok) throw new Error('Lỗi khi tải thư viện hình ảnh.');
+                currentImages = await res.json();
+                renderGallery();
+            } catch (err) {
+                container.innerHTML = `<div class="empty-gallery-state" style="color:var(--error);">❌ ${err.message}</div>`;
+                showToast('error', err.message);
+            }
+        }
+
+        // 3. Render Lưới Hình Ảnh
+        function renderGallery() {
+            const container = document.getElementById('gallery-container');
+            const total = currentImages.length;
+            const hasCover = currentImages.some(img => img.is_cover);
+
+            document.getElementById('stat-total-images').innerText = total;
+            document.getElementById('stat-cover-status').innerText = hasCover ? 'Đã có' : 'Chưa có';
+            document.getElementById('stat-cover-status').style.color = hasCover ? '#10b981' : '#f59e0b';
+
+            if (total === 0) {
+                container.innerHTML = `
+                    <div class="empty-gallery-state">
+                        <div style="font-size: 3rem; margin-bottom: 0.5rem;">🖼️</div>
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+                            Nhà hàng này chưa có hình ảnh nào!
+                        </h3>
+                        <p style="color: var(--text-muted); margin-bottom: 1.25rem;">
+                            Hãy tải lên tệp ảnh thực tế hoặc thêm qua link URL để thu hút thực khách.
+                        </p>
+                        <button class="btn-action btn-primary" onclick="openUploadModal()">
+                            + Thêm Hình Ảnh Ngay
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = currentImages.map(img => `
+                <div class="image-card ${img.is_cover ? 'is-cover-active' : ''}">
+                    <div class="image-thumb-box">
+                        <img src="${img.image_url}" alt="${escapeHtml(img.caption || 'Ảnh nhà hàng')}" class="image-thumb" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800'">
+                        ${img.is_cover ? `<span class="badge-cover">⭐ Ảnh bìa chính</span>` : ''}
+                        <span class="badge-order">Thứ tự: ${img.display_order}</span>
+                    </div>
+                    <div class="image-card-body">
+                        <h4 class="image-caption">${img.caption || 'Chưa có chú thích'}</h4>
+                        <div class="image-url-preview" title="${img.image_url}">${img.image_url}</div>
+                        <div class="image-card-footer">
+                            ${img.is_cover 
+                                ? `<span class="btn-cover-active">✓ Đang là ảnh bìa</span>`
+                                : `<button class="btn-cover-star" onclick="setCover(${img.id})">⭐ Đặt làm ảnh bìa</button>`
+                            }
+                            <div style="display: flex; gap: 0.35rem;">
+                                <button class="btn-icon" title="Sửa chú thích & thứ tự" onclick="openEditModal(${img.id}, '${escapeHtml(img.caption || '')}', ${img.display_order})">
+                                    ✏️
+                                </button>
+                                <button class="btn-icon" style="color:var(--error);" title="Xóa ảnh" onclick="deleteImage(${img.id})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 4. Đặt làm ảnh bìa chính (Set Cover)
+        async function setCover(imageId) {
+            try {
+                const res = await fetch(`/api/restaurant-images/${imageId}/set-cover`, { method: 'PATCH' });
+                if (!res.ok) throw new Error('Không thể đặt làm ảnh bìa.');
+                showToast('success', 'Đã cập nhật ảnh bìa chính thành công!');
+                await loadRestaurantImages();
+            } catch (err) {
+                showToast('error', err.message);
+            }
+        }
+
+        // 5. Xóa ảnh
+        async function deleteImage(imageId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa bức ảnh này khỏi thư viện?')) return;
+            try {
+                const res = await fetch(`/api/restaurant-images/${imageId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Không thể xóa ảnh.');
+                showToast('success', 'Đã xóa ảnh thành công!');
+                await loadRestaurantImages();
+            } catch (err) {
+                showToast('error', err.message);
+            }
+        }
+
+        // ============================================================
+        // MODAL TẢI ẢNH (UPLOAD & URL TABS)
+        // ============================================================
+        function openUploadModal() {
+            selectedFiles = [];
+            document.getElementById('file-preview-list').innerHTML = '';
+            document.getElementById('url-input').value = '';
+            document.getElementById('url-caption').value = '';
+            document.getElementById('url-order').value = currentImages.length + 1;
+            document.getElementById('upload-is-cover').checked = (currentImages.length === 0);
+            document.getElementById('url-is-cover').checked = (currentImages.length === 0);
+            switchUploadTab('upload');
+            document.getElementById('upload-modal').classList.add('active');
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.remove('active');
+        }
+
+        function switchUploadTab(tab) {
+            activeTab = tab;
+            document.getElementById('tab-upload-btn').classList.toggle('active', tab === 'upload');
+            document.getElementById('tab-url-btn').classList.toggle('active', tab === 'url');
+            document.getElementById('tab-upload-content').style.display = tab === 'upload' ? 'flex' : 'none';
+            document.getElementById('tab-url-content').style.display = tab === 'url' ? 'flex' : 'none';
+        }
+
+        function setupDragAndDrop() {
+            const dropzone = document.getElementById('dropzone');
+            ['dragenter', 'dragover'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('dragover');
+                });
+            });
+            ['dragleave', 'drop'].forEach(name => {
+                dropzone.addEventListener(name, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                });
+            });
+            dropzone.addEventListener('drop', (e) => {
+                if (e.dataTransfer.files) {
+                    processFiles(e.dataTransfer.files);
+                }
+            });
+        }
+
+        function handleFileSelect(event) {
+            if (event.target.files) {
+                processFiles(event.target.files);
+            }
+        }
+
+        function processFiles(files) {
+            selectedFiles = Array.from(files);
+            const list = document.getElementById('file-preview-list');
+            list.innerHTML = selectedFiles.map((f, i) => `
+                <div style="padding: 4px 0; border-bottom: 1px solid var(--border);">
+                    📄 <strong>${f.name}</strong> (${(f.size / 1024).toFixed(1)} KB)
+                </div>
+            `).join('');
+        }
+
+        async function submitImageForm() {
+            const btn = document.getElementById('btn-save-image');
+            btn.disabled = true;
+            btn.innerText = 'Đang xử lý...';
+
+            try {
+                if (activeTab === 'upload') {
+                    if (selectedFiles.length === 0) {
+                        throw new Error('Vui lòng chọn ít nhất một file ảnh để tải lên.');
+                    }
+                    const formData = new FormData();
+                    selectedFiles.forEach(file => {
+                        formData.append('files', file);
+                    });
+                    const isCover = document.getElementById('upload-is-cover').checked;
+                    formData.append('set_first_as_cover', isCover ? 'true' : 'false');
+
+                    const res = await fetch(`/api/restaurants/${currentRestaurantId}/images/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.detail || 'Không thể tải ảnh lên.');
+                    }
+                    showToast('success', `Đã tải lên thành công ${selectedFiles.length} bức ảnh!`);
+                } else {
+                    // URL Tab
+                    const url = document.getElementById('url-input').value.trim();
+                    const caption = document.getElementById('url-caption').value.trim();
+                    const order = parseInt(document.getElementById('url-order').value) || 0;
+                    const isCover = document.getElementById('url-is-cover').checked;
+
+                    if (!url) throw new Error('Vui lòng nhập đường dẫn ảnh.');
+
+                    const res = await fetch(`/api/restaurants/${currentRestaurantId}/images`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            image_url: url,
+                            caption: caption,
+                            display_order: order,
+                            is_cover: isCover
+                        })
+                    });
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.detail || 'Không thể lưu ảnh.');
+                    }
+                    showToast('success', 'Đã thêm ảnh bằng link thành công!');
+                }
+
+                closeUploadModal();
+                await loadRestaurantImages();
+            } catch (err) {
+                showToast('error', err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Lưu hình ảnh';
+            }
+        }
+
+        // ============================================================
+        // MODAL CHỈNH SỬA
+        // ============================================================
+        function openEditModal(id, caption, order) {
+            document.getElementById('edit-image-id').value = id;
+            document.getElementById('edit-caption').value = caption;
+            document.getElementById('edit-order').value = order;
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        async function saveEditImage() {
+            const id = document.getElementById('edit-image-id').value;
+            const caption = document.getElementById('edit-caption').value.trim();
+            const order = parseInt(document.getElementById('edit-order').value) || 0;
+
+            try {
+                const res = await fetch(`/api/restaurant-images/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ caption, display_order: order })
+                });
+                if (!res.ok) throw new Error('Không thể cập nhật ảnh.');
+                showToast('success', 'Đã cập nhật thông tin ảnh thành công!');
+                closeEditModal();
+                await loadRestaurantImages();
+            } catch (err) {
+                showToast('error', err.message);
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

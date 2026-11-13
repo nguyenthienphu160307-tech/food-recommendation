@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from app.core.database import engine, Base, get_db
 import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
-from app.routers import auth_router, restaurant_router, user_router, search_router, menu_router
+from app.routers import auth_router, restaurant_router, user_router, search_router, menu_router, image_router
 
 # Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, SearchCriteria, ...)
 try:
@@ -28,6 +28,7 @@ app.include_router(restaurant_router)
 app.include_router(user_router)
 app.include_router(search_router)
 app.include_router(menu_router)
+app.include_router(image_router)
 
 # Mount thư mục static assets nếu tồn tại
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
@@ -80,6 +81,15 @@ def serve_admin_menu_page():
     if os.path.exists(admin_menu_file):
         return FileResponse(admin_menu_file)
     raise HTTPException(status_code=404, detail="Không tìm thấy trang quản lý thực đơn.")
+
+
+@app.get("/admin/images", tags=["Frontend UI"], summary="Trang Quản lý Hình ảnh Nhà hàng (Admin - TSK-28)")
+@app.get("/admin-images.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_admin_images_page():
+    admin_images_file = os.path.join(FRONTEND_DIR, "admin-images.html")
+    if os.path.exists(admin_images_file):
+        return FileResponse(admin_images_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang quản lý hình ảnh.")
 
 
 @app.get("/index.html", tags=["Frontend UI"], include_in_schema=False)
