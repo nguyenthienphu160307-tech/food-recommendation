@@ -425,6 +425,10 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Chỉnh sửa hồ sơ cá nhân
                 </a>
+                <a href="/admin/menu" id="admin-menu-link" class="dropdown-link" style="color:var(--brand-primary); font-weight:600; display:none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+                    Quản lý Thực đơn (Admin)
+                </a>
                 <a href="/profile#location-section" class="dropdown-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     Địa chỉ & Tọa độ mặc định
@@ -728,6 +732,16 @@
                 if (linkLogin) linkLogin.style.display = 'flex';
                 if (linkRegister) linkRegister.style.display = 'flex';
                 if (linkLogout) linkLogout.style.display = 'none';
+            }
+
+            // Phân quyền hiển thị Menu Admin: Chỉ hiển thị cho tài khoản có role='admin'
+            const adminMenuLink = document.getElementById('admin-menu-link');
+            if (adminMenuLink) {
+                if (authUser && authUser.role === 'admin') {
+                    adminMenuLink.style.display = 'flex';
+                } else {
+                    adminMenuLink.style.display = 'none';
+                }
             }
 
             if (prof && prof.default_address) {

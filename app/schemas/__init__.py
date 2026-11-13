@@ -30,6 +30,18 @@ from .search import (
     PrivacySettingsUpdateRequest,
     PurgeLocationResponse,
 )
+from .menu import (
+    MenuItemBase,
+    MenuItemCreate,
+    MenuItemUpdate,
+    MenuItemAvailabilityUpdate,
+    MenuItemResponse,
+    RestaurantMenuBase,
+    RestaurantMenuCreate,
+    RestaurantMenuUpdate,
+    RestaurantMenuResponse,
+    RestaurantMenuWithItemsResponse,
+)
 
 __all__ = [
     "SendOTPRequest",
@@ -57,4 +69,14 @@ __all__ = [
     "PrivacySettingsResponse",
     "PrivacySettingsUpdateRequest",
     "PurgeLocationResponse",
+    "MenuItemBase",
+    "MenuItemCreate",
+    "MenuItemUpdate",
+    "MenuItemAvailabilityUpdate",
+    "MenuItemResponse",
+    "RestaurantMenuBase",
+    "RestaurantMenuCreate",
+    "RestaurantMenuUpdate",
+    "RestaurantMenuResponse",
+    "RestaurantMenuWithItemsResponse",
 ]

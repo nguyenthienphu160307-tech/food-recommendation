@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from app.core.database import engine, Base, get_db
 import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
-from app.routers import auth_router, restaurant_router, user_router, search_router
+from app.routers import auth_router, restaurant_router, user_router, search_router, menu_router
 
 # Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, SearchCriteria, ...)
 try:
@@ -27,6 +27,7 @@ app.include_router(auth_router)
 app.include_router(restaurant_router)
 app.include_router(user_router)
 app.include_router(search_router)
+app.include_router(menu_router)
 
 # Mount thư mục static assets nếu tồn tại
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
@@ -70,6 +71,15 @@ def serve_profile_page():
     if os.path.exists(profile_file):
         return FileResponse(profile_file)
     raise HTTPException(status_code=404, detail="Không tìm thấy trang hồ sơ.")
+
+
+@app.get("/admin/menu", tags=["Frontend UI"], summary="Trang Quản lý Thực đơn & Món ăn (Admin - TSK-27)")
+@app.get("/admin-menu.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_admin_menu_page():
+    admin_menu_file = os.path.join(FRONTEND_DIR, "admin-menu.html")
+    if os.path.exists(admin_menu_file):
+        return FileResponse(admin_menu_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang quản lý thực đơn.")
 
 
 @app.get("/index.html", tags=["Frontend UI"], include_in_schema=False)
