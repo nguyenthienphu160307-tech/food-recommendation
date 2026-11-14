@@ -10,6 +10,7 @@ Cung cấp các API:
 - POST /api/admin/restaurants: Thêm mới nhà hàng (FR-13)
 - GET /api/admin/restaurants/{restaurant_id}: Xem chi tiết nhà hàng (FR-13)
 - PUT /api/admin/restaurants/{restaurant_id}: Cập nhật toàn diện nhà hàng (FR-13)
+- PUT /api/admin/restaurants/{restaurant_id}/amenities: Cập nhật tiện ích nhà hàng (TE9C663)
 - DELETE /api/admin/restaurants/{restaurant_id}: Xóa vĩnh viễn nhà hàng (FR-13)
 - PUT /api/admin/restaurants/{restaurant_id}/status: Đổi trạng thái hiển thị
 - GET /api/admin/reports: Danh sách báo cáo vi phạm & khiếu nại
@@ -508,18 +509,6 @@ def update_restaurant(
             )
         r.status = norm_status
 
-    # Cập nhật tiện ích
-    if req.amenities is not None:
-        if not r.amenities:
-            r.amenities = RestaurantAmenity(restaurant_id=r.id)
-            db.add(r.amenities)
-        r.amenities.has_parking = req.amenities.has_parking
-        r.amenities.has_private_room = req.amenities.has_private_room
-        r.amenities.has_outdoor = req.amenities.has_outdoor
-        r.amenities.pet_friendly = req.amenities.pet_friendly
-        r.amenities.vegetarian_support = req.amenities.vegetarian_support
-        r.amenities.updated_at = datetime.utcnow()
-
     # Cập nhật ảnh đại diện nếu có truyền lên
     if req.image_url is not None:
         cover_img = None
@@ -547,6 +536,53 @@ def update_restaurant(
         "status": "success",
         "message": f"Cập nhật thông tin nhà hàng '{r.name}' thành công!",
         "data": _format_restaurant_detail(r)
+    }
+
+
+# ==============================================================================
+# ĐÂY LÀ API RIÊNG DÀNH CHO TASK TE9C663 (Cập nhật tiện ích)
+# ==============================================================================
+@admin_router.put(
+    "/restaurants/{restaurant_id}/amenities",
+    summary="Cập nhật riêng các tiện ích của nhà hàng (Task TE9C663)"
+)
+def update_restaurant_amenities(
+    restaurant_id: int,
+    req: AmenityPayload,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+) -> Dict[str, Any]:
+    """
+    API Quản lý Tiện ích nhà hàng (RestaurantAmenities):
+    Cập nhật các thuộc tính tiện ích: has_parking, has_private_room, has_outdoor, pet_friendly, vegetarian_support cho từng nhà hàng.
+    """
+    r = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not r:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy nhà hàng với ID={restaurant_id}."
+        )
+
+    # Kiểm tra xem nhà hàng đã có bản ghi tiện ích chưa, chưa có thì tạo mới
+    if not r.amenities:
+        r.amenities = RestaurantAmenity(restaurant_id=r.id)
+        db.add(r.amenities)
+    
+    # Cập nhật các trường tiện ích từ payload gửi lên
+    r.amenities.has_parking = req.has_parking
+    r.amenities.has_private_room = req.has_private_room
+    r.amenities.has_outdoor = req.has_outdoor
+    r.amenities.pet_friendly = req.pet_friendly
+    r.amenities.vegetarian_support = req.vegetarian_support
+    r.amenities.updated_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(r)
+    
+    return {
+        "status": "success",
+        "message": f"Cập nhật tiện ích cho nhà hàng '{r.name}' thành công!",
+        "data": _format_restaurant_detail(r)["amenities"]
     }
 
 
