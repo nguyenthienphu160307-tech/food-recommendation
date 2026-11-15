@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Dining — Khám phá & Gợi ý địa điểm ẩm thực quanh bạn</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="map-component.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Design Tokens đồng bộ với trang Profile */
@@ -461,6 +462,14 @@
             <button class="filter-pill" onclick="setCategory('BBQ Hàn Quốc', this)">BBQ Hàn Quốc</button>
         </div>
 
+        <div class="radius-filters" style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.78rem;font-weight:600;color:var(--text-muted);white-space:nowrap;">🎯 Bán kính:</span>
+            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="1" onclick="setSearchRadius(1)">1 km</button>
+            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="3" onclick="setSearchRadius(3)">3 km</button>
+            <button type="button" class="filter-pill radius-ribbon-btn active" data-radius="5" onclick="setSearchRadius(5)">5 km</button>
+            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="10" onclick="setSearchRadius(10)">10 km</button>
+        </div>
+
         <div class="amenity-filters">
             <button class="filter-pill" id="btn-parking" onclick="toggleAmenity('parking')">Có bãi đỗ ô tô</button>
             <button class="filter-pill" id="btn-room" onclick="toggleAmenity('private_room')">Phòng riêng</button>
@@ -468,7 +477,7 @@
         </div>
     </div>
 
-    <main class="discovery-layout">
+    <main class="discovery-layout view-list">
         <section class="listings-column">
             <div class="ai-insight-banner" id="ai-banner">
                 <div class="ai-banner-top">
@@ -481,14 +490,22 @@
                 <p class="ai-banner-text" id="ai-banner-reason"></p>
             </div>
 
-            <div class="listings-header">
-                <h2 id="results-heading">Địa điểm ăn uống đề xuất quanh bạn</h2>
-                <select class="sort-select" id="sort-mode" onchange="renderVenues()">
-                    <option value="score">Sắp xếp: Độ phù hợp cao nhất</option>
-                    <option value="distance">Khoảng cách gần nhất</option>
-                    <option value="rating">Điểm đánh giá cao nhất</option>
-                    <option value="price_asc">Giá thấp đến cao</option>
-                </select>
+            <div class="listings-header" style="flex-wrap:wrap;gap:12px;">
+                <div>
+                    <h2 id="results-heading">Địa điểm ăn uống đề xuất quanh bạn</h2>
+                    <small id="results-subheading" style="font-size:0.8rem;color:var(--text-muted);display:block;margin-top:2px;">Bán kính 5 km • Tự động đồng bộ ghim trên bản đồ khi cuộn</small>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <button type="button" class="filter-pill active" id="btn-scroll-sync" onclick="toggleScrollSync()" title="Tự động làm nổi bật và di chuyển bản đồ theo quán đang xem">
+                        🔄 Đồng bộ khi cuộn
+                    </button>
+                    <select class="sort-select" id="sort-mode" onchange="renderVenues()">
+                        <option value="score">Sắp xếp: Độ phù hợp cao nhất</option>
+                        <option value="distance">Khoảng cách gần nhất</option>
+                        <option value="rating">Điểm đánh giá cao nhất</option>
+                        <option value="price_asc">Giá thấp đến cao</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Nơi chứa thẻ nhà hàng -->
@@ -566,13 +583,15 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- NHÚNG FILE API.JS -->
+    <!-- NHÚNG DỮ LIỆU, MAP COMPONENT & API.JS -->
+    <script src="venues-data.js"></script>
+    <script src="map-component.js"></script>
     <script src="api.js"></script>
     
     <script>
         const STORAGE_KEY = 'foodai_demo_profile_state';
 
-        let venues = [
+        const fallbackVenues = [
             {
                 id: 1,
                 name: "GoGi House — Thịt Nướng Hàn Quốc",
@@ -678,7 +697,19 @@
             }
         ];
 
-        let currentPos = { lat: 10.7860, lng: 106.7003 };
+        let venues = (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES) && SEED_VENUES.length > 0)
+            ? SEED_VENUES
+            : fallbackVenues;
+
+        // Tọa độ mặc định TP.HCM (Quận 1)
+        let currentPos = { lat: 10.776889, lng: 106.700806 };
+        let searchRadiusKm = 5;
+        let scrollSyncEnabled = true;
+        let activeSyncedVenueId = null;
+        let scrollSyncTimer = null;
+        let isProgrammaticScroll = false;
+        let mapComponent = null;
+
         let activeCategory = 'all';
         let activeAmenities = { parking: false, private_room: false, vegetarian: false };
         let maxBudgetFilter = null;
@@ -688,7 +719,48 @@
                 return raw ? JSON.parse(raw) : [1, 2];
             } catch (_) { return [1, 2]; }
         })();
-        let mainMap, userMarker, venueMarkers = [];
+
+        /**
+         * Đồng bộ thông tin hồ sơ & tọa độ mặc định từ localStorage
+         */
+        function syncProfileData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('current_user');
+                if (!raw) return;
+                const prof = JSON.parse(raw);
+                if (prof.full_name) {
+                    const navName = document.getElementById('nav-user-name');
+                    const dropName = document.getElementById('drop-user-name');
+                    if (navName) navName.innerText = prof.full_name;
+                    if (dropName) dropName.innerText = prof.full_name;
+                }
+                if (prof.email) {
+                    const dropEmail = document.getElementById('drop-user-email');
+                    if (dropEmail) dropEmail.innerText = prof.email;
+                }
+                if (prof.avatar_url) {
+                    const navAvatar = document.getElementById('nav-user-avatar');
+                    if (navAvatar) navAvatar.src = prof.avatar_url;
+                }
+                if (prof.default_address) {
+                    const addrLabel = document.getElementById('current-address-label');
+                    if (addrLabel) addrLabel.innerText = prof.default_address;
+                }
+                if (prof.default_lat && prof.default_lng) {
+                    currentPos.lat = parseFloat(prof.default_lat);
+                    currentPos.lng = parseFloat(prof.default_lng);
+                }
+            } catch (_) {}
+        }
+
+        function calcDistanceKm(lat1, lng1, lat2, lng2) {
+            return FoodAIMapComponent.calcDistanceKm(lat1, lng1, lat2, lng2);
+        }
+
+        function formatExactDistance(km) {
+            if (km < 1) return `${Math.max(10, Math.round(km * 1000))} m`;
+            return `${km.toFixed(2)} km`;
+        }
 
         /**
          * Kiểm tra đăng nhập và cập nhật UI Header
@@ -761,93 +833,189 @@
             }
         }
 
-        function initMainMap() {
-            mainMap = L.map('main-map').setView([currentPos.lat, currentPos.lng], 13);
-
-            const googleStreets = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=vi', {
-                maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: '© Google Maps'
-            });
-
-            const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}&hl=vi', {
-                maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: '© Google Maps Satellite'
-            });
-
-            googleStreets.addTo(mainMap);
-            L.control.layers({
-                "Bản đồ Đường phố": googleStreets,
-                "Vệ tinh": googleHybrid
-            }).addTo(mainMap);
-
-            const userIcon = L.divIcon({
-                html: `<div style="width:18px;height:18px;background:#e11d48;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4);"></div>`,
-                className: ''
-            });
-
-            userMarker = L.marker([currentPos.lat, currentPos.lng], { icon: userIcon, draggable: true })
-                .addTo(mainMap)
-                .bindPopup("<strong>Vị trí tìm kiếm hiện tại</strong><br>Kéo thả hoặc nhấp bản đồ để đổi vị trí");
-
-            userMarker.on('dragend', (e) => {
-                const p = e.target.getLatLng();
-                currentPos = { lat: p.lat, lng: p.lng };
-                fetchVenuesFromAPI(); // Gọi lại API khi đổi vị trí
-            });
-
-            mainMap.on('click', (e) => {
-                currentPos = { lat: e.latlng.lat, lng: e.latlng.lng };
-                userMarker.setLatLng([currentPos.lat, currentPos.lng]);
-                fetchVenuesFromAPI(); // Gọi lại API khi đổi vị trí
+        function syncRadiusRibbonUI(km) {
+            document.querySelectorAll('.radius-ribbon-btn').forEach(btn => {
+                btn.classList.toggle('active', parseFloat(btn.dataset.radius) === km);
             });
         }
 
+        function setSearchRadius(km) {
+            searchRadiusKm = km;
+            syncRadiusRibbonUI(km);
+            if (mapComponent) {
+                mapComponent.setSearchRadius(km, true, false);
+            }
+            renderVenues();
+        }
 
+        function toggleScrollSync() {
+            scrollSyncEnabled = !scrollSyncEnabled;
+            const btn = document.getElementById('btn-scroll-sync');
+            if (btn) {
+                btn.classList.toggle('active', scrollSyncEnabled);
+                btn.innerText = scrollSyncEnabled ? '🔄 Đồng bộ khi cuộn' : '⏸️ Tạm tắt đồng bộ cuộn';
+            }
+        }
+
+        function initMainMap() {
+            mapComponent = new FoodAIMapComponent({
+                containerId: 'main-map',
+                defaultCenter: [10.776889, 106.700806],
+                currentCenter: [currentPos.lat, currentPos.lng],
+                defaultZoom: 13,
+                minZoom: 5,
+                maxZoom: 20,
+                defaultRadiusKm: searchRadiusKm,
+                radiusOptions: [1, 3, 5, 10],
+                onLocationChange: (pos) => {
+                    currentPos = pos;
+                    const addrLabel = document.getElementById('current-address-label');
+                    if (addrLabel) {
+                        addrLabel.innerText = `Tọa độ: ${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}`;
+                    }
+                    renderVenues();
+                },
+                onRadiusChange: (km) => {
+                    searchRadiusKm = km;
+                    syncRadiusRibbonUI(km);
+                    renderVenues();
+                },
+                onVenueClick: (v) => {
+                    scrollToAndHighlightCard(v.id);
+                }
+            });
+        }
+
+        /**
+         * Lọc theo bán kính (1km, 3km, 5km, 10km), tính khoảng cách chính xác,
+         * chấm điểm độ phù hợp và đồng bộ marker + popup lên Bản đồ.
+         */
         function renderVenues(customList = null) {
             let list = customList ? [...customList] : [...venues];
 
+            // Tính chính xác khoảng cách Haversine cho từng quán dựa trên tọa độ tâm hiện tại
+            list = list.map(v => {
+                const lat = parseFloat(v.lat !== undefined ? v.lat : v.latitude);
+                const lng = parseFloat(v.lng !== undefined ? v.lng : v.longitude);
+                const dist = (!isNaN(lat) && !isNaN(lng))
+                    ? calcDistanceKm(currentPos.lat, currentPos.lng, lat, lng)
+                    : (v.distance_km || 0);
+
+                const rating = Number(v.rating || 4.5);
+                const distScore = Math.max(0, 1 - dist / Math.max(1, searchRadiusKm));
+                const ratingScore = rating / 5;
+                const amenityScore = (v.parking ? 0.5 : 0) + (v.private_room ? 0.5 : 0);
+                const totalScore = Math.round((distScore * 0.45 + ratingScore * 0.35 + amenityScore * 0.2) * 100);
+
+                return {
+                    ...v,
+                    lat,
+                    lng,
+                    distanceKm: dist,
+                    distance_km: dist,
+                    matchScore: Math.min(99, Math.max(70, totalScore))
+                };
+            });
+
             if (!customList) {
-                if (activeCategory !== 'all') {
-                    list = list.filter(v => v.category === activeCategory);
+                // 1. Lọc theo vòng tròn bán kính tìm kiếm
+                if (searchRadiusKm > 0) {
+                    list = list.filter(v => v.distanceKm <= searchRadiusKm);
                 }
-                // Các tính năng amenities có thể cần Backend hỗ trợ thêm, tạm filter frontend
+
+                // 2. Lọc theo danh mục ẩm thực (tương thích cả tiếng Việt lẫn mã category)
+                if (activeCategory !== 'all') {
+                    const catTarget = activeCategory.toLowerCase();
+                    list = list.filter(v => {
+                        const c1 = (v.category || '').toLowerCase();
+                        const c2 = (v.cuisineLabel || '').toLowerCase();
+                        const n = (v.name || '').toLowerCase();
+                        if (catTarget === 'món chay' || catTarget === 'vegan') {
+                            return v.vegetarian || c1.includes('chay') || c1.includes('vegan') || c2.includes('chay');
+                        }
+                        if (catTarget === 'bbq hàn quốc' || catTarget === 'bbq') {
+                            return c1 === 'bbq' || c1.includes('nướng') || c2.includes('nướng') || c2.includes('bbq');
+                        }
+                        return c1 === catTarget || c2.includes(catTarget) || n.includes(catTarget);
+                    });
+                }
+
+                // 3. Lọc theo tiện ích & ngân sách
+                if (activeAmenities.parking) list = list.filter(v => v.parking);
+                if (activeAmenities.private_room) list = list.filter(v => v.private_room);
+                if (activeAmenities.vegetarian) list = list.filter(v => v.vegetarian);
+                if (maxBudgetFilter) list = list.filter(v => (v.priceMin || 0) <= maxBudgetFilter);
             }
 
-            // Fallback sắp xếp nếu backend chưa trả về khoảng cách chuẩn hoặc user đổi filter
+            // 4. Sắp xếp
             const sortMode = document.getElementById('sort-mode').value;
-            if (sortMode === 'distance') list.sort((a, b) => (a.distance_km || 0) - (b.distance_km || 0));
-            else if (sortMode === 'rating') list.sort((a, b) => b.rating - a.rating);
+            if (sortMode === 'distance') list.sort((a, b) => a.distanceKm - b.distanceKm);
+            else if (sortMode === 'rating') list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            else if (sortMode === 'price_asc') list.sort((a, b) => (a.priceMin || 0) - (b.priceMin || 0));
+            else list.sort((a, b) => b.matchScore - a.matchScore);
+
+            // 5. Cập nhật tiêu đề thống kê số quán trong bán kính
+            const heading = document.getElementById('results-heading');
+            const subheading = document.getElementById('results-subheading');
+            if (heading) {
+                heading.innerText = `Tìm thấy ${list.length} địa điểm trong bán kính ${searchRadiusKm} km`;
+            }
+            if (subheading) {
+                subheading.innerText = `Định tâm: ${currentPos.lat.toFixed(4)}, ${currentPos.lng.toFixed(4)} • Ghim bản đồ tự động đồng bộ khi cuộn`;
+            }
+
+            // 6. Đồng bộ Marker & Popup lên Bản đồ số
+            if (mapComponent) {
+                mapComponent.setVenueMarkers(list);
+            }
 
             const grid = document.getElementById('venues-grid');
             grid.innerHTML = '';
-            
-            if (list.length === 0) {
-                 grid.innerHTML = "<p>Không tìm thấy nhà hàng nào phù hợp trong khu vực này.</p>";
-            }
 
-            venueMarkers.forEach(m => mainMap.removeLayer(m));
-            venueMarkers = [];
+            if (list.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column:1/-1;background:var(--bg-surface);border:1px dashed var(--border);border-radius:14px;padding:32px;text-align:center;">
+                        <p style="font-size:1rem;font-weight:600;margin-bottom:8px;">Chưa tìm thấy quán ăn phù hợp trong bán kính ${searchRadiusKm} km</p>
+                        <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:16px;">Bạn có thể mở rộng bán kính lên 5 km hoặc 10 km để xem thêm địa điểm quanh đây.</p>
+                        <button type="button" class="btn-ai-ask" style="margin:0 auto;" onclick="setSearchRadius(10)">Mở rộng lên 10 km</button>
+                    </div>
+                `;
+                return;
+            }
 
             list.forEach(v => {
                 const isSaved = savedIds.includes(v.id);
-                const dist = v.distance_km || 0;
-                const travelMins = Math.max(4, Math.round(dist * 3.2));
-                // Lấy fallback ảnh nếu db chưa có
-                const imageUrl = v.image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
-                
-                const m = L.marker([v.latitude || v.lat, v.longitude || v.lng]).addTo(mainMap)
-                    .bindPopup(`<strong>${v.name}</strong><br>${v.category || ''} • ⭐ ${v.rating || 0}<br>Cách ${dist.toFixed(1)} km`);
-                venueMarkers.push(m);
+                const dist = v.distanceKm || 0;
+                const travelMins = Math.max(2, Math.round(dist * 3.2));
+                const distFormatted = formatExactDistance(dist);
+                const imageUrl = v.image || v.image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
+                const priceMin = Number(v.priceMin || v.price_min || 50000);
+                const priceMax = Number(v.priceMax || v.price_max || 300000);
 
                 const card = document.createElement('article');
-                card.className = 'venue-card';
-                card.onclick = () => openVenueModal(v);
+                card.className = `venue-card${activeSyncedVenueId === v.id ? ' active-sync' : ''}`;
+                card.id = `venue-card-${v.id}`;
+                card.setAttribute('data-venue-id', v.id);
+
+                card.onmouseenter = () => {
+                    if (scrollSyncEnabled && mapComponent) {
+                        highlightCardElement(v.id);
+                        mapComponent.highlightVenue(v.id, { panTo: false, openPopup: false });
+                    }
+                };
+
+                card.onclick = () => {
+                    highlightCardElement(v.id);
+                    openVenueModal(v);
+                    if (mapComponent) {
+                        mapComponent.focusVenue(v.id);
+                    }
+                };
+
                 card.innerHTML = `
                     <div class="venue-img-wrap">
-                        <img src="${imageUrl}" alt="${v.name}">
-                        <span class="match-badge">⭐ ${v.rating || "Mới"}</span>
+                        <img src="${imageUrl}" alt="${v.name}" loading="lazy">
+                        <span class="match-badge">Phù hợp ${v.matchScore}% • ${distFormatted}</span>
                         <button type="button" class="fav-btn ${isSaved ? 'saved' : ''}" onclick="toggleSaveVenue(event, ${v.id})">
                             ♥
                         </button>
@@ -855,14 +1023,91 @@
                     <div class="venue-body">
                         <div class="venue-title-row">
                             <h3 class="venue-name">${v.name}</h3>
+                            <span class="rating-pill">★ ${Number(v.rating || 4.5).toFixed(1)}</span>
                         </div>
                         <div class="venue-meta">
-                            ${v.category || "Nhà hàng"} • ${dist.toFixed(1)} km (~${travelMins} phút) <br> ${v.address}
+                            ${v.cuisineLabel || v.category || "Nhà hàng"} • <strong style="color:var(--brand-red);">${distFormatted}</strong> (~${travelMins} phút) • ${priceMin.toLocaleString()}đ - ${priceMax.toLocaleString()}đ
+                        </div>
+                        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            📍 ${v.address}
+                        </div>
+                        <div class="venue-tags">
+                            ${v.parking ? '<span class="venue-tag">Đỗ ô tô</span>' : ''}
+                            ${v.private_room ? '<span class="venue-tag">Phòng riêng</span>' : ''}
+                            ${v.vegetarian ? '<span class="venue-tag">Món chay</span>' : ''}
                         </div>
                     </div>
                 `;
                 grid.appendChild(card);
             });
+
+            setupScrollSyncObserver();
+        }
+
+        function highlightCardElement(venueId) {
+            if (activeSyncedVenueId !== null && activeSyncedVenueId !== venueId) {
+                const prev = document.getElementById(`venue-card-${activeSyncedVenueId}`);
+                if (prev) prev.classList.remove('active-sync');
+            }
+            activeSyncedVenueId = venueId;
+            const current = document.getElementById(`venue-card-${venueId}`);
+            if (current) current.classList.add('active-sync');
+        }
+
+        function scrollToAndHighlightCard(venueId) {
+            highlightCardElement(venueId);
+            const card = document.getElementById(`venue-card-${venueId}`);
+            if (card) {
+                isProgrammaticScroll = true;
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => { isProgrammaticScroll = false; }, 700);
+            }
+        }
+
+        /**
+         * Đồng bộ ghim trên bản đồ khi người dùng cuộn danh sách nhà hàng
+         */
+        let scrollListenerBound = false;
+        function setupScrollSyncObserver() {
+            if (scrollListenerBound) return;
+            scrollListenerBound = true;
+
+            const onScrollHandler = () => {
+                if (!scrollSyncEnabled || isProgrammaticScroll || !mapComponent) return;
+
+                if (scrollSyncTimer) cancelAnimationFrame(scrollSyncTimer);
+                scrollSyncTimer = requestAnimationFrame(() => {
+                    const cards = document.querySelectorAll('#venues-grid .venue-card[data-venue-id]');
+                    if (!cards.length) return;
+
+                    // Chọn thẻ nằm gần dải trọng tâm (top + 180px) nhất trong khung nhìn
+                    const targetY = Math.min(window.innerHeight * 0.35, 240);
+                    let bestCard = null;
+                    let minDistanceToTarget = Infinity;
+
+                    cards.forEach(card => {
+                        const rect = card.getBoundingClientRect();
+                        if (rect.bottom > 80 && rect.top < window.innerHeight - 60) {
+                            const cardCenter = rect.top + rect.height / 2;
+                            const dist = Math.abs(cardCenter - targetY);
+                            if (dist < minDistanceToTarget) {
+                                minDistanceToTarget = dist;
+                                bestCard = card;
+                            }
+                        }
+                    });
+
+                    if (bestCard) {
+                        const vid = parseInt(bestCard.getAttribute('data-venue-id'), 10);
+                        if (!isNaN(vid) && vid !== activeSyncedVenueId) {
+                            highlightCardElement(vid);
+                            mapComponent.highlightVenue(vid, { panTo: true, openPopup: false });
+                        }
+                    }
+                });
+            };
+
+            window.addEventListener('scroll', onScrollHandler, { passive: true });
         }
 
         function setCategory(cat, btn) {
@@ -940,7 +1185,7 @@
             const lat = v.latitude || v.lat;
             const lng = v.longitude || v.lng;
             const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentPos.lat},${currentPos.lng}&destination=${lat},${lng}&travelmode=two-wheeler`;
-            const imageUrl = v.image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
+            const imageUrl = v.image || v.image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
 
             box.innerHTML = `
                 <img src="${imageUrl}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
@@ -948,7 +1193,7 @@
                 <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:12px;">${v.address}</p>
                 <div style="display:flex;gap:8px;margin-bottom:18px;">
                     <span class="venue-tag">★ ${v.rating || "Chưa có đánh giá"}</span>
-                    <span class="venue-tag">Cách ${(v.distance_km || 0).toFixed(1)} km</span>
+                    <span class="venue-tag">Cách ${formatExactDistance(v.distanceKm !== undefined ? v.distanceKm : (v.distance_km || 0))}</span>
                 </div>
                 <div style="display:flex;gap:10px;">
                     <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
@@ -1037,14 +1282,26 @@
         }
 
         function locateUserGPS() {
+            if (mapComponent) {
+                mapComponent.locateUser();
+                return;
+            }
             if (!navigator.geolocation) return;
             navigator.geolocation.getCurrentPosition((pos) => {
                 currentPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                mainMap.setView([currentPos.lat, currentPos.lng], 15);
-                userMarker.setLatLng([currentPos.lat, currentPos.lng]);
-                fetchVenuesFromAPI();
+                renderVenues();
             });
         }
+
+        window.onMapPopupSelectVenue = function(venueId) {
+            const v = venues.find(item => item.id === venueId);
+            if (v) {
+                const lat = parseFloat(v.lat !== undefined ? v.lat : v.latitude);
+                const lng = parseFloat(v.lng !== undefined ? v.lng : v.longitude);
+                const dist = (!isNaN(lat) && !isNaN(lng)) ? calcDistanceKm(currentPos.lat, currentPos.lng, lat, lng) : (v.distance_km || 0);
+                openVenueModal({ ...v, distanceKm: dist, distance_km: dist });
+            }
+        };
 
         function toggleAccountDropdown() {
             document.getElementById('account-dropdown').classList.toggle('open');
@@ -1141,10 +1398,15 @@
                         });
                     }
 
-                    // Nếu nhận diện được tọa độ tâm mới, di chuyển bản đồ đến khu vực đó
-                    if (geocodedInfo && geocodedInfo.latitude && geocodedInfo.longitude && mainMap) {
-                        mainMap.flyTo([geocodedInfo.latitude, geocodedInfo.longitude], 14, { duration: 1.2 });
+                    // Nếu nhận diện được tọa độ tâm mới, di chuyển bản đồ & vòng tròn bán kính đến khu vực đó
+                    if (geocodedInfo && geocodedInfo.latitude && geocodedInfo.longitude) {
                         currentPos = { lat: geocodedInfo.latitude, lng: geocodedInfo.longitude };
+                        if (mapComponent) {
+                            mapComponent.setUserPosition(currentPos.lat, currentPos.lng, false);
+                            if (mapComponent.map) {
+                                mapComponent.map.flyTo([currentPos.lat, currentPos.lng], 14, { duration: 1.2 });
+                            }
+                        }
                     }
                 }
             } catch (err) {
@@ -1274,6 +1536,34 @@
             renderVenues();
             await fetchRestaurantsFromAPI();
         });
+
+        function switchMobileView(mode) {
+            const layout = document.querySelector('.discovery-layout');
+            const btnList = document.getElementById('btn-view-list');
+            const btnMap = document.getElementById('btn-view-map');
+            if (!layout) return;
+
+            if (mode === 'map') {
+                layout.classList.remove('view-list');
+                layout.classList.add('view-map');
+                if (btnList) btnList.classList.remove('active');
+                if (btnMap) btnMap.classList.add('active');
+                if (mapComponent) mapComponent.invalidateSize();
+            } else {
+                layout.classList.remove('view-map');
+                layout.classList.add('view-list');
+                if (btnList) btnList.classList.add('active');
+                if (btnMap) btnMap.classList.remove('active');
+            }
+        }
     </script>
+    <div class="mobile-view-toggle-bar" id="mobile-view-toggle">
+        <button type="button" class="mobile-view-btn active" id="btn-view-list" onclick="switchMobileView('list')">
+            📋 Danh sách
+        </button>
+        <button type="button" class="mobile-view-btn" id="btn-view-map" onclick="switchMobileView('map')">
+            🗺️ Bản đồ
+        </button>
+    </div>
 </body>
 </html>
