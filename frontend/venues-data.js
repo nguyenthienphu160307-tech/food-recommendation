@@ -47,7 +47,14 @@ const SEED_VENUES = [
         "price": 65000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 2,
@@ -88,7 +95,14 @@ const SEED_VENUES = [
         "price": 125000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 3,
@@ -129,7 +143,14 @@ const SEED_VENUES = [
         "price": 260000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 4,
@@ -170,7 +191,14 @@ const SEED_VENUES = [
         "price": 15000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 5,
@@ -207,7 +235,14 @@ const SEED_VENUES = [
         "price": 195000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 6,
@@ -244,7 +279,14 @@ const SEED_VENUES = [
         "price": 150000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 7,
@@ -277,7 +319,14 @@ const SEED_VENUES = [
         "price": 125000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": false,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 8,
@@ -314,7 +363,14 @@ const SEED_VENUES = [
         "price": 85000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 9,
@@ -347,7 +403,14 @@ const SEED_VENUES = [
         "price": 15000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 10,
@@ -376,7 +439,14 @@ const SEED_VENUES = [
         "price": 195000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 11,
@@ -405,7 +475,14 @@ const SEED_VENUES = [
         "price": 165000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": true
   },
   {
     "id": 12,
@@ -434,7 +511,14 @@ const SEED_VENUES = [
         "price": 135000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 13,
@@ -459,7 +543,14 @@ const SEED_VENUES = [
         "price": 68000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": false,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 14,
@@ -488,7 +579,14 @@ const SEED_VENUES = [
         "price": 280000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 15,
@@ -517,7 +615,14 @@ const SEED_VENUES = [
         "price": 320000.0
       }
     ],
-    "district": "Quận 1"
+    "district": "Quận 1",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   },
   {
     "id": 16,
@@ -546,7 +651,14 @@ const SEED_VENUES = [
         "price": 115000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 17,
@@ -575,7 +687,14 @@ const SEED_VENUES = [
         "price": 185000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 18,
@@ -604,7 +723,14 @@ const SEED_VENUES = [
         "price": 85000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 19,
@@ -633,7 +759,14 @@ const SEED_VENUES = [
         "price": 95000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 20,
@@ -658,7 +791,14 @@ const SEED_VENUES = [
         "price": 439000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 21,
@@ -687,7 +827,14 @@ const SEED_VENUES = [
         "price": 125000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": true
   },
   {
     "id": 22,
@@ -716,7 +863,14 @@ const SEED_VENUES = [
         "price": 140000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 23,
@@ -745,7 +899,14 @@ const SEED_VENUES = [
         "price": 190000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 24,
@@ -774,7 +935,14 @@ const SEED_VENUES = [
         "price": 85000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 25,
@@ -799,7 +967,14 @@ const SEED_VENUES = [
         "price": 145000.0
       }
     ],
-    "district": "Quận 3"
+    "district": "Quận 3",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 26,
@@ -832,7 +1007,14 @@ const SEED_VENUES = [
         "price": 285000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 27,
@@ -865,7 +1047,14 @@ const SEED_VENUES = [
         "price": 35000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 28,
@@ -894,7 +1083,14 @@ const SEED_VENUES = [
         "price": 25000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   },
   {
     "id": 29,
@@ -923,7 +1119,14 @@ const SEED_VENUES = [
         "price": 85000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 30,
@@ -952,7 +1155,14 @@ const SEED_VENUES = [
         "price": 95000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   },
   {
     "id": 31,
@@ -981,7 +1191,14 @@ const SEED_VENUES = [
         "price": 105000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   },
   {
     "id": 32,
@@ -1006,7 +1223,14 @@ const SEED_VENUES = [
         "price": 65000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 33,
@@ -1031,7 +1255,14 @@ const SEED_VENUES = [
         "price": 469000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 34,
@@ -1056,7 +1287,14 @@ const SEED_VENUES = [
         "price": 279000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": true
   },
   {
     "id": 35,
@@ -1085,7 +1323,14 @@ const SEED_VENUES = [
         "price": 60000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   },
   {
     "id": 36,
@@ -1114,7 +1359,14 @@ const SEED_VENUES = [
         "price": 95000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 37,
@@ -1143,7 +1395,14 @@ const SEED_VENUES = [
         "price": 165000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 38,
@@ -1172,7 +1431,14 @@ const SEED_VENUES = [
         "price": 39000.0
       }
     ],
-    "district": "Quận Bình Thạnh"
+    "district": "Quận Bình Thạnh",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": true
   },
   {
     "id": 39,
@@ -1201,7 +1467,14 @@ const SEED_VENUES = [
         "price": 680000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": true
   },
   {
     "id": 40,
@@ -1230,7 +1503,14 @@ const SEED_VENUES = [
         "price": 135000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": true
   },
   {
     "id": 41,
@@ -1259,7 +1539,14 @@ const SEED_VENUES = [
         "price": 380000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 42,
@@ -1288,7 +1575,14 @@ const SEED_VENUES = [
         "price": 160000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 43,
@@ -1317,7 +1611,14 @@ const SEED_VENUES = [
         "price": 195000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": true
   },
   {
     "id": 44,
@@ -1342,7 +1643,14 @@ const SEED_VENUES = [
         "price": 185000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": false,
+    "outdoor": false,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 45,
@@ -1367,7 +1675,14 @@ const SEED_VENUES = [
         "price": 280000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": true
   },
   {
     "id": 46,
@@ -1396,7 +1711,14 @@ const SEED_VENUES = [
         "price": 250000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": true,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 47,
@@ -1425,7 +1747,14 @@ const SEED_VENUES = [
         "price": 85000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   },
   {
     "id": 48,
@@ -1454,7 +1783,14 @@ const SEED_VENUES = [
         "price": 79000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": false,
+    "has_pet_friendly": false,
+    "vegetarian_support": false
   },
   {
     "id": 49,
@@ -1483,7 +1819,14 @@ const SEED_VENUES = [
         "price": 210000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   },
   {
     "id": 50,
@@ -1508,6 +1851,13 @@ const SEED_VENUES = [
         "price": 169000.0
       }
     ],
-    "district": "TP. Thủ Đức"
+    "district": "TP. Thủ Đức",
+    "has_parking": true,
+    "has_private_room": false,
+    "has_outdoor": true,
+    "outdoor": true,
+    "pet_friendly": true,
+    "has_pet_friendly": true,
+    "vegetarian_support": false
   }
 ];
