@@ -56,6 +56,19 @@ def serve_home_page():
     }
 
 
+@app.get("/restaurant-detail", tags=["Frontend UI"], summary="Trang Chi tiết Nhà hàng & Thực đơn (FR-09 / TE9C662)")
+@app.get("/restaurant-detail.html", tags=["Frontend UI"], summary="Trang Chi tiết Nhà hàng & Thực đơn (FR-09 / TE9C662)")
+def serve_restaurant_detail_page():
+    detail_file = os.path.join(FRONTEND_DIR, "restaurant-detail.html")
+    if os.path.exists(detail_file):
+        return FileResponse(detail_file)
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="Trang chi tiết nhà hàng chưa được khởi tạo.",
+    )
+
+
+
 @app.get("/api/test-db", tags=["Hệ thống"])
 def test_db_connection(db: Session = Depends(get_db)):
     try:

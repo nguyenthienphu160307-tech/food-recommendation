@@ -5,15 +5,25 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
-from app.models.restaurant import Restaurant, RestaurantAmenity
+from app.models.restaurant import (
+    Restaurant,
+    RestaurantAmenity,
+    RestaurantImage,
+    RestaurantMenu,
+    MenuItem,
+)
 from app.schemas.restaurant import (
     AmenityResponse,
     AppliedFilterCriteria,
+    MenuItemResponse,
     PaginationMetadata,
+    RestaurantDetailResponse,
     RestaurantFilterItemResponse,
     RestaurantFilterResponse,
+    RestaurantImageResponse,
     RestaurantListItemResponse,
     RestaurantListResponse,
+    RestaurantMenuResponse,
 )
 from app.services.geo_service import (
     calculate_bounding_box,
@@ -367,3 +377,143 @@ def get_restaurants(
         data=list_items,
         pagination=pagination,
     )
+
+
+@router.get(
+    "/{restaurant_id}",
+    response_model=RestaurantDetailResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Lấy chi tiết thông tin nhà hàng, tiện ích và thực đơn món ăn (FR-09 / TE9C662)",
+)
+def get_restaurant_detail(
+    restaurant_id: int,
+    lat: Optional[float] = Query(None, ge=-90.0, le=90.0, description="Vĩ độ người dùng để tính khoảng cách"),
+    lng: Optional[float] = Query(None, ge=-180.0, le=180.0, description="Kinh độ người dùng để tính khoảng cách"),
+    db: Session = Depends(get_db),
+):
+    """
+    API chi tiết nhà hàng (FR-09 / TE9C662):
+    - Trả về thông tin cốt lõi (tên, địa chỉ, số điện thoại, giờ mở cửa, giá, đánh giá)
+    - Tính khoảng cách Haversine chính xác nếu có lat, lng
+    - 5 tiện ích chính trong RestaurantAmenities
+    - Danh sách hình ảnh slide sắp xếp theo display_order (RestaurantImages)
+    - Danh mục thực đơn (RestaurantMenus) kèm từng món ăn chi tiết (MenuItems)
+    """
+    if (lat is None) != (lng is None):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vui lòng cung cấp đầy đủ cả hai tọa độ lat và lng để tính khoảng cách.",
+        )
+
+    restaurant = (
+        db.query(Restaurant)
+        .options(
+            joinedload(Restaurant.amenities),
+            joinedload(Restaurant.images),
+            joinedload(Restaurant.menus).joinedload(RestaurantMenu.items),
+        )
+        .filter(Restaurant.id == restaurant_id)
+        .first()
+    )
+
+    if not restaurant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy nhà hàng có ID={restaurant_id}",
+        )
+
+    # Tính khoảng cách GPS nếu có tọa độ
+    distance_km: Optional[float] = None
+    if lat is not None and lng is not None:
+        distance_km = round(
+            calculate_haversine_distance(lat, lng, restaurant.latitude, restaurant.longitude),
+            2,
+        )
+
+    # Sắp xếp ảnh theo display_order, sau đó theo ID
+    sorted_images = sorted(
+        restaurant.images or [],
+        key=lambda img: (img.display_order if img.display_order is not None else 0, img.id),
+    )
+
+    # Xác định cover_image_url
+    cover_image_url = None
+    if sorted_images:
+        cover_img = next((img for img in sorted_images if img.is_cover), None)
+        cover_image_url = cover_img.image_url if cover_img else sorted_images[0].image_url
+
+    # Sắp xếp danh mục thực đơn theo display_order và món theo ID
+    sorted_menus = sorted(
+        restaurant.menus or [],
+        key=lambda m: (m.display_order if m.display_order is not None else 0, m.id),
+    )
+
+    menus_response: List[RestaurantMenuResponse] = []
+    for menu in sorted_menus:
+        sorted_items = sorted(menu.items or [], key=lambda item: item.id)
+        items_response = [
+            MenuItemResponse(
+                id=item.id,
+                name=item.name,
+                description=item.description,
+                price=item.price,
+                image_url=item.image_url,
+                is_available=item.is_available,
+            )
+            for item in sorted_items
+        ]
+        menus_response.append(
+            RestaurantMenuResponse(
+                id=menu.id,
+                name=menu.name,
+                description=menu.description,
+                display_order=menu.display_order,
+                items=items_response,
+            )
+        )
+
+    # Tiện ích 5 cờ
+    if restaurant.amenities:
+        amenities_data = AmenityResponse(
+            has_parking=restaurant.amenities.has_parking,
+            has_private_room=restaurant.amenities.has_private_room,
+            has_outdoor=restaurant.amenities.has_outdoor,
+            pet_friendly=restaurant.amenities.pet_friendly,
+            vegetarian_support=restaurant.amenities.vegetarian_support,
+        )
+    else:
+        amenities_data = AmenityResponse()
+
+    images_response = [
+        RestaurantImageResponse(
+            id=img.id,
+            image_url=img.image_url,
+            caption=img.caption,
+            is_cover=img.is_cover,
+            display_order=img.display_order,
+        )
+        for img in sorted_images
+    ]
+
+    return RestaurantDetailResponse(
+        id=restaurant.id,
+        name=restaurant.name,
+        description=restaurant.description,
+        address=restaurant.address,
+        phone_number=restaurant.phone_number,
+        cuisine_type=restaurant.cuisine_type,
+        latitude=restaurant.latitude,
+        longitude=restaurant.longitude,
+        min_price=restaurant.min_price,
+        max_price=restaurant.max_price,
+        open_hours=restaurant.open_hours,
+        avg_rating=restaurant.avg_rating,
+        total_reviews=restaurant.total_reviews,
+        status=restaurant.status,
+        cover_image_url=cover_image_url,
+        distance_km=distance_km,
+        amenities=amenities_data,
+        images=images_response,
+        menus=menus_response,
+    )
+

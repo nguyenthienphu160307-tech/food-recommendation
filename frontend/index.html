@@ -1847,6 +1847,10 @@
                             ${(v.pet_friendly || v.has_pet_friendly) ? '<span class="venue-tag">🐾 Thú cưng</span>' : ''}
                             ${(v.vegetarian || v.vegetarian_support) ? '<span class="venue-tag">🌱 Món chay</span>' : ''}
                         </div>
+                        <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:0.78rem;color:var(--text-muted);">Thực đơn & Tiện ích</span>
+                            <span style="font-size:0.82rem;font-weight:700;color:var(--brand-red);">Chi tiết →</span>
+                        </div>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -2475,13 +2479,18 @@
                     <span class="venue-tag">★ ${v.rating || "Chưa có đánh giá"}</span>
                     <span class="venue-tag">Cách ${formatExactDistance(v.distanceKm !== undefined ? v.distanceKm : (v.distance_km || 0))}</span>
                 </div>
-                <div style="display:flex;gap:10px;">
-                    <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
-                        Mở chỉ đường Google Maps
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <a href="restaurant-detail.html?id=${v.id}" class="btn-ai-ask" style="height:42px;justify-content:center;text-decoration:none;border-radius:8px;background:var(--brand-red);color:#ffffff;font-weight:700;box-shadow:var(--shadow-sm);">
+                        🍽️ Xem thực đơn & chi tiết quán →
                     </a>
-                    <button type="button" onclick="closeVenueModal()" style="height:40px;padding:0 18px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);cursor:pointer;font-weight:600;">
-                        Đóng
-                    </button>
+                    <div style="display:flex;gap:10px;">
+                        <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);border:1px solid var(--border);">
+                            🧭 Chỉ đường Google Maps
+                        </a>
+                        <button type="button" onclick="closeVenueModal()" style="height:40px;padding:0 18px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);cursor:pointer;font-weight:600;">
+                            Đóng
+                        </button>
+                    </div>
                 </div>
             `;
             modal.classList.add('open');

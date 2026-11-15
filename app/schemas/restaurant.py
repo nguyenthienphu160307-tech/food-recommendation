@@ -81,3 +81,67 @@ class RestaurantFilterResponse(BaseModel):
     data: List[RestaurantFilterItemResponse]
     applied_filters: AppliedFilterCriteria
     pagination: PaginationMetadata
+
+
+class RestaurantImageResponse(BaseModel):
+    """Schema hình ảnh trong bộ sưu tập slide của nhà hàng (RestaurantImages - FR-09)"""
+    id: int
+    image_url: str
+    caption: Optional[str] = None
+    is_cover: bool = False
+    display_order: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class MenuItemResponse(BaseModel):
+    """Schema món ăn chi tiết trong thực đơn (MenuItems - FR-09)"""
+    id: int
+    name: str
+    description: Optional[str] = None
+    price: float
+    image_url: Optional[str] = None
+    is_available: bool = True
+
+    class Config:
+        from_attributes = True
+
+
+class RestaurantMenuResponse(BaseModel):
+    """Schema nhóm danh mục thực đơn (RestaurantMenus - FR-09)"""
+    id: int
+    name: str
+    description: Optional[str] = None
+    display_order: int = 0
+    items: List[MenuItemResponse] = Field(default_factory=list, description="Danh sách món ăn thuộc nhóm")
+
+    class Config:
+        from_attributes = True
+
+
+class RestaurantDetailResponse(BaseModel):
+    """Schema phản hồi chi tiết toàn diện của Nhà hàng (FR-09 / TE9C662)"""
+    id: int
+    name: str
+    description: Optional[str] = None
+    address: str
+    phone_number: Optional[str] = None
+    cuisine_type: Optional[str] = None
+    latitude: float
+    longitude: float
+    min_price: float
+    max_price: float
+    open_hours: Optional[str] = None
+    avg_rating: float
+    total_reviews: int
+    status: str
+    cover_image_url: Optional[str] = Field(None, description="Ảnh bìa chính đại diện")
+    distance_km: Optional[float] = Field(None, description="Khoảng cách GPS tính từ vị trí người dùng (km)")
+    amenities: Optional[AmenityResponse] = Field(None, description="5 tiện ích của nhà hàng")
+    images: List[RestaurantImageResponse] = Field(default_factory=list, description="Bộ ảnh slide của nhà hàng")
+    menus: List[RestaurantMenuResponse] = Field(default_factory=list, description="Thực đơn phân theo nhóm danh mục")
+
+    class Config:
+        from_attributes = True
+
