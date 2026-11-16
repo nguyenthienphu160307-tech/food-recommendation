@@ -499,6 +499,206 @@
             width: 560px; max-width: 100%; max-height: 88vh;
             overflow-y: auto; padding: 24px; position: relative;
         }
+        .modal-card.venue-detail-modal {
+            width: 680px; max-width: 95vw; max-height: 90vh; padding: 24px 26px;
+        }
+
+        /* Component Thư viện ảnh Lightbox & Bảng Thực đơn (TSK-30) */
+        .detail-cover-wrapper {
+            position: relative; width: 100%; height: 240px; border-radius: 14px;
+            overflow: hidden; margin-bottom: 12px; background: var(--bg-subtle);
+        }
+        .detail-cover-wrapper img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            transition: transform 0.35s ease;
+        }
+        .detail-cover-wrapper:hover img {
+            transform: scale(1.02);
+        }
+        .btn-open-lightbox {
+            position: absolute; bottom: 12px; right: 12px;
+            background: rgba(17, 24, 39, 0.85); color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px;
+            padding: 6px 14px; font-size: 0.78rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px;
+            cursor: pointer; backdrop-filter: blur(6px); transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        }
+        .btn-open-lightbox:hover {
+            background: var(--brand-red); border-color: var(--brand-red); transform: scale(1.05);
+        }
+        .gallery-thumbs-strip {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;
+            scrollbar-width: thin;
+        }
+        .gallery-thumb-img {
+            width: 76px; height: 54px; border-radius: 8px; object-fit: cover;
+            cursor: pointer; border: 2px solid transparent; flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .gallery-thumb-img:hover {
+            border-color: var(--brand-red); transform: translateY(-2px);
+        }
+        .gallery-thumb-img.active {
+            border-color: var(--brand-red); box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.3);
+        }
+
+        /* Menu Quick Filter & Accordion (TSK-30) */
+        .menu-search-bar {
+            display: flex; align-items: center; gap: 8px; background: var(--bg-subtle);
+            border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
+            margin-bottom: 12px; transition: border-color 0.2s, background 0.2s;
+        }
+        .menu-search-bar:focus-within {
+            border-color: var(--brand-red); background: var(--bg-surface);
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
+        }
+        .menu-search-bar input {
+            border: none; background: transparent; width: 100%; outline: none;
+            font-size: 0.88rem; color: var(--text-primary);
+        }
+        .menu-category-card {
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px; margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        .menu-category-header {
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; user-select: none; padding: 2px 0;
+        }
+        .menu-category-header:hover .menu-category-title {
+            color: var(--brand-red);
+        }
+        .menu-category-arrow {
+            display: inline-block; font-size: 0.72rem; color: var(--text-muted);
+            transition: transform 0.2s ease; margin-right: 4px;
+        }
+        .menu-category-title {
+            font-weight: 700; font-size: 0.96rem; color: var(--text-primary);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .menu-category-count {
+            font-size: 0.74rem; font-weight: 600; color: var(--text-muted);
+            background: var(--bg-surface); border: 1px solid var(--border);
+            padding: 2px 8px; border-radius: 999px;
+        }
+        .menu-item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 12px; border-radius: 10px; background: var(--bg-surface);
+            border: 1px solid var(--border); margin-top: 8px; transition: all 0.2s;
+            gap: 12px;
+        }
+        .menu-item-row:hover {
+            border-color: rgba(225, 29, 72, 0.35); transform: translateX(2px);
+        }
+        .menu-item-row.unavailable {
+            opacity: 0.65; background: var(--bg-subtle);
+        }
+        .menu-item-name {
+            font-weight: 600; font-size: 0.92rem; color: var(--text-primary);
+        }
+        .menu-item-row.unavailable .menu-item-name {
+            text-decoration: line-through;
+        }
+        .menu-item-thumb {
+            width: 54px; height: 54px; border-radius: 8px; object-fit: cover;
+            flex-shrink: 0; cursor: zoom-in; border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .menu-item-thumb:hover {
+            transform: scale(1.06); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+        }
+        .badge-status-available {
+            font-size: 0.68rem; font-weight: 700; color: #059669;
+            background: rgba(16, 185, 129, 0.12); padding: 2px 7px; border-radius: 4px;
+        }
+        .badge-status-unavailable {
+            font-size: 0.68rem; font-weight: 700; color: #dc2626;
+            background: rgba(239, 68, 68, 0.12); padding: 2px 7px; border-radius: 4px;
+        }
+        .menu-item-price {
+            font-weight: 700; font-size: 0.94rem; color: var(--brand-red); white-space: nowrap;
+        }
+
+        /* Lightbox Viewer Styles (TSK-30) */
+        .lightbox-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(10, 15, 29, 0.94);
+            backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 3200; padding: 20px;
+            user-select: none;
+        }
+        .lightbox-backdrop.open { display: flex; animation: lightboxFadeIn 0.2s ease-out; }
+        @keyframes lightboxFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .lightbox-container {
+            position: relative; max-width: 960px; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .lightbox-close-btn {
+            position: absolute; top: -45px; right: 0;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; z-index: 10;
+        }
+        .lightbox-close-btn:hover {
+            background: var(--brand-red); border-color: var(--brand-red); transform: scale(1.08);
+        }
+        .lightbox-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(0, 0, 0, 0.65); border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; z-index: 10;
+        }
+        .lightbox-nav-btn:hover {
+            background: var(--brand-red); border-color: var(--brand-red); transform: translateY(-50%) scale(1.1);
+        }
+        .lightbox-prev { left: -24px; }
+        .lightbox-next { right: -24px; }
+        @media (max-width: 768px) {
+            .lightbox-prev { left: 8px; width: 40px; height: 40px; }
+            .lightbox-next { right: 8px; width: 40px; height: 40px; }
+            .lightbox-close-btn { top: -40px; right: 8px; }
+            .modal-card.venue-detail-modal { padding: 18px 16px; }
+        }
+        .lightbox-image-wrap {
+            max-width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            background: #000000; position: relative;
+        }
+        .lightbox-image-wrap img {
+            max-width: 100%; max-height: 70vh; object-fit: contain; display: block;
+            transition: opacity 0.2s ease;
+        }
+        .lightbox-footer {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 6px; color: #ffffff; font-size: 0.9rem;
+        }
+        .lightbox-caption {
+            font-weight: 500; color: #f3f4f6; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lightbox-counter {
+            font-size: 0.82rem; font-weight: 700; color: #9ca3af; background: rgba(0,0,0,0.5);
+            padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15);
+        }
+        .lightbox-thumbs {
+            display: flex; gap: 8px; max-width: 100%; overflow-x: auto; padding: 6px 0;
+            scrollbar-width: thin;
+        }
+        .lightbox-thumb-item {
+            width: 64px; height: 46px; border-radius: 6px; object-fit: cover;
+            cursor: pointer; opacity: 0.5; transition: all 0.2s; border: 2px solid transparent;
+            flex-shrink: 0;
+        }
+        .lightbox-thumb-item:hover, .lightbox-thumb-item.active {
+            opacity: 1; border-color: var(--brand-red); transform: scale(1.05);
+        }
 
         .site-footer {
             background: var(--bg-surface); border-top: 1px solid var(--border);
@@ -689,7 +889,30 @@
     </div>
 
     <div class="modal-backdrop" id="venue-modal" onclick="if(event.target===this) closeVenueModal()">
-        <div class="modal-card" id="venue-modal-content"></div>
+        <div class="modal-card venue-detail-modal" id="venue-modal-content"></div>
+    </div>
+
+    <!-- Lightbox Viewer Modal (TSK-30) -->
+    <div class="lightbox-backdrop" id="lightbox-modal" onclick="if(event.target===this) closeLightbox()" ontouchstart="handleLightboxTouchStart(event)" ontouchend="handleLightboxTouchEnd(event)">
+        <div class="lightbox-container">
+            <button type="button" class="lightbox-close-btn" onclick="closeLightbox()" title="Đóng (ESC)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <button type="button" class="lightbox-nav-btn lightbox-prev" onclick="lightboxPrev()" title="Ảnh trước (←)">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button type="button" class="lightbox-nav-btn lightbox-next" onclick="lightboxNext()" title="Ảnh tiếp theo (→)">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <div class="lightbox-image-wrap">
+                <img id="lightbox-image" src="" alt="Ảnh nhà hàng">
+            </div>
+            <div class="lightbox-footer">
+                <div class="lightbox-caption" id="lightbox-caption">Mô tả ảnh</div>
+                <div class="lightbox-counter" id="lightbox-counter">1 / 1</div>
+            </div>
+            <div class="lightbox-thumbs" id="lightbox-thumbs"></div>
+        </div>
     </div>
 
     <div class="modal-backdrop" id="auth-modal" onclick="if(event.target===this) closeAuthModal()">
@@ -1265,6 +1488,105 @@
             renderVenues(filtered);
         }
 
+        // =====================================================================
+        // TSK-30: QUẢN LÝ LIGHTBOX XEM ẢNH PHÓNG TO & BẢNG THỰC ĐƠN PHÂN CẤP
+        // =====================================================================
+        let currentLightboxImages = [];
+        let currentLightboxIndex = 0;
+        let currentLoadedMenus = [];
+        let lightboxTouchStartX = 0;
+        let lightboxTouchEndX = 0;
+
+        function openLightbox(startIndex = currentLightboxIndex) {
+            if (!currentLightboxImages || currentLightboxImages.length === 0) return;
+            currentLightboxIndex = Math.max(0, Math.min(startIndex, currentLightboxImages.length - 1));
+            updateLightboxView();
+            const modal = document.getElementById('lightbox-modal');
+            if (modal) modal.classList.add('open');
+            document.addEventListener('keydown', handleLightboxKeydown);
+        }
+
+        function openSingleImageLightbox(url, caption) {
+            currentLightboxImages = [{ image_url: url, caption: caption || 'Hình ảnh món ăn' }];
+            currentLightboxIndex = 0;
+            openLightbox(0);
+        }
+
+        function closeLightbox() {
+            const modal = document.getElementById('lightbox-modal');
+            if (modal) modal.classList.remove('open');
+            document.removeEventListener('keydown', handleLightboxKeydown);
+        }
+
+        function lightboxNext() {
+            if (currentLightboxImages.length <= 1) return;
+            currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxImages.length;
+            updateLightboxView();
+        }
+
+        function lightboxPrev() {
+            if (currentLightboxImages.length <= 1) return;
+            currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
+            updateLightboxView();
+        }
+
+        function handleLightboxKeydown(e) {
+            if (e.key === 'Escape') closeLightbox();
+            else if (e.key === 'ArrowRight') lightboxNext();
+            else if (e.key === 'ArrowLeft') lightboxPrev();
+        }
+
+        function handleLightboxTouchStart(e) {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                lightboxTouchStartX = e.changedTouches[0].screenX;
+            }
+        }
+
+        function handleLightboxTouchEnd(e) {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                lightboxTouchEndX = e.changedTouches[0].screenX;
+                const diff = lightboxTouchEndX - lightboxTouchStartX;
+                if (Math.abs(diff) > 45) {
+                    if (diff < 0) lightboxNext();
+                    else lightboxPrev();
+                }
+            }
+        }
+
+        function updateLightboxView() {
+            const imgData = currentLightboxImages[currentLightboxIndex];
+            if (!imgData) return;
+
+            const mainImg = document.getElementById('lightbox-image');
+            const captionEl = document.getElementById('lightbox-caption');
+            const counterEl = document.getElementById('lightbox-counter');
+            const thumbsEl = document.getElementById('lightbox-thumbs');
+
+            if (mainImg) {
+                mainImg.style.opacity = '0.3';
+                mainImg.src = imgData.image_url;
+                mainImg.onload = () => { mainImg.style.opacity = '1'; };
+            }
+
+            if (captionEl) {
+                captionEl.innerText = imgData.caption || 'Hình ảnh không gian nhà hàng';
+            }
+
+            if (counterEl) {
+                counterEl.innerText = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
+            }
+
+            if (thumbsEl) {
+                thumbsEl.innerHTML = currentLightboxImages.map((im, idx) => `
+                    <img src="${im.image_url}" 
+                         class="lightbox-thumb-item ${idx === currentLightboxIndex ? 'active' : ''}" 
+                         onclick="openLightbox(${idx})" 
+                         alt="Thumb ${idx + 1}"
+                         title="${im.caption || 'Ảnh ' + (idx + 1)}">
+                `).join('');
+            }
+        }
+
         function openVenueModal(v) {
             const modal = document.getElementById('venue-modal');
             const box = document.getElementById('venue-modal-content');
@@ -1279,37 +1601,67 @@
 
             const priceFormatted = `${v.priceMin.toLocaleString('vi-VN')}đ - ${v.priceMax.toLocaleString('vi-VN')}đ/người`;
 
+            // Khởi tạo ảnh mặc định cho Lightbox
+            currentLightboxImages = [{ image_url: v.image, caption: v.name + " (Ảnh đại diện quán)" }];
+            currentLightboxIndex = 0;
+
             box.innerHTML = `
-                <div style="position:relative;margin-bottom:12px;">
+                <!-- Khung Ảnh Bìa & Nút Mở Lightbox (TSK-30) -->
+                <div class="detail-cover-wrapper">
                     <img id="modal-main-cover" src="${v.image}" 
-                         style="width:100%;height:220px;object-fit:cover;border-radius:12px;" 
+                         alt="${v.name}"
+                         onclick="openLightbox()" 
+                         style="cursor:zoom-in;"
                          onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80';">
+                    <button type="button" class="btn-open-lightbox" onclick="openLightbox()" title="Xem ảnh phóng to toàn màn hình">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                        Phóng to ảnh (Lightbox)
+                    </button>
                 </div>
-                <div id="modal-gallery-row" style="display:none;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;"></div>
-                <h3 style="font-size:1.35rem;font-weight:700;margin-bottom:4px;color:var(--text-primary);">${v.name}</h3>
+
+                <!-- Dải ảnh thu nhỏ (Gallery Thumbnails Strip) -->
+                <div class="gallery-thumbs-strip" id="modal-gallery-row" style="display:none;"></div>
+
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;">
+                    <h3 style="font-size:1.35rem;font-weight:700;color:var(--text-primary);margin:0;line-height:1.3;">${v.name}</h3>
+                    <span class="rating-pill" style="font-size:0.85rem;padding:4px 10px;">★ ${Number(v.rating).toFixed(1)} <small style="opacity:0.8;">(${v.reviews || 0})</small></span>
+                </div>
+                
                 <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:12px;">📍 ${v.address} • ⏰ ${v.openHours}</p>
+                
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-                    <span class="venue-tag" style="background:rgba(245,158,11,0.12);color:#d97706;border-color:rgba(245,158,11,0.3);font-weight:700;">★ ${Number(v.rating).toFixed(1)} (${v.reviews || 0} đánh giá)</span>
-                    <span class="venue-tag">📍 Cách ${v.distanceKm.toFixed(1)} km</span>
-                    <span class="venue-tag" style="font-weight:600;color:var(--brand-red);">💵 ${priceFormatted}</span>
+                    <span class="venue-tag" style="color:#0284c7;font-weight:700;">📍 Cách ${v.distanceKm.toFixed(1)} km</span>
+                    <span class="venue-tag" style="font-weight:700;color:var(--brand-red);">💵 ${priceFormatted}</span>
+                    <span class="venue-tag">🏷️ ${v.cuisineLabel}</span>
                 </div>
+
                 <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
                     ${amenitiesModalHtml}
                 </div>
 
-                <!-- Khu vực hiển thị Thực đơn thật đồng bộ từ Admin (TSK-27 / TSK-30) -->
-                <div style="margin-top:10px;margin-bottom:20px;">
+                <!-- Bảng Thực đơn Món ăn Phân cấp & Tìm kiếm Nhanh (TSK-30) -->
+                <div style="margin-top:12px;margin-bottom:20px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">
                         <h4 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;display:flex;align-items:center;gap:6px;">
-                            <span>📋 Thực đơn &amp; Món ăn của quán</span>
+                            <span>📋 Thực đơn &amp; Món ăn</span>
                         </h4>
-                        <span id="modal-menu-count-badge" style="font-size:0.75rem;font-weight:600;color:var(--brand-red);background:rgba(225,29,72,0.1);padding:2px 8px;border-radius:999px;">
-                            Đang tải món ăn...
+                        <span id="modal-menu-count-badge" style="font-size:0.75rem;font-weight:600;color:var(--brand-red);background:rgba(225,29,72,0.1);padding:3px 10px;border-radius:999px;">
+                            Đang nạp thực đơn...
                         </span>
                     </div>
-                    <div id="modal-menu-list" style="display:flex;flex-direction:column;gap:12px;max-height:280px;overflow-y:auto;padding-right:4px;">
-                        <div class="skeleton-shimmer" style="height:38px;border-radius:8px;"></div>
-                        <div class="skeleton-shimmer" style="height:38px;border-radius:8px;"></div>
+
+                    <!-- Thanh tìm kiếm món ăn nhanh trong quán -->
+                    <div class="menu-search-bar" id="modal-menu-search-box" style="display:none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0;">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="modal-menu-search-input" placeholder="Tìm nhanh món ăn trong thực đơn của quán..." oninput="filterModalMenuItems(this.value)">
+                        <span id="modal-menu-search-count" style="font-size:0.75rem;font-weight:600;color:var(--text-muted);white-space:nowrap;display:none;"></span>
+                    </div>
+
+                    <div id="modal-menu-list" style="display:flex;flex-direction:column;gap:12px;max-height:300px;overflow-y:auto;padding-right:4px;">
+                        <div class="skeleton-shimmer" style="height:40px;border-radius:8px;"></div>
+                        <div class="skeleton-shimmer" style="height:40px;border-radius:8px;"></div>
                     </div>
                 </div>
 
@@ -1318,25 +1670,25 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
                         Mở chỉ đường Google Maps
                     </a>
-                    <button type="button" onclick="closeVenueModal()" style="height:42px;padding:0 20px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);cursor:pointer;font-weight:600;">
+                    <button type="button" onclick="closeVenueModal()" style="height:42px;padding:0 22px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);cursor:pointer;font-weight:600;">
                         Đóng
                     </button>
                 </div>
             `;
             modal.classList.add('open');
 
-            // Đồng bộ thực đơn thật & hình ảnh thật từ CSDL MySQL (TSK-27 & TSK-28)
+            // Đồng bộ thực đơn thật & thư viện ảnh từ CSDL MySQL (TSK-27, TSK-28 & TSK-30)
             loadRestaurantMenuInModal(v.id, v.menu);
-            loadRestaurantImagesInModal(v.id);
+            loadRestaurantImagesInModal(v.id, v.image, v.name);
         }
 
         /**
-         * TSK-27 / TSK-30: Tự động nạp danh sách thực đơn & món ăn thật từ API GET /api/restaurants/{id}/menus
-         * Hiển thị nhóm thực đơn (RestaurantMenus) và từng món ăn kèm giá tiền, trạng thái còn/hết món (MenuItems).
+         * TSK-27 / TSK-30: Nạp danh mục thực đơn & món ăn thật từ API GET /api/restaurants/{id}/menus
          */
         async function loadRestaurantMenuInModal(restaurantId, fallbackMenu) {
             const listEl = document.getElementById('modal-menu-list');
             const badgeEl = document.getElementById('modal-menu-count-badge');
+            const searchBox = document.getElementById('modal-menu-search-box');
             if (!listEl) return;
 
             try {
@@ -1346,40 +1698,10 @@
                     const totalItems = menus.reduce((acc, m) => acc + (m.items ? m.items.length : 0), 0);
 
                     if (menus.length > 0 && totalItems > 0) {
+                        currentLoadedMenus = menus;
                         if (badgeEl) badgeEl.innerText = `${menus.length} danh mục • ${totalItems} món`;
-                        let html = '';
-                        menus.forEach(group => {
-                            const items = group.items || [];
-                            if (items.length === 0) return;
-                            html += `
-                                <div class="modal-menu-group" style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:10px;padding:12px;">
-                                    <div style="font-weight:700;font-size:0.92rem;color:var(--brand-red);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-                                        <span>🍽️ ${group.name}</span>
-                                        <small style="color:var(--text-muted);font-weight:normal;font-size:0.75rem;">${items.length} món</small>
-                                    </div>
-                                    ${group.description ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;font-style:italic;">${group.description}</p>` : ''}
-                                    <div style="display:flex;flex-direction:column;gap:8px;">
-                                        ${items.map(it => `
-                                            <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);">
-                                                <div style="flex:1;padding-right:12px;">
-                                                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                                                        <span style="font-weight:600;font-size:0.9rem;${!it.is_available ? 'text-decoration:line-through;opacity:0.6;' : 'color:var(--text-primary);'}">${it.name}</span>
-                                                        ${it.is_available 
-                                                            ? '<span style="font-size:0.68rem;font-weight:700;color:#059669;background:rgba(16,185,129,0.12);padding:1px 6px;border-radius:4px;">Còn món</span>'
-                                                            : '<span style="font-size:0.68rem;font-weight:700;color:#dc2626;background:rgba(239,68,68,0.12);padding:1px 6px;border-radius:4px;">Hết món</span>'}
-                                                    </div>
-                                                    ${it.description ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">${it.description}</div>` : ''}
-                                                </div>
-                                                <div style="font-weight:700;font-size:0.92rem;color:var(--brand-red);white-space:nowrap;">
-                                                    ${Number(it.price).toLocaleString('vi-VN')}đ
-                                                </div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        listEl.innerHTML = html;
+                        if (searchBox) searchBox.style.display = 'flex';
+                        renderCategorizedMenus(menus);
                         return;
                     }
                 }
@@ -1388,21 +1710,26 @@
             }
 
             // Fallback nếu nhà hàng chưa có menu trong CSDL
+            currentLoadedMenus = [];
             if (badgeEl) badgeEl.innerText = 'Thực đơn tiêu biểu';
+            if (searchBox) searchBox.style.display = 'none';
+
             if (fallbackMenu && fallbackMenu.length > 0) {
                 listEl.innerHTML = `
                     <div style="display:flex;flex-direction:column;gap:8px;">
                         ${fallbackMenu.map(m => `
-                            <div style="display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);font-size:0.88rem;">
-                                <span>${m.name}</span>
-                                <strong style="color:var(--brand-red);">${Number(m.price).toLocaleString('vi-VN')}đ</strong>
+                            <div class="menu-item-row" style="margin-top:0;">
+                                <div>
+                                    <span class="menu-item-name">${m.name}</span>
+                                </div>
+                                <div class="menu-item-price">${Number(m.price).toLocaleString('vi-VN')}đ</div>
                             </div>
                         `).join('')}
                     </div>
                 `;
             } else {
                 listEl.innerHTML = `
-                    <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem;background:var(--bg-subtle);border-radius:10px;">
+                    <div style="text-align:center;padding:22px;color:var(--text-muted);font-size:0.86rem;background:var(--bg-subtle);border-radius:10px;">
                         Nhà hàng chưa cập nhật thực đơn chi tiết.
                     </div>
                 `;
@@ -1410,27 +1737,142 @@
         }
 
         /**
-         * TSK-28 / TSK-30: Tự động nạp thư viện ảnh của quán từ API GET /api/restaurants/{id}/images
-         * Cho phép khách hàng xem nhiều góc chụp và bấm vào ảnh nhỏ để đổi ảnh đại diện xem trước.
+         * Render bảng thực đơn phân cấp theo từng nhóm thực đơn (RestaurantMenus)
          */
-        async function loadRestaurantImagesInModal(restaurantId) {
+        function renderCategorizedMenus(menus, isFiltered = false) {
+            const listEl = document.getElementById('modal-menu-list');
+            if (!listEl) return;
+
+            let html = '';
+            menus.forEach(group => {
+                const items = group.items || [];
+                if (items.length === 0) return;
+
+                html += `
+                    <div class="menu-category-card">
+                        <div class="menu-category-header" onclick="toggleMenuCategory(this)" title="Nhấp để thu gọn hoặc mở rộng danh mục">
+                            <span class="menu-category-title">
+                                <span class="menu-category-arrow">▼</span>
+                                <span>🍽️</span>
+                                <span>${group.name}</span>
+                            </span>
+                            <span class="menu-category-count">${items.length} món</span>
+                        </div>
+                        ${group.description ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;margin-bottom:6px;font-style:italic;">${group.description}</p>` : ''}
+                        <div class="menu-category-body" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                            ${items.map(it => `
+                                <div class="menu-item-row ${!it.is_available ? 'unavailable' : ''}">
+                                    ${it.image_url ? `
+                                        <img src="${it.image_url}" class="menu-item-thumb" 
+                                             alt="${it.name}" 
+                                             title="Nhấp để phóng to ảnh món ăn"
+                                             onclick="event.stopPropagation(); openSingleImageLightbox('${it.image_url}', '${it.name} • ${Number(it.price).toLocaleString('vi-VN')}đ')"
+                                             onerror="this.style.display='none';">
+                                    ` : ''}
+                                    <div style="flex:1;padding-right:8px;">
+                                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                            <span class="menu-item-name">${it.name}</span>
+                                            ${it.is_available 
+                                                ? '<span class="badge-status-available">Còn món</span>' 
+                                                : '<span class="badge-status-unavailable">Tạm hết</span>'}
+                                        </div>
+                                        ${it.description ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">${it.description}</div>` : ''}
+                                    </div>
+                                    <div class="menu-item-price">
+                                        ${Number(it.price).toLocaleString('vi-VN')}đ
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            listEl.innerHTML = html;
+        }
+
+        /**
+         * Thu gọn / mở rộng Accordion từng nhóm thực đơn
+         */
+        function toggleMenuCategory(headerEl) {
+            const card = headerEl.closest('.menu-category-card');
+            if (!card) return;
+            const body = card.querySelector('.menu-category-body');
+            const arrow = card.querySelector('.menu-category-arrow');
+            if (!body) return;
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? 'flex' : 'none';
+            if (arrow) arrow.innerText = isHidden ? '▼' : '▶';
+        }
+
+        /**
+         * Lọc nhanh món ăn trong thực đơn theo từ khóa gõ vào ô tìm kiếm
+         */
+        function filterModalMenuItems(keyword) {
+            const listEl = document.getElementById('modal-menu-list');
+            const countEl = document.getElementById('modal-menu-search-count');
+            if (!listEl || !currentLoadedMenus) return;
+
+            const q = (keyword || '').trim().toLowerCase();
+            if (!q) {
+                renderCategorizedMenus(currentLoadedMenus);
+                if (countEl) countEl.style.display = 'none';
+                return;
+            }
+
+            let matchTotal = 0;
+            const filteredMenus = currentLoadedMenus.map(group => {
+                const matchedItems = (group.items || []).filter(it => 
+                    (it.name || '').toLowerCase().includes(q) || 
+                    (it.description || '').toLowerCase().includes(q)
+                );
+                matchTotal += matchedItems.length;
+                return { ...group, items: matchedItems };
+            }).filter(group => group.items.length > 0);
+
+            if (countEl) {
+                countEl.style.display = 'inline';
+                countEl.innerText = `${matchTotal} món khớp`;
+            }
+
+            if (matchTotal === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align:center;padding:24px 12px;background:var(--bg-subtle);border-radius:10px;color:var(--text-muted);">
+                        <div style="font-size:1.8rem;margin-bottom:6px;">🔍</div>
+                        <div style="font-weight:600;font-size:0.9rem;color:var(--text-primary);margin-bottom:4px;">Không tìm thấy món ăn phù hợp</div>
+                        <div style="font-size:0.8rem;">Không có món nào chứa từ khóa "${keyword}" trong thực đơn của quán.</div>
+                    </div>
+                `;
+            } else {
+                renderCategorizedMenus(filteredMenus, true);
+            }
+        }
+
+        /**
+         * TSK-28 / TSK-30: Nạp toàn bộ ảnh của quán và kết nối Trình xem ảnh phóng to Lightbox
+         */
+        async function loadRestaurantImagesInModal(restaurantId, coverUrl, restaurantName) {
             const galleryRow = document.getElementById('modal-gallery-row');
             if (!galleryRow) return;
+
             try {
                 const res = await fetch(`/api/restaurants/${restaurantId}/images`);
                 if (res.ok) {
                     const images = await res.json();
-                    if (images && images.length > 1) {
+                    if (images && images.length > 0) {
+                        currentLightboxImages = images.map(im => ({
+                            image_url: im.image_url,
+                            caption: im.caption || (restaurantName + " (Hình ảnh quán)")
+                        }));
+
                         let html = '';
-                        images.forEach(img => {
+                        images.forEach((img, idx) => {
                             html += `
                                 <img src="${img.image_url}" 
+                                     class="gallery-thumb-img ${idx === 0 ? 'active' : ''}"
                                      alt="${img.caption || 'Ảnh nhà hàng'}" 
-                                     title="${img.caption || 'Nhấp để xem ảnh này'}"
-                                     onclick="document.getElementById('modal-main-cover').src='${img.image_url}'" 
-                                     style="width:72px;height:52px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:border-color 0.2s;" 
-                                     onmouseover="this.style.borderColor='var(--brand-red)'" 
-                                     onmouseout="this.style.borderColor='transparent'">
+                                     title="${img.caption || 'Xem ảnh ' + (idx + 1) + ' (Bấm để xem, nhấp tiếp để phóng to)'}"
+                                     onclick="selectModalGalleryImage('${img.image_url}', ${idx})"
+                                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80';">
                             `;
                         });
                         galleryRow.innerHTML = html;
@@ -1439,11 +1881,24 @@
                     }
                 }
             } catch (_) {}
+
+            // Fallback nếu chỉ có ảnh bìa
+            currentLightboxImages = [{ image_url: coverUrl, caption: restaurantName }];
             galleryRow.style.display = 'none';
+        }
+
+        function selectModalGalleryImage(url, index) {
+            const coverEl = document.getElementById('modal-main-cover');
+            if (coverEl) coverEl.src = url;
+            currentLightboxIndex = index;
+            document.querySelectorAll('.gallery-thumb-img').forEach((el, idx) => {
+                el.classList.toggle('active', idx === index);
+            });
         }
 
         function closeVenueModal() {
             document.getElementById('venue-modal').classList.remove('open');
+            closeLightbox();
         }
 
         function toggleSaveVenue(e, id) {
