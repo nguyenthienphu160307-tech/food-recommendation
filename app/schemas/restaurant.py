@@ -1,6 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
-
+from typing import Optional, List
 
 class AmenityResponse(BaseModel):
     """Schema 5 tiện ích chính của nhà hàng"""
@@ -87,3 +87,11 @@ class RestaurantDetailResponse(RestaurantListItemResponse):
     """Chi tiết một nhà hàng: thông tin cơ bản + thực đơn + thư viện ảnh"""
     menus: List[MenuCategoryResponse] = []
     images: List[RestaurantImageResponse] = []
+    
+class AmenityUpdateRequest(BaseModel):
+    """Schema dữ liệu gửi lên khi Admin cập nhật tiện ích nhà hàng."""
+    has_parking: Optional[bool] = Field(None, description="Có chỗ đậu ô tô")
+    has_private_room: Optional[bool] = Field(None, description="Có phòng riêng")
+    has_outdoor: Optional[bool] = Field(None, description="Có không gian ngoài trời")
+    pet_friendly: Optional[bool] = Field(None, description="Thân thiện với thú cưng")
+    vegetarian_support: Optional[bool] = Field(None, description="Có hỗ trợ món chay")

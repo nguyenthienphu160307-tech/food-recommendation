@@ -194,37 +194,47 @@ def _rule_based_extract(user_prompt: str, current_context: Optional[Dict[str, An
     )
 
 
-def build_ai_explanation(criteria: DiningCriteriaSchema) -> str:
-    """Sinh câu giải thích tự nhiên tiếng Việt dựa trên tiêu chí đã bóc tách."""
-    parts = []
-    if criteria.cuisine:
-        parts.append(f"ẩm thực **{criteria.cuisine}**")
-    if criteria.location_text:
-        parts.append(f"tại khu vực **{criteria.location_text}**")
-    if criteria.budget:
-        parts.append(f"ngân sách dưới **{criteria.budget:,}đ/người**".replace(",", "."))
-    if criteria.has_parking:
-        parts.append("có **bãi đỗ ô tô**")
+def build_ai_explanation(criteria: Dict[str, Any]) -> str:
+    """
+    Task TE9C66A: Sinh lời giải thích đề xuất (Explainable AI Generator).
+    Sinh câu trả lời tự nhiên giải thích lý do đề xuất.
+    """
+    explanation = "Dựa trên yêu cầu của bạn, mình đã lọc ra các quán "
+    
+    if criteria.get('cuisine'):
+        explanation += f"chuyên {criteria['cuisine']}, "
+    else:
+        explanation += "ăn uống, "
 
-    conds = []
-    if criteria.other_conditions.has_private_room:
-        conds.append("phòng riêng yên tĩnh")
-    if criteria.other_conditions.pet_friendly:
-        conds.append("cho phép mang thú cưng")
-    if criteria.other_conditions.vegetarian_support:
-        conds.append("hỗ trợ thực đơn chay")
-    if criteria.other_conditions.has_outdoor:
-        conds.append("không gian sân vườn ngoài trời")
-    if criteria.other_conditions.group_size:
-        conds.append(f"phù hợp nhóm {criteria.other_conditions.group_size} người")
+    if criteria.get('location_text'):
+        explanation += f"tại khu vực {criteria['location_text']}, "
+        
+    conditions = []
+    if criteria.get('budget'):
+        conditions.append(f"có mức giá phù hợp khoảng {criteria['budget']:,.0f}đ/người")
+    if criteria.get('has_parking'):
+        conditions.append("có bãi đỗ xe ô tô")
+    
+    # Đọc các điều kiện khác
+    other = criteria.get('other_conditions', {})
+    if isinstance(other, dict):
+        if other.get('has_private_room'):
+            conditions.append("có không gian phòng riêng")
+        if other.get('pet_friendly'):
+            conditions.append("cho phép mang thú cưng")
+        if other.get('vegetarian_support'):
+            conditions.append("có thực đơn đồ chay")
+            
+    elif isinstance(other, str) and other.strip():
+        conditions.append(other)
 
-    if conds:
-        parts.append("kèm tiện ích: " + ", ".join(conds))
+    if conditions:
+        explanation += "và đáp ứng tiêu chí: " + ", ".join(conditions) + ". "
+    else:
+        explanation = explanation.rstrip(', ') + ". "
 
-    if not parts:
-        return "Hệ thống đã ghi nhận yêu cầu và ưu tiên gợi ý các địa điểm có đánh giá cao nhất gần vị trí của bạn."
-    return "Đã bóc tách tiêu chí tìm kiếm: Ưu tiên nhà hàng " + ", ".join(parts) + "."
-
+    explanation += "Dưới đây là các đề xuất tốt nhất dành cho bạn nhé!"
+    return explanation
 
 def extract_criteria_from_prompt(
     user_prompt: str,

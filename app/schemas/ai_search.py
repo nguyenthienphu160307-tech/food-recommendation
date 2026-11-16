@@ -56,22 +56,14 @@ class DiningCriteriaSchema(BaseModel):
 
 
 class ExtractCriteriaRequest(BaseModel):
-    """Payload đầu vào cho API kiểm thử trích xuất tiêu chí từ câu hỏi tự nhiên"""
-    prompt: str = Field(
-        ...,
-        min_length=2,
-        description="Câu hỏi tự nhiên của người dùng",
-        examples=["Nhóm 4 người muốn ăn đồ nướng ở Quận 1 có chỗ đậu ô tô dưới 300k/người, có phòng riêng"]
-    )
-    current_context: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="Ngữ cảnh tiêu chí của lượt hội thoại trước (hỗ trợ Multi-turn)"
-    )
-
+    """Schema request cho API trích xuất tiêu chí."""
+    prompt: str = Field(..., description="Câu hỏi tự nhiên của người dùng")
+    session_id: Optional[int] = Field(None, description="ID của phiên chat hiện tại để lưu lịch sử (TE9C66A)")
+    current_context: Optional[Dict[str, Any]] = Field(None, description="Ngữ cảnh hội thoại trước đó")
 
 class ExtractCriteriaResponse(BaseModel):
-    """Phản hồi trả về gồm JSON tiêu chí đã bóc tách, lời giải thích AI và JSON Schema chuẩn"""
-    prompt: str
-    extracted_criteria: DiningCriteriaSchema
-    ai_explanation: str
-    extraction_engine: str = Field(description="Nguồn xử lý: 'llm_api' hoặc 'rule_based_nlp'")
+    """Schema response trả về cho Frontend."""
+    prompt: str = Field(..., description="Câu hỏi gốc của người dùng")
+    extracted_criteria: Dict[str, Any] = Field(..., description="JSON chứa các tiêu chí đã bóc tách")
+    ai_explanation: str = Field(..., description="Lời giải thích tự nhiên từ AI về cách trích xuất tiêu chí")
+    extraction_engine: str = Field(..., description="Engine đã sử dụng (vd: Gemini, Rule-based)")

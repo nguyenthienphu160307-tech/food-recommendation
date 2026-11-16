@@ -9,7 +9,8 @@ from app.routers import auth_router, restaurant_router, geo_router, users_router
 from app.core.database import engine, Base, get_db
 import app.models
 from app.routers import auth_router, profile_router, geo_router, ai_search_router
-# Tự động tạo bảng CSDL
+from app.routers import admin_router
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -23,7 +24,7 @@ app.include_router(auth_router)
 app.include_router(restaurant_router)
 app.include_router(users_router)
 app.include_router(ai_search_router)
-
+app.include_router(admin_router)
 # Gắn các router API vào hệ thống
 app.include_router(auth_router)
 app.include_router(profile_router)
@@ -61,3 +62,4 @@ def test_db_connection(db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"status": "error", "error": str(e)}
         )
+        
