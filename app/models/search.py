@@ -16,6 +16,7 @@ class SearchSession(Base):
     session_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     status = Column(String(20), default="active", nullable=False)  # 'active', 'closed'
+    current_state = Column(String(50), default="SESSION_IDLE", nullable=False)  # Multi-turn State Machine (TE9C669 / Hình 8.2)
     started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Quan hệ với bảng Users (1 User có nhiều phiên tìm kiếm)

@@ -102,3 +102,32 @@ def llm_parse_and_save_criteria(
     )
 
     return LLMParseAndSaveResponse(**result)
+
+
+@router.get(
+    "/state-diagram",
+    summary="Xem cấu trúc và các bước chuyển của State Diagram Vòng đời tìm kiếm (Hình 8.2 SRS - TE9C669)"
+)
+def get_state_diagram_metadata():
+    """
+    Trả về định nghĩa 8 trạng thái và sơ đồ chuyển đổi State Diagram (Hình 8.2 SRS).
+    """
+    from app.services.multi_turn_state_machine import SearchSessionState, VALID_STATE_TRANSITIONS
+    return {
+        "task_code": "TE9C669",
+        "diagram_name": "Hình 8.2. State Diagram – Vòng đời phiên tìm kiếm",
+        "states": [
+            {"id": 1, "state": SearchSessionState.SESSION_IDLE.value, "title": "Khởi tạo Phiên (Session Idle)", "description": "Chờ câu hỏi hoặc vị trí GPS"},
+            {"id": 2, "state": SearchSessionState.PARSING_INTENT.value, "title": "Đang phân tích NLP (Parsing Intent)", "description": "Trích xuất vị trí, món, ngân sách, tiện ích"},
+            {"id": 3, "state": SearchSessionState.SPATIAL_FILTERING.value, "title": "Truy vấn Không gian (Spatial Filtering)", "description": "Quét bán kính GPS & lọc tiện ích"},
+            {"id": 4, "state": SearchSessionState.QUERY_RELAXATION.value, "title": "Nới lỏng Điều kiện (Query Relaxation)", "description": "Mở rộng bán kính / ngân sách khi 0 kết quả"},
+            {"id": 5, "state": SearchSessionState.RANKING_AND_AI.value, "title": "Xếp hạng & Giải thích (Ranking & AI)", "description": "Chấm điểm độ khớp & sinh lý do đề xuất"},
+            {"id": 6, "state": SearchSessionState.RESULT_PRESENTED.value, "title": "Hiển thị Kết quả (Result Presented)", "description": "Hiển thị danh sách quán & Bản đồ"},
+            {"id": 7, "state": SearchSessionState.CONTEXT_REFINING.value, "title": "Hội thoại Nhiều lượt (Context Refining)", "description": "Cập nhật SearchCriteria trong cùng phiên"},
+            {"id": 8, "state": SearchSessionState.SESSION_CLOSED.value, "title": "Đóng Phiên (Session Closed)", "description": "Lưu lịch sử SearchSessions (status=closed)"},
+        ],
+        "valid_transitions": {
+            k.value: [v.value for v in vals] for k, vals in VALID_STATE_TRANSITIONS.items()
+        }
+    }
+

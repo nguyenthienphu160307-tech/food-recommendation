@@ -36,6 +36,10 @@ from .ai_search import (
     OtherConditionsSchema,
     LLMParseAndSaveRequest,
     LLMParseAndSaveResponse,
+    MultiTurnChatRequest,
+    MultiTurnChatResponse,
+    MultiTurnRestaurantItem,
+    SessionStateResponse,
 )
 
 __all__ = [
@@ -68,4 +72,8 @@ __all__ = [
     "OtherConditionsSchema",
     "LLMParseAndSaveRequest",
     "LLMParseAndSaveResponse",
+    "MultiTurnChatRequest",
+    "MultiTurnChatResponse",
+    "MultiTurnRestaurantItem",
+    "SessionStateResponse",
 ]

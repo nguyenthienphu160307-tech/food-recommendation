@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -110,3 +110,58 @@ class LLMParseAndSaveResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ==============================================================================
+# SCHEMAS MULTI-TURN STATE MACHINE & CONTEXT MANAGER (TASK TE9C669 / HÌNH 8.2)
+# ==============================================================================
+
+class MultiTurnChatRequest(BaseModel):
+    """Payload gửi câu hỏi hội thoại nhiều lượt (VD: 'Quán nào rẻ hơn?', 'Đổi sang Quận 3')"""
+    message: str = Field(..., min_length=1, description="Câu hỏi hoặc yêu cầu điều chỉnh tiêu chí của người dùng")
+    provider: Optional[str] = Field("auto", description="Nhà cung cấp LLM: 'auto', 'gemini', 'openai', 'rule_based'")
+    user_id: Optional[int] = Field(None, description="ID người dùng nếu có (để kiểm tra cài đặt quyền riêng tư GPS)")
+
+
+class MultiTurnRestaurantItem(BaseModel):
+    """Thông tin tóm tắt nhà hàng trả về trong lượt hội thoại"""
+    id: int
+    name: str
+    address: str
+    cuisine_type: Optional[str] = None
+    avg_rating: float
+    min_price: float
+    max_price: float
+    distance_km: float
+    cover_image_url: Optional[str] = None
+    has_parking: bool = False
+    has_private_room: bool = False
+
+
+class MultiTurnChatResponse(BaseModel):
+    """Phản hồi kết quả xử lý lượt hội thoại theo State Diagram (Hình 8.2)"""
+    session_id: int
+    current_state: str = Field(..., description="Trạng thái hiện tại trong State Machine (Hình 8.2)")
+    status: str = Field(..., description="Trạng thái phiên ('active' hoặc 'closed')")
+    criteria_id: Optional[int] = None
+    user_message_id: Optional[int] = None
+    ai_message_id: Optional[int] = None
+    ai_message: str
+    extraction_engine: Optional[str] = None
+    relaxation_applied: bool = Field(False, description="Đánh dấu có kích hoạt Nới lỏng Điều kiện (State 4) hay không")
+    relaxation_info: Dict[str, Any] = Field(default_factory=dict, description="Chi tiết các điều kiện đã được nới lỏng")
+    merged_criteria: Optional[Dict[str, Any]] = Field(None, description="Tiêu chí tìm kiếm sau khi hợp nhất thông minh")
+    results: List[MultiTurnRestaurantItem] = Field(default_factory=list, description="Danh sách nhà hàng được xếp hạng (State 5 & 6)")
+
+
+class SessionStateResponse(BaseModel):
+    """Phản hồi trạng thái hiện tại và lịch sử tiêu chí của phiên hội thoại"""
+    session_id: int
+    current_state: str
+    status: str
+    started_at: datetime
+    total_messages: int
+    total_criteria_versions: int
+    latest_criteria: Optional[Dict[str, Any]] = None
+    criteria_history: List[Dict[str, Any]] = Field(default_factory=list)
+
