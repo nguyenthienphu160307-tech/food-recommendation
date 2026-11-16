@@ -61,36 +61,17 @@ Output:
     "group_size": 4
   }}
 }}
-
-Input: "Tìm nhà hàng chay thanh đạm quanh Gò Vấp giá tầm 150 ngàn, cho mang thú cưng"
-Output:
-{{
-  "location_text": "Gò Vấp",
-  "cuisine": "Món Chay",
-  "budget": 150000,
-  "has_parking": null,
-  "other_conditions": {{
-    "has_private_room": null,
-    "pet_friendly": true,
-    "vegetarian_support": true,
-    "has_outdoor": null,
-    "group_size": null
-  }}
-}}
 """
 
-
 def build_extraction_prompt(user_prompt: str, current_context: Optional[Dict[str, Any]] = None) -> str:
-    """
-    Hàm ghép nối System Prompt, JSON Schema, Ngữ cảnh cũ (Multi-turn) và câu hỏi hiện tại.
-    """
+    """Ghép nối System Prompt, JSON Schema, Ngữ cảnh cũ và câu hỏi hiện tại."""
     schema_str = json.dumps(get_dining_criteria_json_schema(), ensure_ascii=False, indent=2)
     base_prompt = SYSTEM_PROMPT_TEMPLATE.format(json_schema=schema_str)
 
     context_block = ""
     if current_context:
         context_block = (
-            f"\n### NGỮ CẢNH HỘI THOẠI TRƯỚC ĐÓ (Hãy kế thừa và cập nhật thêm tiêu chí mới):\n"
+            f"\n### NGỮ CẢNH HỘI THOẠI TRƯỚC ĐÓ (Kế thừa và cập nhật thêm tiêu chí mới):\n"
             f"{json.dumps(current_context, ensure_ascii=False)}\n"
         )
 
@@ -98,86 +79,44 @@ def build_extraction_prompt(user_prompt: str, current_context: Optional[Dict[str
 
 
 # ==============================================================================
-# 3. BỘ BÓC TÁCH NGÔN NGỮ TỰ NHIÊN TIẾNG VIỆT (HYBRID LLM + RULE-BASED FALLBACK)
+# 3. FALLBACK PARSER & ASYNC EXTRACTION ENGINE (TASK TE9C66B)
 # ==============================================================================
 def _rule_based_extract(user_prompt: str, current_context: Optional[Dict[str, Any]] = None) -> DiningCriteriaSchema:
     """
-    Bộ trích xuất NLP Tiếng Việt tốc độ cao (Fallback khi không cấu hình API Key ngoài).
-    Đảm bảo hệ thống luôn hoạt động 100% trong mọi buổi chấm bài & chạy kiểm thử tự động.
+    Bộ trích xuất NLP Tiếng Việt tốc độ cao (Fallback Parser).
+    Được tối ưu Regex để luôn phản hồi dưới 1 giây.
     """
     text = user_prompt.lower()
     ctx = current_context or {}
     other_ctx = ctx.get("other_conditions") or {}
 
-    # 1. Trích xuất khu vực / địa điểm (location_text)
     location_text = ctx.get("location_text")
-    location_patterns = [
-        r"(quận\s*\d+)",
-        r"(q\.\s*\d+)",
-        r"(gò vấp|bình thạnh|thủ đức|tân bình|phú nhuận|đa kao|pasteur|quang trung|phan văn trị|võ văn tần)",
-    ]
-    for pat in location_patterns:
-        m = re.search(pat, text, re.IGNORECASE)
-        if m:
-            raw_loc = m.group(1).strip()
-            location_text = raw_loc.title() if not raw_loc.lower().startswith("q.") else raw_loc.upper()
-            break
+    loc_match = re.search(r"(quận\s*\d+|q\.\s*\d+|gò vấp|bình thạnh|thủ đức|tân bình|phú nhuận|đa kao)", text)
+    if loc_match:
+        raw_loc = loc_match.group(1).strip()
+        location_text = raw_loc.title() if not raw_loc.startswith("q.") else raw_loc.upper()
 
-    # 2. Trích xuất loại hình ẩm thực (cuisine)
     cuisine = ctx.get("cuisine")
-    if any(k in text for k in ["nướng", "bbq", "hàn quốc", "thịt nướng"]):
+    if any(k in text for k in ["nướng", "bbq", "hàn quốc"]):
         cuisine = "BBQ Hàn Quốc"
-    elif any(k in text for k in ["chay", "thuần chay", "thanh đạm", "vegetarian", "vegan"]):
+    elif any(k in text for k in ["chay", "thanh đạm", "vegan"]):
         cuisine = "Món Chay"
     elif "cơm tấm" in text or "sườn bì" in text:
         cuisine = "Cơm tấm"
-    elif any(k in text for k in ["phở", "bún", "lẩu nấm", "món việt", "lẩu"]):
+    elif any(k in text for k in ["phở", "bún", "món việt", "lẩu"]):
         cuisine = "Món Việt"
 
-    # 3. Trích xuất ngân sách (budget)
     budget = ctx.get("budget")
-    # Bắt dạng "300k", "250 nghìn", "150 ngàn"
-    m_k = re.search(r"(\d+(?:[\.,]\d+)?)\s*(?:k|nghìn|ngàn|nghin|ngan)\b", text)
-    m_tr = re.search(r"(\d+(?:[\.,]\d+)?)\s*(?:triệu|tr| củ)\b", text)
-    m_vnd = re.search(r"(\d{5,7})\s*(?:đ|vnd|vnđ|đồng)?\b", text)
-
+    m_k = re.search(r"(\d+(?:[\.,]\d+)?)\s*(?:k|nghìn|ngàn)\b", text)
+    m_tr = re.search(r"(\d+(?:[\.,]\d+)?)\s*(?:triệu|tr|củ)\b", text)
     if m_k:
-        val = float(m_k.group(1).replace(",", "."))
-        budget = int(val * 1000)
+        budget = int(float(m_k.group(1).replace(",", ".")) * 1000)
     elif m_tr:
-        val = float(m_tr.group(1).replace(",", "."))
-        budget = int(val * 1_000_000)
-    elif m_vnd:
-        budget = int(m_vnd.group(1))
+        budget = int(float(m_tr.group(1).replace(",", ".")) * 1000000)
 
-    # 4. Trích xuất chỗ đỗ xe (has_parking)
     has_parking = ctx.get("has_parking")
-    if any(k in text for k in ["đỗ ô tô", "đậu ô tô", "đỗ xe", "đậu xe", "bãi xe", "gửi ô tô", "parking"]):
+    if any(k in text for k in ["đỗ ô tô", "đậu xe", "bãi xe"]):
         has_parking = False if "không cần" in text else True
-
-    # 5. Trích xuất other_conditions (phòng riêng, thú cưng, ăn chay, ngoài trời, số người)
-    has_private_room = other_ctx.get("has_private_room")
-    if any(k in text for k in ["phòng riêng", "phòng vip", "yên tĩnh", "riêng tư", "tiếp khách"]):
-        has_private_room = True
-
-    pet_friendly = other_ctx.get("pet_friendly")
-    if any(k in text for k in ["thú cưng", "chó", "mèo", "pet"]):
-        pet_friendly = False if ("không mang" in text or "cấm" in text) else True
-
-    vegetarian_support = other_ctx.get("vegetarian_support")
-    if any(k in text for k in ["chay", "ăn chay", "món chay", "thuần chay"]):
-        vegetarian_support = True
-
-    has_outdoor = other_ctx.get("has_outdoor")
-    if any(k in text for k in ["ngoài trời", "sân vườn", "thoáng mát", "rooftop", "ban công"]):
-        has_outdoor = True
-
-    group_size = other_ctx.get("group_size")
-    m_group = re.search(r"(\d+)\s*(?:người|khách|bạn|suất)", text)
-    if m_group:
-        group_size = int(m_group.group(1))
-    elif "cặp đôi" in text or "2 người" in text:
-        group_size = 2
 
     return DiningCriteriaSchema(
         location_text=location_text,
@@ -185,84 +124,66 @@ def _rule_based_extract(user_prompt: str, current_context: Optional[Dict[str, An
         budget=budget,
         has_parking=has_parking,
         other_conditions=OtherConditionsSchema(
-            has_private_room=has_private_room,
-            pet_friendly=pet_friendly,
-            vegetarian_support=vegetarian_support,
-            has_outdoor=has_outdoor,
-            group_size=group_size,
+            has_private_room=other_ctx.get("has_private_room") or bool(re.search(r"phòng (riêng|vip)|yên tĩnh", text)),
+            pet_friendly=other_ctx.get("pet_friendly") or bool(re.search(r"thú cưng|chó|mèo", text)),
+            vegetarian_support=other_ctx.get("vegetarian_support") or bool(re.search(r"chay|thuần chay", text)),
+            has_outdoor=other_ctx.get("has_outdoor") or bool(re.search(r"ngoài trời|sân vườn|thoáng mát", text)),
+            group_size=int(re.search(r"(\d+)\s*(?:người|khách)", text).group(1)) if re.search(r"(\d+)\s*(?:người|khách)", text) else (2 if "cặp đôi" in text else other_ctx.get("group_size")),
         ),
     )
 
 
-def build_ai_explanation(criteria: Dict[str, Any]) -> str:
-    """
-    Task TE9C66A: Sinh lời giải thích đề xuất (Explainable AI Generator).
-    Sinh câu trả lời tự nhiên giải thích lý do đề xuất.
-    """
-    explanation = "Dựa trên yêu cầu của bạn, mình đã lọc ra các quán "
-    
-    if criteria.get('cuisine'):
-        explanation += f"chuyên {criteria['cuisine']}, "
-    else:
-        explanation += "ăn uống, "
+def build_ai_explanation(criteria: DiningCriteriaSchema) -> str:
+    """Sinh câu giải thích tự nhiên tiếng Việt dựa trên tiêu chí đã bóc tách."""
+    parts = []
+    if criteria.cuisine: parts.append(f"ẩm thực **{criteria.cuisine}**")
+    if criteria.location_text: parts.append(f"tại khu vực **{criteria.location_text}**")
+    if criteria.budget: parts.append(f"ngân sách dưới **{criteria.budget:,}đ/người**".replace(",", "."))
+    if criteria.has_parking: parts.append("có **bãi đỗ ô tô**")
 
-    if criteria.get('location_text'):
-        explanation += f"tại khu vực {criteria['location_text']}, "
-        
-    conditions = []
-    if criteria.get('budget'):
-        conditions.append(f"có mức giá phù hợp khoảng {criteria['budget']:,.0f}đ/người")
-    if criteria.get('has_parking'):
-        conditions.append("có bãi đỗ xe ô tô")
-    
-    # Đọc các điều kiện khác
-    other = criteria.get('other_conditions', {})
-    if isinstance(other, dict):
-        if other.get('has_private_room'):
-            conditions.append("có không gian phòng riêng")
-        if other.get('pet_friendly'):
-            conditions.append("cho phép mang thú cưng")
-        if other.get('vegetarian_support'):
-            conditions.append("có thực đơn đồ chay")
-            
-    elif isinstance(other, str) and other.strip():
-        conditions.append(other)
+    conds = []
+    if criteria.other_conditions.has_private_room: conds.append("phòng riêng yên tĩnh")
+    if criteria.other_conditions.pet_friendly: conds.append("cho phép mang thú cưng")
+    if criteria.other_conditions.vegetarian_support: conds.append("hỗ trợ món chay")
+    if criteria.other_conditions.has_outdoor: conds.append("không gian ngoài trời")
 
-    if conditions:
-        explanation += "và đáp ứng tiêu chí: " + ", ".join(conditions) + ". "
-    else:
-        explanation = explanation.rstrip(', ') + ". "
+    if conds: parts.append("kèm tiện ích: " + ", ".join(conds))
 
-    explanation += "Dưới đây là các đề xuất tốt nhất dành cho bạn nhé!"
-    return explanation
+    if not parts:
+        return "Hệ thống đã ghi nhận yêu cầu và sẽ gợi ý các địa điểm có đánh giá cao nhất."
+    return "Đã bóc tách tiêu chí: Ưu tiên nhà hàng " + ", ".join(parts) + "."
 
-def extract_criteria_from_prompt(
+
+async def extract_criteria_from_prompt_async(
     user_prompt: str,
     current_context: Optional[Dict[str, Any]] = None
 ) -> Tuple[DiningCriteriaSchema, str]:
     """
-    Hàm chính thực thi bóc tách tiêu chí ăn uống:
-    - Nếu biến môi trường GEMINI_API_KEY được cấu hình -> Gọi Gemini API với JSON Schema.
-    - Nếu không có API Key hoặc mất kết nối -> Tự động dùng Rule-based NLP Tiếng Việt.
+    Hàm phân tích từ khóa bất đồng bộ (Async) TE9C66B:
+    - Timeout ngắn gọn (max 4.5 giây) để đảm bảo SLA < 5s.
+    - Gọi API Gemini Async, nếu lỗi/timeout -> rẽ nhánh ngay sang Fallback Parser.
     """
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+    
     if gemini_key and "your_" not in gemini_key:
         try:
             full_prompt = build_extraction_prompt(user_prompt, current_context)
             url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}"
             payload = {
                 "contents": [{"parts": [{"text": full_prompt}]}],
-                "generationConfig": {
-                    "responseMimeType": "application/json",
-                },
+                "generationConfig": {"responseMimeType": "application/json"},
             }
-            with httpx.Client(timeout=6.0) as client:
-                resp = client.post(url, json=payload)
+            # Sử dụng AsyncClient với timeout tối đa 4.5s để thỏa mãn NFR-01 (< 5s)
+            async with httpx.AsyncClient(timeout=4.5) as client:
+                resp = await client.post(url, json=payload)
                 if resp.status_code == 200:
                     raw_text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
                     parsed_dict = json.loads(raw_text)
-                    return DiningCriteriaSchema(**parsed_dict), "llm_api"
-        except Exception:
+                    return DiningCriteriaSchema(**parsed_dict), "llm_api_async"
+        except Exception as e:
+            # Bắt mọi lỗi: Timeout, JSONDecodeError, Mất mạng...
+            print(f"[Fallback Triggered] Lỗi gọi LLM: {e}")
             pass
 
-    return _rule_based_extract(user_prompt, current_context), "rule_based_nlp"
+    # Nếu không có API Key, hoặc API chậm quá 4.5s, lập tức dùng Fallback Parser (chạy chưa tới 0.1s)
+    return _rule_based_extract(user_prompt, current_context), "rule_based_nlp_fallback"
