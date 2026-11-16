@@ -1,17 +1,23 @@
-from fastapi import APIRouter
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, status
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
 from app.schemas.ai_search import (
     ExtractCriteriaRequest,
     ExtractCriteriaResponse,
+    LLMParseAndSaveRequest,
+    LLMParseAndSaveResponse,
 )
 from app.core.prompt_template import (
     SYSTEM_PROMPT_TEMPLATE,
     get_dining_criteria_json_schema,
     build_extraction_prompt,
-    extract_criteria_from_prompt,
-    build_ai_explanation,
 )
+from app.services.llm_service import LLMService
+from app.services.chat_session_service import ChatSessionService
 
-router = APIRouter(prefix="/api/search", tags=["AI Prompt & Trích xuất Tiêu chí (TE9C65A)"])
+router = APIRouter(prefix="/api/search", tags=["AI LLM & Trích xuất Tiêu chí (TE9C65A & TE9C668)"])
 
 
 @router.get(
@@ -29,28 +35,31 @@ def get_prompt_and_schema():
         "json_schema": get_dining_criteria_json_schema(),
         "system_prompt_template": SYSTEM_PROMPT_TEMPLATE,
         "rendered_prompt_example": build_extraction_prompt(sample_query),
+        "configured_providers": LLMService.get_configured_providers(),
     }
 
 
 @router.post(
     "/extract-criteria",
     response_model=ExtractCriteriaResponse,
-    summary="Trích xuất tiêu chí ăn uống từ câu hỏi tự nhiên (NER / Structured JSON)"
+    summary="Trích xuất tiêu chí ăn uống từ câu hỏi tự nhiên (NER / Structured JSON / LLM)"
 )
 def extract_dining_criteria(payload: ExtractCriteriaRequest):
     """
     Nhận câu truy vấn tiếng Việt tự nhiên của người dùng và bóc tách thành JSON Schema chuẩn:
+    - Hỗ trợ LLM Provider: 'auto', 'gemini', 'openai', 'rule_based'.
     - `location_text`: Địa điểm / Khu vực
     - `cuisine`: Loại hình ẩm thực
     - `budget`: Ngân sách tối đa (VNĐ)
     - `has_parking`: Chỗ đỗ xe ô tô
     - `other_conditions`: Phòng riêng (`has_private_room`), Thú cưng (`pet_friendly`), Ăn chay (`vegetarian_support`), Ngoài trời (`has_outdoor`), Số người (`group_size`)
     """
-    criteria, engine_used = extract_criteria_from_prompt(
-        user_prompt=payload.prompt,
+    provider = getattr(payload, "provider", "auto") or "auto"
+    criteria, explanation, engine_used = LLMService.extract_criteria(
+        prompt=payload.prompt,
         current_context=payload.current_context,
+        provider=provider,
     )
-    explanation = build_ai_explanation(criteria)
 
     return ExtractCriteriaResponse(
         prompt=payload.prompt,
@@ -58,3 +67,38 @@ def extract_dining_criteria(payload: ExtractCriteriaRequest):
         ai_explanation=explanation,
         extraction_engine=engine_used,
     )
+
+
+@router.post(
+    "/llm-parse-and-save",
+    response_model=LLMParseAndSaveResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Phân tích câu chat qua LLM và tự động lưu vào bảng SearchCriteria (TE9C668)"
+)
+def llm_parse_and_save_criteria(
+    payload: LLMParseAndSaveRequest,
+    session_id: Optional[int] = Query(None, description="ID phiên chat liên kết; nếu để trống sẽ tự động khởi tạo phiên mới"),
+    db: Session = Depends(get_db),
+):
+    """
+    API Tích hợp LLM/NLP phân tích câu chat tự nhiên sang SearchCriteria (TE9C668):
+    1. Kết nối dịch vụ LLM (Gemini API hoặc OpenAI API).
+    2. Phân tích câu hỏi tự nhiên thành tiêu chí ẩm thực có cấu trúc.
+    3. Tự động Geocode tọa độ GPS từ địa danh bóc tách được.
+    4. Áp dụng bảo vệ quyền riêng tư vị trí GPS (BR-08 / TSK-20).
+    5. Lưu tiêu chí vào bảng `SearchCriteria` và lưu tin nhắn vào bảng `SearchMessages`.
+    """
+    # Nếu chưa có session_id, tự tạo phiên chat mới
+    if session_id is None:
+        new_sess = ChatSessionService.create_session(db, user_id=payload.user_id)
+        session_id = new_sess.session_id
+
+    result = LLMService.parse_and_save_to_criteria(
+        db=db,
+        session_id=session_id,
+        user_message=payload.message,
+        provider=payload.provider or "auto",
+        user_id=payload.user_id,
+    )
+
+    return LLMParseAndSaveResponse(**result)

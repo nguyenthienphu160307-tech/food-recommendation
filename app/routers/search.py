@@ -7,6 +7,8 @@ from app.core.database import get_db
 from app.services.chat_session_service import ChatSessionService
 from app.services.geocoding_service import GeocodingService
 from app.services.privacy_service import LocationPrivacyService
+from app.services.llm_service import LLMService
+from app.schemas.ai_search import LLMParseAndSaveRequest, LLMParseAndSaveResponse
 from app.schemas.search import (
     CreateSessionRequest,
     SessionResponse,
@@ -348,3 +350,70 @@ def get_session_criteria(
         is_obfuscated=getattr(crit_obj, "is_obfuscated", False),
         created_at=crit_obj.created_at
     )
+
+
+# =====================================================================
+# TÍCH HỢP LLM/NLP PHÂN TÍCH CHAT SANG SEARCHCRITERIA (TASK TE9C668)
+# =====================================================================
+
+@router.post(
+    "/sessions/{session_id}/parse-and-save",
+    response_model=LLMParseAndSaveResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Phân tích câu chat tự nhiên bằng LLM/NLP và lưu vào SearchCriteria (TE9C668)"
+)
+def parse_and_save_session_message(
+    session_id: int,
+    payload: LLMParseAndSaveRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    API Tích hợp LLM/NLP bóc tách câu chat tự nhiên sang SearchCriteria (TE9C668):
+    - Kết nối dịch vụ LLM (OpenAI API / Gemini API) với fallback Rule-based Tiếng Việt.
+    - Truyền câu hỏi của người dùng kèm ngữ cảnh Multi-turn của phiên.
+    - Bóc tách tiêu chí: location_text, cuisine, budget, has_parking, other_conditions.
+    - Tự động Geocode tọa độ GPS (latitude, longitude) từ location_text.
+    - Áp dụng làm mờ tọa độ bảo vệ quyền riêng tư nếu người dùng cấu hình (BR-08 / TSK-20).
+    - Lưu câu hỏi vào bảng `SearchMessages` (sender_type='user').
+    - Lưu kết quả bóc tách vào bảng `SearchCriteria`.
+    - Lưu câu phản hồi giải thích của AI vào bảng `SearchMessages` (sender_type='ai').
+    """
+    result = LLMService.parse_and_save_to_criteria(
+        db=db,
+        session_id=session_id,
+        user_message=payload.message,
+        provider=payload.provider or "auto",
+        user_id=payload.user_id,
+    )
+    return LLMParseAndSaveResponse(**result)
+
+
+@router.post(
+    "/parse-and-save",
+    response_model=LLMParseAndSaveResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Phân tích câu chat bằng LLM và tự động tạo phiên mới nếu chưa có (TE9C668)"
+)
+def parse_and_save_auto_session(
+    payload: LLMParseAndSaveRequest,
+    session_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Tiện ích khởi tạo phiên và bóc tách tiêu chí trong 1 request duy nhất (TE9C668):
+    - Nếu `session_id` là None: tự động tạo SearchSession mới.
+    - Gọi LLMService để phân tích và lưu SearchCriteria.
+    """
+    if session_id is None:
+        new_sess = ChatSessionService.create_session(db, user_id=payload.user_id)
+        session_id = new_sess.session_id
+
+    result = LLMService.parse_and_save_to_criteria(
+        db=db,
+        session_id=session_id,
+        user_message=payload.message,
+        provider=payload.provider or "auto",
+        user_id=payload.user_id,
+    )
+    return LLMParseAndSaveResponse(**result)
+

@@ -31,6 +31,13 @@ from .search import (
     PurgeLocationResponse,
 )
 
+from .ai_search import (
+    DiningCriteriaSchema,
+    OtherConditionsSchema,
+    LLMParseAndSaveRequest,
+    LLMParseAndSaveResponse,
+)
+
 __all__ = [
     "SendOTPRequest",
     "RegisterRequest",
@@ -57,4 +64,8 @@ __all__ = [
     "PrivacySettingsResponse",
     "PrivacySettingsUpdateRequest",
     "PurgeLocationResponse",
+    "DiningCriteriaSchema",
+    "OtherConditionsSchema",
+    "LLMParseAndSaveRequest",
+    "LLMParseAndSaveResponse",
 ]

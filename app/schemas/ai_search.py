@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 
@@ -67,6 +68,10 @@ class ExtractCriteriaRequest(BaseModel):
         default=None,
         description="Ngữ cảnh tiêu chí của lượt hội thoại trước (hỗ trợ Multi-turn)"
     )
+    provider: Optional[str] = Field(
+        default="auto",
+        description="Nhà cung cấp LLM: 'auto', 'gemini', 'openai', 'rule_based'"
+    )
 
 
 class ExtractCriteriaResponse(BaseModel):
@@ -74,4 +79,34 @@ class ExtractCriteriaResponse(BaseModel):
     prompt: str
     extracted_criteria: DiningCriteriaSchema
     ai_explanation: str
-    extraction_engine: str = Field(description="Nguồn xử lý: 'llm_api' hoặc 'rule_based_nlp'")
+    extraction_engine: str = Field(description="Nguồn xử lý: 'gemini_api', 'openai_api', hoặc 'rule_based_nlp'")
+
+
+class LLMParseAndSaveRequest(BaseModel):
+    """Yêu cầu phân tích câu chat tự nhiên qua LLM và lưu vào bảng SearchCriteria (TE9C668)"""
+    message: str = Field(..., min_length=1, description="Câu chat tự nhiên tiếng Việt của người dùng")
+    provider: Optional[str] = Field("auto", description="Nhà cung cấp LLM: 'auto', 'gemini', 'openai', 'rule_based'")
+    user_id: Optional[int] = Field(None, description="ID người dùng nếu có (để áp dụng cài đặt quyền riêng tư vị trí)")
+
+
+class LLMParseAndSaveResponse(BaseModel):
+    """Phản hồi kết quả bóc tách LLM và lưu vào bảng SearchCriteria (TE9C668)"""
+    session_id: int = Field(..., description="ID phiên chat liên kết")
+    criteria_id: int = Field(..., description="ID bản ghi SearchCriteria mới tạo")
+    user_message_id: int = Field(..., description="ID tin nhắn của người dùng trong SearchMessages")
+    ai_message_id: int = Field(..., description="ID tin nhắn phản hồi của AI trong SearchMessages")
+    user_message: str = Field(..., description="Nội dung câu chat của người dùng")
+    ai_explanation: str = Field(..., description="Lời giải thích / phản hồi sinh bởi AI")
+    extraction_engine: str = Field(..., description="Engine thực hiện bóc tách ('gemini_api', 'openai_api', 'rule_based_nlp')")
+    location_text: Optional[str] = Field(None, description="Tên khu vực địa lý bóc tách được")
+    latitude: Optional[float] = Field(None, description="Vĩ độ tâm tìm kiếm sau Geocoding")
+    longitude: Optional[float] = Field(None, description="Kinh độ tâm tìm kiếm sau Geocoding")
+    cuisine: Optional[str] = Field(None, description="Loại hình ẩm thực chuẩn hóa")
+    budget: Optional[int] = Field(None, description="Ngân sách tối đa (VNĐ)")
+    has_parking: Optional[bool] = Field(None, description="Yêu cầu chỗ đậu xe ô tô")
+    other_conditions: Dict[str, Any] = Field(default_factory=dict, description="Các tiện ích mở rộng (phòng riêng, ngoài trời, thú cưng, món chay, số người)")
+    is_obfuscated: bool = Field(False, description="Cờ đánh dấu tọa độ đã được làm mờ theo BR-08")
+    created_at: datetime = Field(..., description="Thời gian tạo bản ghi")
+
+    class Config:
+        from_attributes = True
