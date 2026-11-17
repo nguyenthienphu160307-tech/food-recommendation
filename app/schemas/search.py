@@ -15,16 +15,76 @@ class SessionResponse(BaseModel):
     status: str
     current_state: str = "SESSION_IDLE"
     started_at: datetime
+    ended_at: Optional[datetime] = None
+    closed_reason: Optional[str] = None
     total_messages: int = 0
 
     class Config:
         from_attributes = True
 
 
+class CloseSessionRequest(BaseModel):
+    """Yêu cầu đóng phiên tìm kiếm / hội thoại chat (TE9C66C)"""
+    reason: Optional[str] = Field(
+        "user_ended",
+        description="Lý do đóng phiên: 'user_ended', 'restaurant_selected', 'timeout', 'manual'"
+    )
+    selected_restaurant_id: Optional[int] = Field(
+        None,
+        description="ID nhà hàng đã chọn nếu kết thúc phiên bằng việc chốt quán"
+    )
+    note: Optional[str] = Field(
+        None,
+        description="Ghi chú thêm từ người dùng khi đóng phiên"
+    )
+
+
 class CloseSessionResponse(BaseModel):
-    """Phản hồi khi đóng phiên hội thoại"""
+    """Phản hồi khi đóng phiên hội thoại (TE9C66C)"""
     session_id: int
     status: str
+    current_state: str = "SESSION_CLOSED"
+    started_at: Optional[datetime] = None
+    ended_at: Optional[datetime] = None
+    duration_seconds: Optional[float] = None
+    closed_reason: Optional[str] = None
+    selected_restaurant_id: Optional[int] = None
+    total_messages: int = 0
+    message: str
+
+
+class SessionStatusResponse(BaseModel):
+    """Chi tiết trạng thái phiên tìm kiếm và thông số thời gian hoạt động (TE9C66C)"""
+    session_id: int
+    user_id: Optional[int] = None
+    status: str
+    current_state: str
+    is_active: bool
+    is_timed_out: bool
+    started_at: datetime
+    last_activity_at: datetime
+    ended_at: Optional[datetime] = None
+    idle_seconds: float
+    duration_seconds: Optional[float] = None
+    closed_reason: Optional[str] = None
+    total_messages: int = 0
+
+
+class TimeoutCleanupRequest(BaseModel):
+    """Yêu cầu quét và đóng các phiên hết thời gian chờ (TE9C66C)"""
+    timeout_minutes: Optional[int] = Field(
+        None,
+        ge=1,
+        le=1440,
+        description="Ngưỡng phút không hoạt động để tính timeout (mặc định cấu hình hệ thống: 30 phút)"
+    )
+
+
+class TimeoutCleanupResponse(BaseModel):
+    """Kết quả sau khi quét và đóng các phiên hết thời gian chờ (TE9C66C)"""
+    closed_count: int
+    closed_session_ids: List[int]
+    timeout_minutes: int
     message: str
 
 
