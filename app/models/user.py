@@ -68,10 +68,19 @@ class UserRole(Base):
 class OTPStorage(Base):
     """Bảng lưu trữ mã OTP xác thực tạm thời kèm thời hạn hiệu lực"""
     __tablename__ = "otp_storage"
-
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     contact = Column(String(255), index=True, nullable=False)  # Lưu email hoặc SĐT
     otp_code = Column(String(6), nullable=False)
     expired_at = Column(DateTime, nullable=False)              # Thời điểm hết hạn (5 phút)
     is_used = Column(Boolean, default=False, nullable=False)   # Trạng thái đã dùng mã hay chưa
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class RevokedToken(Base):
+    """Bảng lưu trữ danh sách Token đã bị thu hồi khi Đăng xuất (Logout)"""
+    __tablename__ = "revoked_tokens"
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    token = Column(String(500), unique=True, index=True, nullable=False)
+    token_type = Column(String(20), default="access", nullable=False)  # 'access', 'refresh'
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    revoked_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=True)

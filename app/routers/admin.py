@@ -23,7 +23,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-
 from app.core.database import get_db
 from app.core.rbac import get_current_admin
 from app.models.user import User, UserProfile, Role, UserRole

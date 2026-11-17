@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng ký tài khoản — Smart Dining</title>
     <!-- Stylesheets: Design System & Responsive Layout -->
-    <link rel="stylesheet" href="/static/css/design-system.css">
-    <link rel="stylesheet" href="/static/css/layout.css">
+    <link rel="stylesheet" href="css/design-system.css">
+    <link rel="stylesheet" href="css/layout.css">
 </head>
 <body>
 
@@ -43,8 +43,8 @@
                 
                 <!-- Guest Area (When not logged in) -->
                 <div id="nav-guest-area" style="display: flex; gap: 8px;">
-                    <a href="/login" class="btn btn-ghost btn-sm">Đăng nhập</a>
-                    <a href="/register" class="btn btn-primary btn-sm">Đăng ký</a>
+                    <a href="login.html" class="btn btn-ghost btn-sm">Đăng nhập</a>
+                    <a href="register.html" class="btn btn-primary btn-sm">Đăng ký</a>
                 </div>
 
                 <!-- User Area (When logged in) -->
@@ -91,8 +91,8 @@
                 <li><a href="/profile" class="drawer-link">Cài đặt tài khoản</a></li>
             </ul>
             <div id="drawer-guest-area" class="drawer-auth-actions">
-                <a href="/login" class="btn btn-secondary btn-block">Đăng nhập</a>
-                <a href="/register" class="btn btn-primary btn-block">Đăng ký thành viên</a>
+                <a href="login.html" class="btn btn-secondary btn-block">Đăng nhập</a>
+                <a href="register.html" class="btn btn-primary btn-block">Đăng ký thành viên</a>
             </div>
             <div id="drawer-user-area" class="drawer-auth-actions" style="display: none;">
                 <div style="font-weight: 600; margin-bottom: 8px;">Xin chào, <span class="drawer-user-name"></span>!</div>
@@ -219,7 +219,7 @@
 
                     <!-- Switch to Login -->
                     <div style="text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-secondary);">
-                        Đã có tài khoản? <a href="/login" style="font-weight: 700;">Đăng nhập ngay</a>
+                        Đã có tài khoản? <a href="login.html" style="font-weight: 700;">Đăng nhập ngay</a>
                     </div>
                 </div>
             </div>
@@ -294,8 +294,8 @@
                 </div>
                 <ul class="footer-nav">
                     <li><a href="/">Trang chủ</a></li>
-                    <li><a href="/login">Đăng nhập</a></li>
-                    <li><a href="/register">Đăng ký</a></li>
+                    <li><a href="login.html">Đăng nhập</a></li>
+                    <li><a href="register.html">Đăng ký</a></li>
                     <li><a href="/docs">Tài liệu API</a></li>
                 </ul>
             </div>
@@ -456,7 +456,7 @@
             submitBtn.classList.add('btn-loading');
 
             try {
-                const response = await fetch('/api/auth/send-otp', {
+                const response = await fetch('http://127.0.0.1:8000/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -488,7 +488,7 @@
             resendBtn.disabled = true;
 
             try {
-                const response = await fetch('/api/auth/send-otp', {
+                const response = await fetch('http://127.0.0.1:8000/api/auth/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -534,7 +534,7 @@
                     otp_code: otpCode
                 };
 
-                const response = await fetch('/api/auth/register', {
+                const response = await fetch('http://127.0.0.1:8000/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)

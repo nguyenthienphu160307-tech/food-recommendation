@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodAI — Bảng Điều Khiển Quản Trị Hệ Thống (Admin Portal)</title>
-    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
     <!-- =========================================================================
-         1. FRONTEND ROUTE GUARD ACCESS CONTROL (MÀN HÌNH CHẶN TRUY CẬP TRÁI PHÉP)
-         ========================================================================= -->
+        1. FRONTEND ROUTE GUARD ACCESS CONTROL (MÀN HÌNH CHẶN TRUY CẬP TRÁI PHÉP)
+        ========================================================================= -->
 
     <!-- Màn hình 403: Đã đăng nhập nhưng không có quyền Admin (User thường cố vào) -->
     <div class="access-denied-container" id="guard-403">
@@ -495,7 +495,7 @@
     <div class="admin-toast-container" id="admin-toast-container"></div>
 
     <!-- Nạp dữ liệu 50 nhà hàng và logic tương tác -->
-    <script src="venues-data.js"></script>
-    <script src="admin.js"></script>
+    <script src="js/venues-data.js"></script>
+    <script src="js/admin.js"></script>
 </body>
 </html>
