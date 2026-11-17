@@ -620,6 +620,22 @@
             font-weight: 700; font-size: 0.94rem; color: var(--brand-red); white-space: nowrap;
         }
 
+        /* Trạng thái Giờ mở cửa hoạt động thực tế (TSK-37 / BR-03) */
+        .open-status-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
+            border-radius: 999px; line-height: 1.25; flex-shrink: 0;
+            user-select: none; transition: all 0.2s;
+        }
+        .open-status-badge.open {
+            color: #047857; background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.28);
+        }
+        .open-status-badge.closed {
+            color: #b91c1c; background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.22);
+        }
+
         /* Lightbox Viewer Styles (TSK-30) */
         .lightbox-backdrop {
             position: fixed; inset: 0;
@@ -833,6 +849,7 @@
         </div>
 
         <div class="amenity-filters">
+            <button class="filter-pill" id="btn-open-now" onclick="toggleOpenNow(this)" title="Lọc các nhà hàng đang mở cửa ngay bây giờ (BR-03)">🟢 Đang mở cửa</button>
             <button class="filter-pill" id="btn-parking" onclick="toggleAmenity('parking')" title="Lọc quán có chỗ đỗ xe ô tô">🚗 Đỗ ô tô</button>
             <button class="filter-pill" id="btn-room" onclick="toggleAmenity('private_room')" title="Lọc quán có phòng riêng">🚪 Phòng riêng</button>
             <button class="filter-pill" id="btn-outdoor" onclick="toggleAmenity('outdoor')" title="Lọc quán có không gian ngoài trời">🌿 Ngoài trời</button>
@@ -857,7 +874,8 @@
             <div class="listings-header">
                 <h2 id="results-heading">Địa điểm ăn uống đề xuất quanh bạn</h2>
                 <select class="sort-select" id="sort-mode" onchange="renderVenues()">
-                    <option value="score">Sắp xếp: Độ phù hợp cao nhất</option>
+                    <option value="score">Sắp xếp: Độ phù hợp cao nhất (BR-03)</option>
+                    <option value="open_first">Ưu tiên đang mở cửa (BR-03)</option>
                     <option value="distance">Khoảng cách gần nhất</option>
                     <option value="rating">Điểm đánh giá cao nhất</option>
                     <option value="price_asc">Giá thấp đến cao</option>
@@ -1068,6 +1086,7 @@
         let currentPos = { lat: 10.7860, lng: 106.7003 };
         let activeCategory = 'all';
         let activeAmenities = { parking: false, private_room: false, outdoor: false, pet_friendly: false, vegetarian: false };
+        let filterOnlyOpen = false; // TSK-37: Bộ lọc trạng thái đang mở cửa (BR-03)
         let maxBudgetFilter = null;
         let savedIds = (function() {
             try {
@@ -1076,6 +1095,50 @@
             } catch (_) { return [1, 2]; }
         })();
         let mainMap, userMarker, venueMarkers = [];
+
+        /**
+         * TSK-37: Phân tích giờ mở cửa thực tế (BR-03) phía Client
+         */
+        function checkClientOpenStatus(openHoursStr) {
+            if (!openHoursStr) return { isOpen: false, label: 'Chưa cập nhật', detail: 'Chưa rõ giờ mở cửa' };
+            const s = openHoursStr.toLowerCase().trim();
+            if (s.includes('24/7') || s.includes('24/24') || s.includes('cả ngày') || s.includes('mở cả ngày')) {
+                return { isOpen: true, label: 'Đang mở cửa', detail: 'Mở cửa cả ngày (24/7)' };
+            }
+            const now = new Date();
+            const curTotal = now.getHours() * 60 + now.getMinutes();
+
+            const parts = s.split(/[,;|\n]|và|&/);
+            for (const part of parts) {
+                const m = part.match(/(\d{1,2})(?::(\d{1,2}))?\s*(?:-|đến|–|to)\s*(\d{1,2})(?::(\d{1,2}))?/);
+                if (m) {
+                    const h1 = parseInt(m[1], 10);
+                    const m1 = parseInt(m[2] || '0', 10);
+                    const h2 = parseInt(m[3], 10);
+                    const m2 = parseInt(m[4] || '0', 10);
+                    const startTotal = h1 * 60 + m1;
+                    const endTotal = h2 * 60 + m2;
+                    const isOvernight = startTotal > endTotal;
+
+                    if (isOvernight) {
+                        if (curTotal >= startTotal || curTotal <= endTotal) {
+                            return { isOpen: true, label: 'Đang mở cửa', detail: `Mở cửa đến ${String(h2).padStart(2, '0')}:${String(m2).padStart(2, '0')}` };
+                        }
+                    } else {
+                        if (curTotal >= startTotal && curTotal <= endTotal) {
+                            return { isOpen: true, label: 'Đang mở cửa', detail: `Mở cửa đến ${String(h2).padStart(2, '0')}:${String(m2).padStart(2, '0')}` };
+                        }
+                    }
+                }
+            }
+            return { isOpen: false, label: 'Đã đóng cửa', detail: 'Đã đóng cửa' };
+        }
+
+        function toggleOpenNow(btn) {
+            filterOnlyOpen = !filterOnlyOpen;
+            if (btn) btn.classList.toggle('active', filterOnlyOpen);
+            renderVenues();
+        }
 
         /**
          * Nạp thông tin hồ sơ người dùng từ LocalStorage để đồng bộ tên, ảnh đại diện
@@ -1259,6 +1322,10 @@
                 if (activeCategory !== 'all') {
                     list = list.filter(v => v.category === activeCategory);
                 }
+                // TSK-37: Lọc quán đang mở cửa (BR-03)
+                if (filterOnlyOpen) {
+                    list = list.filter(v => v.isOpen);
+                }
                 if (activeAmenities.parking) list = list.filter(v => v.parking);
                 if (activeAmenities.private_room) list = list.filter(v => v.private_room);
                 if (activeAmenities.outdoor) list = list.filter(v => v.outdoor);
@@ -1268,6 +1335,14 @@
             }
 
             list = list.map(v => {
+                // Đảm bảo trạng thái mở cửa luôn được cập nhật chính xác
+                if (v.isOpen === undefined) {
+                    const st = checkClientOpenStatus(v.openHours);
+                    v.isOpen = st.isOpen;
+                    v.openStatusLabel = st.label;
+                    v.openStatusDetail = st.detail;
+                }
+
                 const dist = calcDistanceKm(currentPos.lat, currentPos.lng, v.lat, v.lng);
                 const distScore = Math.max(0, 1 - dist / 15);
                 const ratingScore = (v.rating || 4.5) / 5;
@@ -1276,13 +1351,22 @@
                                      (v.outdoor ? 0.2 : 0) + 
                                      (v.pet_friendly ? 0.2 : 0) + 
                                      (v.vegetarian ? 0.2 : 0);
-                const totalScore = Math.round((distScore * 0.4 + ratingScore * 0.4 + amenityScore * 0.2) * 100);
-                return { ...v, distanceKm: dist, matchScore: Math.min(99, Math.max(75, totalScore)) };
+                
+                // BR-03 & BR-05: Điểm ưu tiên xếp hạng cho quán đang mở cửa (+15 điểm trọng số)
+                const openBonusScore = v.isOpen ? 15 : 0;
+                const baseScore = Math.round((distScore * 0.45 + ratingScore * 0.35 + amenityScore * 0.20) * 84);
+                const totalScore = Math.min(99, Math.max(65, baseScore + openBonusScore));
+                return { ...v, distanceKm: dist, matchScore: totalScore };
             });
 
             const sortSelect = document.getElementById('sort-mode');
             const sortMode = sortSelect ? sortSelect.value : 'score';
-            if (sortMode === 'distance') list.sort((a, b) => a.distanceKm - b.distanceKm);
+            if (sortMode === 'open_first') {
+                list.sort((a, b) => {
+                    if (a.isOpen !== b.isOpen) return a.isOpen ? -1 : 1;
+                    return b.matchScore - a.matchScore;
+                });
+            } else if (sortMode === 'distance') list.sort((a, b) => a.distanceKm - b.distanceKm);
             else if (sortMode === 'rating') list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
             else if (sortMode === 'price_asc') list.sort((a, b) => a.priceMin - b.priceMin);
             else list.sort((a, b) => b.matchScore - a.matchScore);
@@ -1316,7 +1400,7 @@
 
                 if (mainMap) {
                     const m = L.marker([v.lat, v.lng]).addTo(mainMap)
-                        .bindPopup(`<strong>${v.name}</strong><br>${v.cuisineLabel} • ⭐ ${Number(v.rating).toFixed(1)}<br>Cách ${v.distanceKm.toFixed(1)} km`);
+                        .bindPopup(`<strong>${v.name}</strong><br>${v.cuisineLabel} • ⭐ ${Number(v.rating).toFixed(1)}<br>Cách ${v.distanceKm.toFixed(1)} km<br><small>${v.isOpen ? '🟢 Đang mở cửa' : '🔴 Đã đóng cửa'}</small>`);
                     venueMarkers.push(m);
                 }
 
@@ -1365,6 +1449,13 @@
                                 <span class="venue-cuisine">${v.cuisineLabel}</span>
                                 <span class="venue-dot">•</span>
                                 <span class="venue-distance" title="Khoảng cách tính theo vị trí GPS">📍 ${v.distanceKm.toFixed(1)} km <small style="color:var(--text-muted);">(~${travelMins}p)</small></span>
+                            </div>
+                            <div class="venue-meta-line" style="margin-top:2px;">
+                                <span class="open-status-badge ${v.isOpen ? 'open' : 'closed'}">
+                                    ${v.isOpen ? '🟢 Đang mở cửa' : '🔴 Đã đóng cửa'}
+                                </span>
+                                <span class="venue-dot">•</span>
+                                <span style="font-size:0.78rem;color:var(--text-muted);" title="${v.openStatusDetail || v.openHours}">⏰ ${v.openStatusDetail || v.openHours}</span>
                             </div>
                             <div class="venue-price-line">
                                 <span class="venue-price" title="Khoảng giá dự kiến">💵 ${priceStr}</span>
@@ -1627,7 +1718,13 @@
                     <span class="rating-pill" style="font-size:0.85rem;padding:4px 10px;">★ ${Number(v.rating).toFixed(1)} <small style="opacity:0.8;">(${v.reviews || 0})</small></span>
                 </div>
                 
-                <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:12px;">📍 ${v.address} • ⏰ ${v.openHours}</p>
+                <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                    <span>📍 ${v.address}</span>
+                    <span>•</span>
+                    <span>⏰ ${v.openHours}</span>
+                    <span class="open-status-badge ${v.isOpen ? 'open' : 'closed'}">${v.isOpen ? '🟢 Đang mở cửa' : '🔴 Đã đóng cửa'}</span>
+                </p>
+                ${v.openStatusDetail ? `<p style="font-size:0.82rem;font-weight:600;color:${v.isOpen ? '#047857' : '#b91c1c'};margin-top:0;margin-bottom:12px;">🕒 ${v.openStatusDetail}</p>` : ''}
                 
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
                     <span class="venue-tag" style="color:#0284c7;font-weight:700;">📍 Cách ${v.distanceKm.toFixed(1)} km</span>
@@ -2187,6 +2284,10 @@
                                 pet_friendly: !!am.pet_friendly,
                                 vegetarian: !!am.vegetarian_support,
                                 openHours: item.open_hours || "09:00 - 22:00",
+                                isOpen: item.is_open !== undefined ? item.is_open : checkClientOpenStatus(item.open_hours).isOpen,
+                                openStatusLabel: item.open_status_label || (item.is_open ? "Đang mở cửa" : "Đã đóng cửa"),
+                                openStatusDetail: item.open_status_detail || "",
+                                rankingBonus: item.ranking_bonus || 0,
                                 image: item.cover_image_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80",
                                 menu: [
                                     { name: "Món đặc sản tuyển chọn", price: item.min_price || 95000 },
