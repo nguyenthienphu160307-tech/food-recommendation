@@ -17,6 +17,14 @@ from app.services.open_hours_service import (
     get_vietnam_now,
     DEFAULT_OPEN_BONUS_WEIGHT,
 )
+from app.services.recommendation_service import (
+    calculate_distance_km,
+    calculate_match_score,
+    generate_match_reasons,
+    generate_recommendation_summary,
+    DEFAULT_USER_LAT,
+    DEFAULT_USER_LON,
+)
 
 router = APIRouter(prefix="/api/restaurants", tags=["Nhà hàng (Restaurants)"])
 
@@ -25,7 +33,7 @@ router = APIRouter(prefix="/api/restaurants", tags=["Nhà hàng (Restaurants)"])
     "",
     response_model=RestaurantListResponse,
     status_code=status.HTTP_200_OK,
-    summary="Lấy danh sách nhà hàng cơ bản có phân trang & Kiểm tra giờ mở cửa (TSK-09 / TSK-37 / BR-03)"
+    summary="Lấy danh sách nhà hàng có phân trang, giờ mở cửa & độ phù hợp Match Score (TSK-09 / TSK-37 / TSK-40 / BR-03 / BR-05)"
 )
 def get_restaurants(
     page: int = Query(1, ge=1, description="Số thứ tự trang (bắt đầu từ 1)"),
@@ -33,16 +41,20 @@ def get_restaurants(
     status_filter: Optional[str] = Query("active", description="Trạng thái nhà hàng ('active', 'all')"),
     open_now: Optional[bool] = Query(None, description="Lọc chỉ các nhà hàng đang mở cửa tại thời điểm hiện tại (BR-03)"),
     sort_by_open: Optional[bool] = Query(False, description="Ưu tiên xếp nhà hàng đang mở cửa lên trước (BR-03 Ranking Bonus)"),
+    user_lat: Optional[float] = Query(None, description="Vĩ độ GPS của người dùng để tính khoảng cách và độ phù hợp (TSK-40)"),
+    user_lon: Optional[float] = Query(None, description="Kinh độ GPS của người dùng để tính khoảng cách và độ phù hợp (TSK-40)"),
+    sort_by_match: Optional[bool] = Query(False, description="Ưu tiên sắp xếp theo % Match Score giảm dần (PBI-11 / BR-05)"),
     db: Session = Depends(get_db)
 ):
     """
-    API lấy danh sách nhà hàng cơ bản hỗ trợ phân trang & kiểm tra giờ mở cửa (Task TSK-09 & TSK-37 / BR-03):
+    API lấy danh sách nhà hàng cơ bản hỗ trợ phân trang & xếp hạng gợi ý (Task TSK-09, TSK-37 & TSK-40):
     1. Nhận tham số phân trang `page` và `limit`.
     2. Truy vấn kết hợp Eager Loading (joinedload) tối ưu hiệu năng không bị lỗi N+1 (< 3s).
     3. Tự động tìm và trả về đường dẫn ảnh bìa (`is_cover=True`) từ bảng `restaurant_images`.
     4. Trả kèm các cờ tiện ích chính từ bảng `restaurant_amenities`.
     5. Phân tích giờ mở cửa hoạt động thực tế `open_hours` theo múi giờ Việt Nam (BR-03).
-    6. Hỗ trợ lọc quán đang mở (`open_now=true`) và cộng điểm ưu tiên xếp hạng (`sort_by_open=true`).
+    6. Tính toán % Match Score (65% - 99%) & sinh tag trực quan các lý do đề xuất (TSK-40 / BR-05).
+    7. Hỗ trợ lọc quán đang mở (`open_now=true`), ưu tiên mở cửa (`sort_by_open=true`), và ưu tiên khớp cao (`sort_by_match=true`).
     """
     now_vn = get_vietnam_now()
 
@@ -53,6 +65,16 @@ def get_restaurants(
         open_now = open_now.default
     if hasattr(sort_by_open, "default"):
         sort_by_open = sort_by_open.default
+    if hasattr(user_lat, "default"):
+        user_lat = user_lat.default
+    if hasattr(user_lon, "default"):
+        user_lon = user_lon.default
+    if hasattr(sort_by_match, "default"):
+        sort_by_match = sort_by_match.default
+
+    # Tọa độ tính toán (sử dụng tọa độ người dùng truyền lên hoặc tọa độ trung tâm mặc định)
+    effective_lat = user_lat if user_lat is not None else DEFAULT_USER_LAT
+    effective_lon = user_lon if user_lon is not None else DEFAULT_USER_LON
 
     # 1. Khởi tạo truy vấn danh sách nhà hàng
     query = db.query(Restaurant)
@@ -69,7 +91,7 @@ def get_restaurants(
         .all()
     )
 
-    # 3. Định dạng dữ liệu từng nhà hàng kèm ảnh bìa, tiện ích và trạng thái giờ mở cửa
+    # 3. Định dạng dữ liệu từng nhà hàng kèm ảnh bìa, tiện ích, giờ mở cửa & độ phù hợp Match Score
     items_response: List[RestaurantListItemResponse] = []
     for r in all_restaurants:
         # Lấy ảnh bìa: ưu tiên ảnh có is_cover = True, nếu không có thì lấy ảnh đầu tiên
@@ -93,6 +115,33 @@ def get_restaurants(
         # Kiểm tra trạng thái giờ mở cửa thực tế (BR-03 / TSK-37)
         open_info = check_restaurant_open_status(r.open_hours, check_dt=now_vn)
 
+        # Tính khoảng cách GPS (Haversine)
+        dist_km = None
+        if r.latitude is not None and r.longitude is not None:
+            dist_km = calculate_distance_km(
+                effective_lat, effective_lon, float(r.latitude), float(r.longitude)
+            )
+
+        # Tính % Match Score (TSK-40 / BR-05)
+        match_score = calculate_match_score(
+            distance_km=dist_km if dist_km is not None else 3.0,
+            avg_rating=r.avg_rating or 4.0,
+            amenities=r.amenities,
+            is_open=open_info["is_open"],
+        )
+
+        # Sinh danh sách các tag lý do đề xuất trực quan (TSK-40)
+        match_reasons = generate_match_reasons(
+            restaurant=r,
+            user_lat=effective_lat,
+            user_lon=effective_lon,
+            check_dt=now_vn,
+            is_open=open_info["is_open"],
+        )
+
+        # Sinh câu tóm tắt một dòng
+        summary = generate_recommendation_summary(match_score, match_reasons)
+
         items_response.append(
             RestaurantListItemResponse(
                 id=r.id,
@@ -115,6 +164,10 @@ def get_restaurants(
                 open_status_label=open_info["status_label"],
                 open_status_detail=open_info["detail_text"],
                 ranking_bonus=open_info["bonus_score"],
+                match_score=match_score,
+                match_reasons=match_reasons,
+                recommendation_summary=summary,
+                distance_km=dist_km,
             )
         )
 
@@ -124,8 +177,12 @@ def get_restaurants(
     elif open_now is False:
         items_response = [it for it in items_response if not it.is_open]
 
-    # 5. Sắp xếp ưu tiên nhà hàng đang mở cửa lên trước (BR-03 & BR-05 Ranking Bonus)
-    if sort_by_open:
+    # 5. Sắp xếp ưu tiên:
+    # 5.1 Ưu tiên theo % Match Score (PBI-11 / BR-05) nếu bật sort_by_match
+    if sort_by_match:
+        items_response.sort(key=lambda x: (x.match_score, x.avg_rating), reverse=True)
+    # 5.2 Hoặc ưu tiên nhà hàng đang mở cửa lên trước (BR-03 Ranking Bonus)
+    elif sort_by_open:
         items_response.sort(key=lambda x: (x.ranking_bonus, x.avg_rating), reverse=True)
 
     # 6. Thực hiện phân trang trên tập kết quả
@@ -190,13 +247,24 @@ def get_restaurant_open_status(
     "/{restaurant_id}",
     response_model=RestaurantListItemResponse,
     status_code=status.HTTP_200_OK,
-    summary="Lấy thông tin chi tiết một nhà hàng kèm giờ mở cửa (TSK-25 / TSK-37)"
+    summary="Lấy thông tin chi tiết một nhà hàng kèm giờ mở cửa & độ phù hợp (TSK-25 / TSK-37 / TSK-40)"
 )
 def get_restaurant_detail(
     restaurant_id: int,
+    user_lat: Optional[float] = Query(None, description="Vĩ độ GPS của người dùng"),
+    user_lon: Optional[float] = Query(None, description="Kinh độ GPS của người dùng"),
     db: Session = Depends(get_db)
 ):
-    """API lấy thông tin chi tiết của một nhà hàng kèm trạng thái mở cửa thực tế"""
+    """API lấy thông tin chi tiết của một nhà hàng kèm trạng thái mở cửa thực tế & lý do đề xuất"""
+    # Xử lý tương thích khi gọi trực tiếp
+    if hasattr(user_lat, "default"):
+        user_lat = user_lat.default
+    if hasattr(user_lon, "default"):
+        user_lon = user_lon.default
+
+    effective_lat = user_lat if user_lat is not None else DEFAULT_USER_LAT
+    effective_lon = user_lon if user_lon is not None else DEFAULT_USER_LON
+
     r = (
         db.query(Restaurant)
         .options(
@@ -228,6 +296,29 @@ def get_restaurant_detail(
     now_vn = get_vietnam_now()
     open_info = check_restaurant_open_status(r.open_hours, check_dt=now_vn)
 
+    dist_km = None
+    if r.latitude is not None and r.longitude is not None:
+        dist_km = calculate_distance_km(
+            effective_lat, effective_lon, float(r.latitude), float(r.longitude)
+        )
+
+    match_score = calculate_match_score(
+        distance_km=dist_km if dist_km is not None else 3.0,
+        avg_rating=r.avg_rating or 4.0,
+        amenities=r.amenities,
+        is_open=open_info["is_open"],
+    )
+
+    match_reasons = generate_match_reasons(
+        restaurant=r,
+        user_lat=effective_lat,
+        user_lon=effective_lon,
+        check_dt=now_vn,
+        is_open=open_info["is_open"],
+    )
+
+    summary = generate_recommendation_summary(match_score, match_reasons)
+
     return RestaurantListItemResponse(
         id=r.id,
         name=r.name,
@@ -249,4 +340,8 @@ def get_restaurant_detail(
         open_status_label=open_info["status_label"],
         open_status_detail=open_info["detail_text"],
         ranking_bonus=open_info["bonus_score"],
+        match_score=match_score,
+        match_reasons=match_reasons,
+        recommendation_summary=summary,
+        distance_km=dist_km,
     )

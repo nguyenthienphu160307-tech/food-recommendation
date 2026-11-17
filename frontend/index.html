@@ -263,12 +263,84 @@
         .venue-card:hover .venue-img-wrap img {
             transform: scale(1.04);
         }
+        /* Phân cấp màu sắc Huy hiệu Match Score (TSK-40 / BR-05) */
         .match-badge {
             position: absolute; top: 12px; left: 12px;
-            background: rgba(17, 24, 39, 0.88); color: #ffffff;
+            color: #ffffff;
             padding: 4px 10px; border-radius: 999px; font-size: 0.74rem;
-            font-weight: 600; backdrop-filter: blur(4px);
-            display: inline-flex; align-items: center; z-index: 2;
+            font-weight: 700; backdrop-filter: blur(6px);
+            display: inline-flex; align-items: center; gap: 4px; z-index: 2;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s ease;
+        }
+        .match-badge.high {
+            background: linear-gradient(135deg, #e11d48, #be123c);
+        }
+        .match-badge.medium {
+            background: linear-gradient(135deg, #059669, #047857);
+        }
+        .match-badge.standard {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+        }
+
+        /* Hàng Tag Lý do Đề xuất Trực quan (TSK-40 / PBI-11) */
+        .match-reasons-row {
+            display: flex; flex-wrap: wrap; gap: 5px;
+            margin: 6px 0 10px 0;
+        }
+        .match-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.72rem; font-weight: 600; padding: 2px 8px;
+            border-radius: 999px; line-height: 1.35;
+            background: #f1f5f9; color: #334155;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .match-chip:hover {
+            transform: translateY(-1px);
+            background: #e2e8f0;
+        }
+        [data-theme="dark"] .match-chip {
+            background: rgba(51, 65, 85, 0.45);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        [data-theme="dark"] .match-chip:hover {
+            background: rgba(51, 65, 85, 0.7);
+            color: #f8fafc;
+        }
+        .recommendation-summary-bar {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.75rem; color: var(--text-muted);
+            margin-bottom: 8px; font-weight: 500;
+        }
+        .recommendation-summary-bar svg {
+            color: var(--brand-red); flex-shrink: 0;
+        }
+
+        /* Khối Điểm nổi bật phù hợp trong Modal chi tiết (TSK-40) */
+        .match-highlight-box {
+            background: linear-gradient(135deg, rgba(225, 29, 72, 0.05), rgba(2, 132, 199, 0.05));
+            border: 1px solid rgba(225, 29, 72, 0.18);
+            border-radius: 12px; padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .match-highlight-title {
+            font-size: 0.85rem; font-weight: 700; color: var(--text-primary);
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .match-highlight-score-badge {
+            background: var(--brand-red); color: #ffffff;
+            font-size: 0.74rem; font-weight: 700; padding: 2px 8px;
+            border-radius: 999px; display: inline-flex; align-items: center; gap: 3px;
+        }
+        .match-highlight-summary {
+            font-size: 0.8rem; color: var(--text-secondary);
+            margin-bottom: 8px; line-height: 1.4;
+        }
+        .match-highlight-chips {
+            display: flex; flex-wrap: wrap; gap: 6px;
         }
         .fav-btn {
             position: absolute; top: 12px; right: 12px;
@@ -1312,8 +1384,56 @@
         }
 
         /**
+         * TSK-40 / PBI-11: Sinh danh sách tag lý do đề xuất trực quan (Match Reason Chips)
+         * Phục vụ hiển thị trực quan các lý do khớp tiêu chí (khoảng cách, giờ mở cửa, giá, tiện ích, đánh giá)
+         */
+        function getClientMatchReasons(v, dist) {
+            if (v.matchReasons && v.matchReasons.length > 0) {
+                return v.matchReasons;
+            }
+            const reasons = [];
+            // 1. Khoảng cách địa lý
+            if (dist < 1.0) {
+                reasons.push(`📍 Rất gần bạn (${dist.toFixed(1)}km)`);
+            } else if (dist <= 3.0) {
+                const estMins = Math.max(3, Math.round(dist * 3.2));
+                reasons.push(`📍 Cách ${dist.toFixed(1)}km (~${estMins}p đi xe)`);
+            } else {
+                reasons.push(`📍 Cách ${dist.toFixed(1)}km`);
+            }
+
+            // 2. Giờ mở cửa thực tế (BR-03)
+            if (v.isOpen) {
+                reasons.push("🟢 Đang mở cửa đón khách");
+            }
+
+            // 3. Mức giá & ngân sách
+            if (v.priceMax && v.priceMax <= 120000) {
+                reasons.push("💵 Giá hạt dẻ (< 120k)");
+            } else if (v.priceMax && v.priceMax <= 300000) {
+                reasons.push(`💵 Trong tầm giá ${Math.round(v.priceMax / 1000)}k`);
+            } else if (v.priceMax && v.priceMax <= 600000) {
+                reasons.push("💵 Hợp túi tiền tiệc nhóm");
+            }
+
+            // 4. Tiện ích nổi bật
+            if (v.parking) reasons.push("🚗 Có chỗ đỗ ô tô");
+            if (v.private_room) reasons.push("🚪 Có phòng riêng yên tĩnh");
+            if (v.outdoor) reasons.push("🌿 Không gian ngoài trời");
+            if (v.pet_friendly) reasons.push("🐾 Thân thiện thú cưng");
+            if (v.vegetarian) reasons.push("🥗 Phục vụ món chay");
+
+            // 5. Đánh giá sao
+            if (v.rating >= 4.7) reasons.push(`⭐ Đánh giá xuất sắc ${Number(v.rating).toFixed(1)}★`);
+            else if (v.rating >= 4.5) reasons.push(`⭐ Đánh giá cao ${Number(v.rating).toFixed(1)}★`);
+
+            return reasons.slice(0, 4);
+        }
+
+        /**
          * Lọc, chấm điểm xếp hạng đa tiêu chí (Weighted Scoring) và đồng bộ danh sách thẻ với Marker trên bản đồ.
          * TSK-29: Thiết kế Component Thẻ Nhà hàng (Restaurant Card) chuẩn UI/UX và tối ưu tốc độ < 3 giây (NFR-01).
+         * TSK-40: Hiển thị nhãn Độ phù hợp (% Match Score) & Lý do đề xuất trực quan (PBI-11 / BR-05).
          */
         function renderVenues(customList = null) {
             let list = customList ? [...customList] : [...venues];
@@ -1343,20 +1463,31 @@
                     v.openStatusDetail = st.detail;
                 }
 
-                const dist = calcDistanceKm(currentPos.lat, currentPos.lng, v.lat, v.lng);
-                const distScore = Math.max(0, 1 - dist / 15);
-                const ratingScore = (v.rating || 4.5) / 5;
-                const amenityScore = (v.parking ? 0.2 : 0) + 
-                                     (v.private_room ? 0.2 : 0) + 
-                                     (v.outdoor ? 0.2 : 0) + 
-                                     (v.pet_friendly ? 0.2 : 0) + 
-                                     (v.vegetarian ? 0.2 : 0);
+                const dist = v.distanceKm !== undefined ? v.distanceKm : calcDistanceKm(currentPos.lat, currentPos.lng, v.lat, v.lng);
                 
-                // BR-03 & BR-05: Điểm ưu tiên xếp hạng cho quán đang mở cửa (+15 điểm trọng số)
-                const openBonusScore = v.isOpen ? 15 : 0;
-                const baseScore = Math.round((distScore * 0.45 + ratingScore * 0.35 + amenityScore * 0.20) * 84);
-                const totalScore = Math.min(99, Math.max(65, baseScore + openBonusScore));
-                return { ...v, distanceKm: dist, matchScore: totalScore };
+                // TSK-40 / BR-05: Sử dụng matchScore từ backend nếu có, hoặc tính toán chuẩn xác
+                let finalScore = v.matchScore;
+                if (!finalScore) {
+                    const distScore = Math.max(0, 1 - dist / 15);
+                    const ratingScore = (v.rating || 4.5) / 5;
+                    const amenityCount = (v.parking ? 1 : 0) + (v.private_room ? 1 : 0) + (v.outdoor ? 1 : 0) + (v.pet_friendly ? 1 : 0) + (v.vegetarian ? 1 : 0);
+                    const amenityScore = Math.min(1.0, amenityCount / 3.0);
+                    const openScore = v.isOpen ? 1.0 : 0.0;
+                    const rawScore = distScore * 0.35 + ratingScore * 0.25 + amenityScore * 0.25 + openScore * 0.15;
+                    finalScore = Math.min(99, Math.max(65, Math.round(65 + rawScore * 34)));
+                }
+
+                // TSK-40: Danh sách các tag lý do đề xuất
+                const reasons = getClientMatchReasons(v, dist);
+                const summary = v.recommendationSummary || `Khớp ${finalScore}% • ${reasons.slice(0, 3).map(r => r.replace(/^[^\s]+\s/, '')).join(' • ')}`;
+
+                return {
+                    ...v,
+                    distanceKm: dist,
+                    matchScore: finalScore,
+                    matchReasons: reasons,
+                    recommendationSummary: summary
+                };
             });
 
             const sortSelect = document.getElementById('sort-mode');
@@ -1400,9 +1531,17 @@
 
                 if (mainMap) {
                     const m = L.marker([v.lat, v.lng]).addTo(mainMap)
-                        .bindPopup(`<strong>${v.name}</strong><br>${v.cuisineLabel} • ⭐ ${Number(v.rating).toFixed(1)}<br>Cách ${v.distanceKm.toFixed(1)} km<br><small>${v.isOpen ? '🟢 Đang mở cửa' : '🔴 Đã đóng cửa'}</small>`);
+                        .bindPopup(`<strong>${v.name}</strong><br>${v.cuisineLabel} • ⭐ ${Number(v.rating).toFixed(1)}<br>Khớp ${v.matchScore}% • Cách ${v.distanceKm.toFixed(1)} km<br><small>${v.isOpen ? '🟢 Đang mở cửa' : '🔴 Đã đóng cửa'}</small>`);
                     venueMarkers.push(m);
                 }
+
+                // TSK-40: Phân loại màu huy hiệu Match Score
+                const badgeLevelClass = v.matchScore >= 90 ? 'high' : (v.matchScore >= 80 ? 'medium' : 'standard');
+
+                // TSK-40: Tạo HTML danh sách Match Reason Chips
+                const reasonsChipsHtml = (v.matchReasons || []).map(r => `
+                    <span class="match-chip" title="${r}">${r}</span>
+                `).join('');
 
                 // TSK-29: Tạo danh sách các icon/badge tiện ích nổi bật từ RestaurantAmenities
                 let amenitiesHtml = '';
@@ -1427,9 +1566,10 @@
                              loading="lazy"
                              decoding="async"
                              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80';">
-                        <span class="match-badge">
+                        <!-- TSK-40: Huy hiệu % Match Score phân cấp màu theo BR-05 -->
+                        <span class="match-badge ${badgeLevelClass}">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:inline-block;vertical-align:-1px;margin-right:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 6.91-1.01L12 2z"/></svg>
-                            Phù hợp ${v.matchScore}%
+                            Khớp ${v.matchScore}%
                         </span>
                         <button type="button" class="fav-btn ${isSaved ? 'saved' : ''}" 
                                 onclick="toggleSaveVenue(event, ${v.id})" 
@@ -1444,6 +1584,12 @@
                                 ★ ${Number(v.rating).toFixed(1)} <span class="rating-count">(${v.reviews || 0})</span>
                             </span>
                         </div>
+
+                        <!-- TSK-40: Dải Tag Lý do Đề xuất Trực quan (Match Reasons Chips) -->
+                        <div class="match-reasons-row">
+                            ${reasonsChipsHtml}
+                        </div>
+
                         <div class="venue-meta">
                             <div class="venue-meta-line">
                                 <span class="venue-cuisine">${v.cuisineLabel}</span>
@@ -1716,6 +1862,18 @@
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;">
                     <h3 style="font-size:1.35rem;font-weight:700;color:var(--text-primary);margin:0;line-height:1.3;">${v.name}</h3>
                     <span class="rating-pill" style="font-size:0.85rem;padding:4px 10px;">★ ${Number(v.rating).toFixed(1)} <small style="opacity:0.8;">(${v.reviews || 0})</small></span>
+                </div>
+
+                <!-- TSK-40: Khối Điểm nổi bật phù hợp & Lý do đề xuất (% Match Score) -->
+                <div class="match-highlight-box">
+                    <div class="match-highlight-title">
+                        <span>🎯 Điểm nổi bật phù hợp với bạn</span>
+                        <span class="match-highlight-score-badge">Khớp ${v.matchScore || 85}%</span>
+                    </div>
+                    ${v.recommendationSummary ? `<div class="match-highlight-summary">💡 ${v.recommendationSummary}</div>` : ''}
+                    <div class="match-highlight-chips">
+                        ${(v.matchReasons && v.matchReasons.length > 0 ? v.matchReasons : getClientMatchReasons(v, v.distanceKm || 1.2)).map(r => `<span class="match-chip">${r}</span>`).join('')}
+                    </div>
                 </div>
                 
                 <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -2248,7 +2406,10 @@
                 renderSkeletonCards(6);
                 const startTime = performance.now();
 
-                const res = await fetch('/api/restaurants?page=1&limit=50&status_filter=all');
+                // TSK-40: Truyền tọa độ GPS người dùng để Backend tính toán khoảng cách & % Match Score chính xác
+                const userLat = currentPos.lat || 10.7860;
+                const userLon = currentPos.lng || 106.7003;
+                const res = await fetch(`/api/restaurants?page=1&limit=50&status_filter=all&user_lat=${userLat}&user_lon=${userLon}`);
                 if (res.ok) {
                     const json = await res.json();
                     if (json && json.data && json.data.length > 0) {
@@ -2288,6 +2449,11 @@
                                 openStatusLabel: item.open_status_label || (item.is_open ? "Đang mở cửa" : "Đã đóng cửa"),
                                 openStatusDetail: item.open_status_detail || "",
                                 rankingBonus: item.ranking_bonus || 0,
+                                // TSK-40: Độ phù hợp & Lý do đề xuất
+                                matchScore: item.match_score !== undefined ? item.match_score : 85,
+                                matchReasons: item.match_reasons || [],
+                                recommendationSummary: item.recommendation_summary || "",
+                                distanceKm: item.distance_km !== undefined && item.distance_km !== null ? item.distance_km : undefined,
                                 image: item.cover_image_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80",
                                 menu: [
                                     { name: "Món đặc sản tuyển chọn", price: item.min_price || 95000 },

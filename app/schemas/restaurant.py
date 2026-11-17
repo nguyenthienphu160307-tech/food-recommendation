@@ -39,6 +39,12 @@ class RestaurantListItemResponse(BaseModel):
     open_status_detail: Optional[str] = Field(default=None, description="Chi tiết thời gian: 'Mở cửa đến 22:00', 'Mở lại lúc 17:00'...")
     ranking_bonus: float = Field(default=0.0, description="Điểm thưởng cộng vào xếp hạng Weighted Score (BR-03)")
 
+    # TSK-40 / PBI-11: Độ phù hợp (% Match Score) & Lý do đề xuất trực quan
+    match_score: int = Field(default=85, description="Điểm phần trăm độ phù hợp (% Match Score từ 65% đến 99%)")
+    match_reasons: List[str] = Field(default_factory=list, description="Danh sách các tag trực quan lý do đề xuất")
+    recommendation_summary: Optional[str] = Field(default=None, description="Tóm tắt đề xuất một dòng (Recommendation Summary)")
+    distance_km: Optional[float] = Field(default=None, description="Khoảng cách tính theo km từ vị trí người dùng")
+
     class Config:
         from_attributes = True
 
