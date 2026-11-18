@@ -374,67 +374,47 @@ class MultiTurnStateMachine:
         other_conditions: Optional[Dict[str, Any]] = None,
     ) -> Tuple[List[Tuple[Restaurant, float]], Dict[str, Any]]:
         """
-        Thực thi Nới lỏng Điều kiện (State 4 - Query Relaxation khi Kết quả = 0):
-        1. Bước 1: Mở rộng bán kính tìm kiếm (3km -> 5km -> 10km).
-        2. Bước 2: Nâng trần ngân sách thêm 25% - 35%.
-        3. Bước 3: Nới lỏng các tiện ích thứ cấp (ngoài trời, thú cưng) giữ tiện ích cốt lõi.
+        Thực thi Nới lỏng Điều kiện (State 4 - Query Relaxation khi Kết quả = 0 / TE9C66F):
+        Sử dụng QueryRelaxationService tuân thủ đúng yêu cầu:
+        1. Bước 1: Mở rộng bán kính +3.0 km.
+        2. Bước 2: Nới khoảng ngân sách ±25%.
+        3. Bước 3: Kết hợp mở rộng bán kính (+3km/+6km) và nới khoảng ngân sách ±25%.
+        4. Bước 4: Tạm nới lỏng tiện ích phụ để ưu tiên vị trí và món ăn cốt lõi.
         """
-        relaxation_notes = {
-            "expanded_radius_km": None,
-            "expanded_budget": None,
-            "relaxed_amenities": False,
-        }
+        from app.services.query_relaxation_service import QueryRelaxationService
 
-        # 1. Thử mở rộng bán kính lên 5km hoặc 10km
-        expanded_radii = [5.0, 10.0, 15.0]
-        for rad in expanded_radii:
-            if rad > current_radius:
-                res = cls.filter_restaurants_spatial(
-                    db=db,
-                    lat=lat,
-                    lng=lng,
-                    radius_km=rad,
-                    cuisine=cuisine,
-                    budget=budget,
-                    has_parking=has_parking,
-                    other_conditions=other_conditions,
-                )
-                if res:
-                    relaxation_notes["expanded_radius_km"] = rad
-                    return res, relaxation_notes
+        other = other_conditions or {}
+        has_private_room = other.get("has_private_room")
+        has_outdoor = other.get("has_outdoor")
+        pet_friendly = other.get("pet_friendly")
+        vegetarian_support = other.get("vegetarian_support")
 
-        # 2. Thử nới lỏng ngân sách (+30%)
-        if budget:
-            relaxed_budget = int(budget * 1.3)
-            res = cls.filter_restaurants_spatial(
-                db=db,
-                lat=lat,
-                lng=lng,
-                radius_km=10.0,
-                cuisine=cuisine,
-                budget=relaxed_budget,
-                has_parking=has_parking,
-                other_conditions=other_conditions,
-            )
-            if res:
-                relaxation_notes["expanded_radius_km"] = 10.0
-                relaxation_notes["expanded_budget"] = relaxed_budget
-                return res, relaxation_notes
-
-        # 3. Nới lỏng tiện ích mở rộng (chỉ giữ vị trí và loại món)
-        res = cls.filter_restaurants_spatial(
+        results, meta = QueryRelaxationService.relax_and_search(
             db=db,
             lat=lat,
             lng=lng,
-            radius_km=10.0,
+            radius_km=current_radius,
             cuisine=cuisine,
-            budget=None,
-            has_parking=None,
-            other_conditions=None,
+            budget=budget,
+            has_parking=has_parking,
+            has_private_room=has_private_room,
+            has_outdoor=has_outdoor,
+            pet_friendly=pet_friendly,
+            vegetarian_support=vegetarian_support,
+            limit=10,
         )
-        relaxation_notes["expanded_radius_km"] = 10.0
-        relaxation_notes["relaxed_amenities"] = True
-        return res, relaxation_notes
+
+        relaxation_notes = {
+            "expanded_radius_km": meta.get("relaxed_radius_km"),
+            "expanded_budget": meta.get("relaxed_budget"),
+            "radius_delta_km": meta.get("radius_delta_km"),
+            "budget_delta_percent": meta.get("budget_delta_percent"),
+            "strategy": meta.get("strategy"),
+            "stage": meta.get("stage"),
+            "relaxed_amenities": meta.get("relaxed_amenities", []),
+            "explanation_message": meta.get("explanation_message"),
+        }
+        return results, relaxation_notes
 
     @classmethod
     def process_turn(
@@ -637,11 +617,29 @@ class MultiTurnStateMachine:
         if relaxation_applied:
             rad_exp = relaxation_info.get("expanded_radius_km")
             bud_exp = relaxation_info.get("expanded_budget")
-            if rad_exp:
-                explanation_parts.append(f"Hệ thống đã tự động nới lỏng bán kính lên **{rad_exp} km**")
+            rad_delta = relaxation_info.get("radius_delta_km")
+            bud_pct = relaxation_info.get("budget_delta_percent")
+
+            relax_reasons = []
+            if rad_exp and rad_delta and rad_delta > 0:
+                relax_reasons.append(f"mở rộng bán kính thêm **+{rad_delta} km** (lên **{rad_exp} km**)")
+            elif rad_exp:
+                relax_reasons.append(f"mở rộng bán kính lên **{rad_exp} km**")
+
             if bud_exp:
-                explanation_parts.append(f"và mở rộng ngân sách tới **{bud_exp:,}đ**".replace(",", "."))
-            explanation_parts.append("để tìm các địa điểm chất lượng tốt nhất gần bạn.")
+                bud_str = f"{bud_exp:,}đ".replace(",", ".")
+                if bud_pct:
+                    relax_reasons.append(f"nới khoảng ngân sách **±{bud_pct}%** (lên mức **{bud_str}**)")
+                else:
+                    relax_reasons.append(f"nới ngân sách lên **{bud_str}**")
+
+            if relaxation_info.get("relaxed_amenities"):
+                relax_reasons.append("tạm thời nới lỏng các tiện ích phụ")
+
+            if relax_reasons:
+                explanation_parts.append(f"Do không có quán thỏa mãn 100% ban đầu, hệ thống đã tự động {' và '.join(relax_reasons)} để tìm các địa điểm chất lượng gần bạn nhất.")
+            else:
+                explanation_parts.append("Hệ thống đã tự động nới lỏng điều kiện tìm kiếm để tìm các quán thay thế gần đúng nhất.")
 
         if matched_restaurants:
             top_names = [f"**{r[0].name}** ({r[1]} km - ★{r[0].avg_rating})" for r in matched_restaurants[:3]]

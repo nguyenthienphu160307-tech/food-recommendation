@@ -44,6 +44,9 @@ from .ai_search import (
     MultiTurnChatResponse,
     MultiTurnRestaurantItem,
     SessionStateResponse,
+    QueryRelaxationInfo,
+    QueryRelaxationRequest,
+    QueryRelaxationResponse,
 )
 
 __all__ = [
@@ -84,4 +87,7 @@ __all__ = [
     "MultiTurnChatResponse",
     "MultiTurnRestaurantItem",
     "SessionStateResponse",
+    "QueryRelaxationInfo",
+    "QueryRelaxationRequest",
+    "QueryRelaxationResponse",
 ]

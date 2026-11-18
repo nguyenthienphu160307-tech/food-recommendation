@@ -8,6 +8,10 @@ from app.schemas.ai_search import (
     ExtractCriteriaResponse,
     LLMParseAndSaveRequest,
     LLMParseAndSaveResponse,
+    QueryRelaxationRequest,
+    QueryRelaxationResponse,
+    QueryRelaxationInfo,
+    MultiTurnRestaurantItem,
 )
 from app.core.prompt_template import (
     SYSTEM_PROMPT_TEMPLATE,
@@ -130,4 +134,75 @@ def get_state_diagram_metadata():
             k.value: [v.value for v in vals] for k, vals in VALID_STATE_TRANSITIONS.items()
         }
     }
+
+
+@router.post(
+    "/relax",
+    response_model=QueryRelaxationResponse,
+    summary="Tìm kiếm với cơ chế tự động nới lỏng điều kiện khi 0 kết quả (TE9C66F / UC-02 Ngoại lệ)"
+)
+def search_with_query_relaxation(
+    payload: QueryRelaxationRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    API Thực thi Cơ chế Tự động Nới lỏng Điều kiện (TE9C66F / UC-02 Ngoại lệ):
+    - Khi truy vấn gốc trả về 0 kết quả:
+      + Tự động mở rộng bán kính (+3.0 km: từ r lên r + 3km).
+      + Hoặc tự động nới khoảng ngân sách (±25%).
+      + Tạm thời nới lỏng các tiện ích phụ.
+      + Trả về danh sách quán thay thế gần đúng nhất kèm metadata chi tiết bước nới lỏng.
+    """
+    from app.services.query_relaxation_service import QueryRelaxationService
+
+    results, meta = QueryRelaxationService.relax_and_search(
+        db=db,
+        lat=payload.lat,
+        lng=payload.lng,
+        radius_km=payload.radius_km,
+        cuisine=payload.cuisine,
+        budget=payload.budget,
+        price_min=payload.price_min,
+        price_max=payload.price_max,
+        min_rating=payload.min_rating,
+        has_parking=payload.has_parking,
+        has_private_room=payload.has_private_room,
+        has_outdoor=payload.has_outdoor,
+        pet_friendly=payload.pet_friendly,
+        vegetarian_support=payload.vegetarian_support,
+        limit=payload.limit,
+    )
+
+    items = []
+    for r, dist in results:
+        cover_img = None
+        if r.images:
+            c_img = next((img for img in r.images if img.is_cover), None)
+            cover_img = c_img.image_url if c_img else r.images[0].image_url
+        has_park = r.amenities.has_parking if r.amenities else False
+        has_priv = r.amenities.has_private_room if r.amenities else False
+        items.append(
+            MultiTurnRestaurantItem(
+                id=r.id,
+                name=r.name,
+                address=r.address,
+                cuisine_type=r.cuisine_type,
+                avg_rating=r.avg_rating or 0.0,
+                min_price=r.min_price or 0.0,
+                max_price=r.max_price or 0.0,
+                distance_km=dist,
+                cover_image_url=cover_img,
+                has_parking=has_park,
+                has_private_room=has_priv,
+            )
+        )
+
+    return QueryRelaxationResponse(
+        status="success",
+        task_code="TE9C66F",
+        results_count=len(items),
+        is_relaxed=meta.get("relaxation_applied", False),
+        relaxation_info=QueryRelaxationInfo(**meta),
+        results=items,
+    )
 

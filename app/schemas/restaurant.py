@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -76,11 +76,12 @@ class AppliedFilterCriteria(BaseModel):
 
 
 class RestaurantFilterResponse(BaseModel):
-    """Phản hồi API lọc nhà hàng đa điều kiện kết hợp (TE9C660)"""
+    """Phản hồi API lọc nhà hàng đa điều kiện kết hợp (TE9C660, TE9C66F)"""
     status: str = "success"
     data: List[RestaurantFilterItemResponse]
     applied_filters: AppliedFilterCriteria
     pagination: PaginationMetadata
+    relaxation: Optional[Dict[str, Any]] = Field(None, description="Thông tin nới lỏng điều kiện tự động nếu được kích hoạt (TE9C66F)")
 
 
 class RestaurantImageResponse(BaseModel):

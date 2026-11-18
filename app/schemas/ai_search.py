@@ -165,3 +165,55 @@ class SessionStateResponse(BaseModel):
     latest_criteria: Optional[Dict[str, Any]] = None
     criteria_history: List[Dict[str, Any]] = Field(default_factory=list)
 
+
+# ==============================================================================
+# SCHEMAS QUERY RELAXATION (TASK TE9C66F / UC-02 NGOẠI LỆ / STATE 4)
+# ==============================================================================
+
+class QueryRelaxationInfo(BaseModel):
+    """Thông tin chi tiết các bước nới lỏng điều kiện tìm kiếm (TE9C66F / UC-02 Ngoại lệ)"""
+    relaxation_applied: bool = Field(False, description="Có áp dụng nới lỏng điều kiện hay không")
+    strategy: Optional[str] = Field(None, description="Chiến lược: 'radius_expansion', 'budget_expansion', 'combined_radius_budget', 'amenities_relaxed', 'none'")
+    stage: int = Field(0, description="Cấp độ nới lỏng (0: gốc, 1: bán kính +3km, 2: ngân sách ±25%, 3: kết hợp, 4: tiện ích)")
+    original_radius_km: Optional[float] = None
+    relaxed_radius_km: Optional[float] = None
+    radius_delta_km: Optional[float] = None
+    original_budget: Optional[int] = None
+    relaxed_budget: Optional[int] = None
+    budget_delta_percent: Optional[float] = None
+    original_price_min: Optional[float] = None
+    relaxed_price_min: Optional[float] = None
+    original_price_max: Optional[float] = None
+    relaxed_price_max: Optional[float] = None
+    relaxed_amenities: List[str] = Field(default_factory=list)
+    explanation_message: Optional[str] = None
+
+
+class QueryRelaxationRequest(BaseModel):
+    """Yêu cầu tìm kiếm với cơ chế tự động nới lỏng điều kiện (TE9C66F)"""
+    lat: Optional[float] = Field(None, ge=-90.0, le=90.0, description="Vĩ độ người dùng")
+    lng: Optional[float] = Field(None, ge=-180.0, le=180.0, description="Kinh độ người dùng")
+    radius_km: Optional[float] = Field(3.0, gt=0.0, le=50.0, description="Bán kính tìm kiếm ban đầu (km)")
+    cuisine: Optional[str] = Field(None, description="Loại hình ẩm thực")
+    budget: Optional[int] = Field(None, ge=0, description="Ngân sách tối đa (VNĐ)")
+    price_min: Optional[float] = Field(None, ge=0, description="Mức giá tối thiểu")
+    price_max: Optional[float] = Field(None, ge=0, description="Mức giá tối đa")
+    min_rating: Optional[float] = Field(None, ge=0.0, le=5.0, description="Điểm đánh giá tối thiểu")
+    has_parking: Optional[bool] = None
+    has_private_room: Optional[bool] = None
+    has_outdoor: Optional[bool] = None
+    pet_friendly: Optional[bool] = None
+    vegetarian_support: Optional[bool] = None
+    limit: int = Field(10, ge=1, le=50)
+
+
+class QueryRelaxationResponse(BaseModel):
+    """Phản hồi kết quả tìm kiếm kèm metadata nới lỏng điều kiện (TE9C66F)"""
+    status: str = "success"
+    task_code: str = "TE9C66F"
+    results_count: int
+    is_relaxed: bool
+    relaxation_info: QueryRelaxationInfo
+    results: List[MultiTurnRestaurantItem] = Field(default_factory=list)
+
+
