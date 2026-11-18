@@ -1,6 +1,6 @@
 import json
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -20,9 +20,11 @@ from app.schemas.search import (
     SearchCriteriaCreateRequest,
     SearchCriteriaResponse,
     PurgeLocationResponse,
+    SearchHistoryResponse,
 )
 
 router = APIRouter(prefix="/api/chat", tags=["Trợ lý Chat AI & Geocoding (Module 2 & 3)"])
+search_history_router = APIRouter(prefix="/api/search", tags=["Tìm kiếm & Lịch sử (Search History - TSK-46)"])
 
 
 @router.post(
@@ -381,4 +383,75 @@ def get_session_criteria(
         other_conditions=crit_obj.other_conditions,
         is_obfuscated=getattr(crit_obj, "is_obfuscated", False),
         created_at=crit_obj.created_at
+    )
+
+
+# =====================================================================
+# API XEM LỊCH SỬ TÌM KIẾM & KẾT QUẢ GỢI Ý (TASK TSK-46 / FR-12, UC-10)
+# =====================================================================
+
+@search_history_router.get(
+    "/history",
+    response_model=SearchHistoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xem lịch sử tìm kiếm & kết quả gợi ý phiên cũ (Task TSK-46 / FR-12, UC-10)"
+)
+def get_search_history(
+    user_id: int = Query(..., description="ID người dùng đã đăng nhập (Bắt buộc theo BR-01)"),
+    page: int = Query(1, ge=1, description="Số thứ tự trang (bắt đầu từ 1)"),
+    limit: int = Query(10, ge=1, le=50, description="Số lượng phiên trên mỗi trang"),
+    status_filter: Optional[str] = Query("all", description="Lọc theo trạng thái ('active', 'closed', 'all')"),
+    db: Session = Depends(get_db)
+):
+    """
+    API Xem lịch sử tìm kiếm & Kết quả đã gợi ý (Task TSK-46 / PBI-14):
+    - Trả về danh sách `SearchSessions` kèm tiêu chí `SearchCriteria` và các nhà hàng đã gợi ý cho người dùng.
+    - Hỗ trợ khôi phục phiên hội thoại cũ (UC-10).
+    - Phân trang chuẩn RESTful và phân cấp thông tin rõ ràng.
+    """
+    # Xử lý tương thích khi hàm được gọi trực tiếp trong Unit Test
+    if hasattr(page, "default"):
+        page = page.default
+    if hasattr(limit, "default"):
+        limit = limit.default
+    if hasattr(status_filter, "default"):
+        status_filter = status_filter.default
+
+    return ChatSessionService.get_user_search_history(
+        db=db,
+        user_id=user_id,
+        page=page,
+        limit=limit,
+        status_filter=status_filter
+    )
+
+
+@router.get(
+    "/history",
+    response_model=SearchHistoryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xem lịch sử tìm kiếm & kết quả gợi ý phiên cũ (Alias qua /api/chat/history)"
+)
+def get_chat_search_history(
+    user_id: int = Query(..., description="ID người dùng đã đăng nhập (BR-01)"),
+    page: int = Query(1, ge=1, description="Số thứ tự trang"),
+    limit: int = Query(10, ge=1, le=50, description="Số lượng phiên trên mỗi trang"),
+    status_filter: Optional[str] = Query("all", description="Lọc theo trạng thái ('active', 'closed', 'all')"),
+    db: Session = Depends(get_db)
+):
+    """Alias chuyển tiếp sang get_search_history"""
+    # Xử lý tương thích khi hàm được gọi trực tiếp trong Unit Test
+    if hasattr(page, "default"):
+        page = page.default
+    if hasattr(limit, "default"):
+        limit = limit.default
+    if hasattr(status_filter, "default"):
+        status_filter = status_filter.default
+
+    return ChatSessionService.get_user_search_history(
+        db=db,
+        user_id=user_id,
+        page=page,
+        limit=limit,
+        status_filter=status_filter
     )

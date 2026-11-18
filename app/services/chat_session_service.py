@@ -1,10 +1,25 @@
+import math
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 
 from app.models.user import User, UserProfile
 from app.models.search import SearchSession, SearchMessage, SearchCriteria
+from app.models.restaurant import Restaurant, RestaurantAmenity, RestaurantImage
+from app.services.open_hours_service import check_restaurant_open_status, get_vietnam_now
+from app.services.recommendation_service import (
+    calculate_distance_km,
+    calculate_match_score,
+    DEFAULT_USER_LAT,
+    DEFAULT_USER_LON,
+)
+from app.schemas.search import (
+    SuggestedRestaurantHistoryItem,
+    SearchHistorySessionItem,
+    SearchHistoryResponse,
+    SearchCriteriaResponse,
+)
 
 
 class ChatSessionService:
@@ -219,4 +234,191 @@ class ChatSessionService:
             .filter(SearchCriteria.session_id == session_id)
             .order_by(SearchCriteria.criteria_id.desc())
             .first()
+        )
+
+    @staticmethod
+    def get_user_search_history(
+        db: Session,
+        user_id: int,
+        page: int = 1,
+        limit: int = 10,
+        status_filter: Optional[str] = "all"
+    ) -> SearchHistoryResponse:
+        """
+        API Nghiệp vụ Lấy Lịch sử Tìm kiếm & Khôi phục Kết quả Đã Gợi ý (Task TSK-46 / FR-12, UC-10):
+        1. Kiểm tra xác thực người dùng tồn tại (BR-01).
+        2. Truy vấn SearchSessions kèm SearchCriteria và SearchMessages (Eager Loading chống N+1).
+        3. Tự động liên kết tiêu chí tìm kiếm (ẩm thực, ngân sách, tiện ích, vị trí) với bảng Restaurants
+           để tái hiện danh sách các nhà hàng đã được gợi ý cho phiên đó.
+        4. Tính toán % Match Score và trạng thái giờ mở cửa thực tế (BR-03, BR-05).
+        5. Phân trang chuẩn RESTful (page, limit, total_pages, total_sessions).
+        """
+        # 1. Kiểm tra tài khoản người dùng tồn tại (BR-01)
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Không tìm thấy người dùng với ID={user_id} để truy vấn lịch sử tìm kiếm."
+            )
+
+        # 2. Xây dựng truy vấn danh sách phiên tìm kiếm
+        query = (
+            db.query(SearchSession)
+            .filter(SearchSession.user_id == user_id)
+            .options(
+                joinedload(SearchSession.messages),
+                joinedload(SearchSession.criteria)
+            )
+        )
+        if status_filter and status_filter != "all":
+            query = query.filter(SearchSession.status == status_filter)
+
+        total_sessions = query.count()
+        total_pages = math.ceil(total_sessions / limit) if total_sessions > 0 else 1
+        offset = (page - 1) * limit
+        sessions = (
+            query.order_by(SearchSession.session_id.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+        now_vn = get_vietnam_now()
+
+        # 3. Định dạng dữ liệu từng phiên kèm tiêu chí & danh sách nhà hàng gợi ý
+        history_items: List[SearchHistorySessionItem] = []
+        for s in sessions:
+            title_prev = ChatSessionService.get_session_preview_title(s)
+            
+            # Lấy tiêu chí mới nhất của phiên
+            latest_crit = s.criteria[0] if s.criteria else None
+            criteria_response = None
+            if latest_crit:
+                criteria_response = SearchCriteriaResponse(
+                    criteria_id=latest_crit.criteria_id,
+                    session_id=latest_crit.session_id,
+                    location_text=latest_crit.location_text,
+                    latitude=latest_crit.latitude,
+                    longitude=latest_crit.longitude,
+                    cuisine=latest_crit.cuisine,
+                    budget=latest_crit.budget,
+                    has_parking=latest_crit.has_parking,
+                    other_conditions=latest_crit.other_conditions,
+                    is_obfuscated=latest_crit.is_obfuscated,
+                    created_at=latest_crit.created_at,
+                )
+
+            # Tọa độ GPS tâm tìm kiếm của phiên
+            center_lat = (
+                latest_crit.latitude
+                if latest_crit and latest_crit.latitude is not None
+                else DEFAULT_USER_LAT
+            )
+            center_lon = (
+                latest_crit.longitude
+                if latest_crit and latest_crit.longitude is not None
+                else DEFAULT_USER_LON
+            )
+
+            # 4. Truy vấn các nhà hàng gợi ý tương ứng với tiêu chí phiên tìm kiếm này
+            rest_query = (
+                db.query(Restaurant)
+                .options(
+                    joinedload(Restaurant.images),
+                    joinedload(Restaurant.amenities)
+                )
+                .filter(Restaurant.status == "active")
+            )
+
+            if latest_crit:
+                if latest_crit.cuisine:
+                    rest_query = rest_query.filter(
+                        Restaurant.cuisine_type.ilike(f"%{latest_crit.cuisine}%")
+                    )
+                if latest_crit.budget and latest_crit.budget > 0:
+                    rest_query = rest_query.filter(
+                        Restaurant.min_price <= float(latest_crit.budget)
+                    )
+                if latest_crit.has_parking:
+                    rest_query = rest_query.join(Restaurant.amenities).filter(
+                        RestaurantAmenity.has_parking == True
+                    )
+
+            matched_restaurants = rest_query.limit(5).all()
+
+            # Nếu bộ lọc quá chặt không có quán nào, fallback lấy top 3 quán đánh giá cao nhất
+            if not matched_restaurants:
+                matched_restaurants = (
+                    db.query(Restaurant)
+                    .options(
+                        joinedload(Restaurant.images),
+                        joinedload(Restaurant.amenities)
+                    )
+                    .filter(Restaurant.status == "active")
+                    .order_by(Restaurant.avg_rating.desc())
+                    .limit(3)
+                    .all()
+                )
+
+            # Chuyển đổi thành SuggestedRestaurantHistoryItem
+            suggested_list: List[SuggestedRestaurantHistoryItem] = []
+            for r in matched_restaurants:
+                cover_url = None
+                if r.images:
+                    cover_img = next((img for img in r.images if img.is_cover), None)
+                    cover_url = cover_img.image_url if cover_img else r.images[0].image_url
+
+                # Kiểm tra giờ mở cửa BR-03
+                open_info = check_restaurant_open_status(r.open_hours, check_dt=now_vn)
+
+                # Tính khoảng cách GPS
+                dist = None
+                if r.latitude is not None and r.longitude is not None:
+                    dist = calculate_distance_km(
+                        center_lat, center_lon, float(r.latitude), float(r.longitude)
+                    )
+
+                # Chấm điểm % Match Score BR-05
+                score = calculate_match_score(
+                    distance_km=dist if dist is not None else 3.0,
+                    avg_rating=r.avg_rating or 4.5,
+                    amenities=r.amenities,
+                    is_open=open_info["is_open"],
+                )
+
+                suggested_list.append(
+                    SuggestedRestaurantHistoryItem(
+                        id=r.id,
+                        name=r.name,
+                        address=r.address,
+                        cuisine_type=r.cuisine_type,
+                        avg_rating=r.avg_rating or 4.5,
+                        min_price=r.min_price or 0.0,
+                        max_price=r.max_price or 0.0,
+                        cover_image_url=cover_url,
+                        is_open=open_info["is_open"],
+                        match_score=score,
+                        distance_km=dist,
+                    )
+                )
+
+            history_items.append(
+                SearchHistorySessionItem(
+                    session_id=s.session_id,
+                    user_id=s.user_id,
+                    status=s.status,
+                    started_at=s.started_at,
+                    title_preview=title_prev,
+                    total_messages=len(s.messages) if s.messages else 0,
+                    criteria=criteria_response,
+                    suggested_restaurants=suggested_list,
+                )
+            )
+
+        return SearchHistoryResponse(
+            total_sessions=total_sessions,
+            page=page,
+            limit=limit,
+            total_pages=total_pages,
+            data=history_items,
         )

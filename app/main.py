@@ -7,7 +7,15 @@ from sqlalchemy import text
 
 from app.core.database import engine, Base, get_db
 import app.models  # Nạp các model để SQLAlchemy nhận diện bảng trước khi tạo
-from app.routers import auth_router, restaurant_router, user_router, search_router, menu_router, image_router
+from app.routers import (
+    auth_router,
+    restaurant_router,
+    user_router,
+    search_router,
+    search_history_router,
+    menu_router,
+    image_router,
+)
 
 # Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, SearchCriteria, ...)
 try:
@@ -27,6 +35,7 @@ app.include_router(auth_router)
 app.include_router(restaurant_router)
 app.include_router(user_router)
 app.include_router(search_router)
+app.include_router(search_history_router)
 app.include_router(menu_router)
 app.include_router(image_router)
 
