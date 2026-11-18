@@ -211,3 +211,26 @@ class PurgeLocationResponse(BaseModel):
     session_id: int
     purged_count: int
     message: str
+
+
+# =====================================================================
+# SCHEMAS XÓA NHANH TIÊU CHÍ ĐÃ BÓC TÁCH (TASK TE9C673)
+# =====================================================================
+
+class RemoveCriterionRequest(BaseModel):
+    """Yêu cầu xóa nhanh một tiêu chí khỏi SearchCriteria (TE9C673)"""
+    field: str = Field(
+        ...,
+        description="Tên trường tiêu chí cần xóa: 'location', 'cuisine', 'budget', 'has_parking', 'has_private_room', 'has_outdoor', 'has_pet_friendly', 'vegetarian', hoặc 'all'"
+    )
+
+
+class RemoveCriterionResponse(BaseModel):
+    """Phản hồi sau khi xóa nhanh tiêu chí và cập nhật danh sách nhà hàng (TE9C673)"""
+    session_id: int
+    removed_field: str
+    status: str = "success"
+    ai_message: str
+    updated_criteria: Optional[Dict[str, Any]] = None
+    results: List[Dict[str, Any]] = Field(default_factory=list)
+    total_found: int = 0

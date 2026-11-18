@@ -731,3 +731,187 @@ class MultiTurnStateMachine:
             },
             "results": results_payload,
         }
+
+    @classmethod
+    def remove_criterion_and_update(
+        cls,
+        session_id: int,
+        field: str,
+        db: Session,
+        user_id: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Xóa nhanh một tiêu chí khỏi SearchCriteria hiện tại và cập nhật lại kết quả tìm kiếm (Task TE9C673).
+        - field hỗ trợ: 'location', 'cuisine', 'budget', 'has_parking', 'has_private_room', 'has_outdoor', 'has_pet_friendly', 'vegetarian', 'all'.
+        - Tự động lưu bản ghi SearchCriteria mới với trường đã bị xóa.
+        - Lọc lại danh sách quán theo tiêu chí mới và lưu SearchMessage (user & ai).
+        - Trả về danh sách quán cập nhật và thông tin tiêu chí mới.
+        """
+        session = db.query(SearchSession).filter(SearchSession.session_id == session_id).first()
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Không tìm thấy phiên tìm kiếm #{session_id}."
+            )
+        if session.status == "closed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Phiên tìm kiếm #{session_id} đã kết thúc. Vui lòng tạo phiên mới để tiếp tục."
+            )
+
+        latest_crit = (
+            db.query(SearchCriteria)
+            .filter(SearchCriteria.session_id == session_id)
+            .order_by(SearchCriteria.criteria_id.desc())
+            .first()
+        )
+
+        loc_text = latest_crit.location_text if latest_crit else None
+        lat = latest_crit.latitude if latest_crit else None
+        lng = latest_crit.longitude if latest_crit else None
+        cuisine = latest_crit.cuisine if latest_crit else None
+        budget = latest_crit.budget if latest_crit else None
+        has_parking = latest_crit.has_parking if latest_crit else False
+        is_obf = latest_crit.is_obfuscated if latest_crit else False
+
+        other_conditions: Dict[str, Any] = {}
+        if latest_crit and latest_crit.other_conditions:
+            try:
+                other_conditions = json.loads(latest_crit.other_conditions)
+            except Exception:
+                other_conditions = {}
+
+        field_norm = field.strip().lower()
+        removed_label = "tiêu chí"
+
+        if field_norm in ("location", "location_text", "dia_diem", "khu_vuc", "vi_tri"):
+            loc_text = None
+            lat = None
+            lng = None
+            removed_label = "Vị trí địa lý"
+        elif field_norm in ("cuisine", "mon_an", "loai_mon", "mon"):
+            cuisine = None
+            removed_label = "Món ăn"
+        elif field_norm in ("budget", "gia", "ngan_sach", "muc_gia"):
+            budget = None
+            removed_label = "Ngân sách"
+        elif field_norm in ("parking", "has_parking", "dau_xe", "oto", "do_xe"):
+            has_parking = False
+            removed_label = "Chỗ đậu ô tô"
+        elif field_norm in ("private_room", "has_private_room", "phong_rieng"):
+            other_conditions.pop("has_private_room", None)
+            other_conditions.pop("private_room", None)
+            removed_label = "Phòng riêng"
+        elif field_norm in ("outdoor", "has_outdoor", "ngoai_troi"):
+            other_conditions.pop("has_outdoor", None)
+            other_conditions.pop("outdoor", None)
+            removed_label = "Không gian ngoài trời"
+        elif field_norm in ("pet_friendly", "has_pet_friendly", "thu_cung"):
+            other_conditions.pop("has_pet_friendly", None)
+            other_conditions.pop("pet_friendly", None)
+            removed_label = "Cho phép thú cưng"
+        elif field_norm in ("vegetarian", "mon_chay", "an_chay"):
+            other_conditions.pop("vegetarian", None)
+            other_conditions.pop("vegetarian_support", None)
+            removed_label = "Món chay"
+        elif field_norm in ("all", "tat_ca"):
+            loc_text = None
+            lat = None
+            lng = None
+            cuisine = None
+            budget = None
+            has_parking = False
+            other_conditions = {}
+            removed_label = "Tất cả tiêu chí"
+        else:
+            other_conditions.pop(field_norm, None)
+            removed_label = field
+
+        # Tạo bản ghi SearchCriteria mới
+        new_criteria = SearchCriteria(
+            session_id=session_id,
+            location_text=loc_text,
+            latitude=lat,
+            longitude=lng,
+            cuisine=cuisine,
+            budget=budget,
+            has_parking=has_parking,
+            other_conditions=json.dumps(other_conditions, ensure_ascii=False) if other_conditions else None,
+            is_obfuscated=is_obf,
+            created_at=datetime.utcnow(),
+        )
+        db.add(new_criteria)
+        db.commit()
+        db.refresh(new_criteria)
+
+        # Lọc lại danh sách nhà hàng theo tiêu chí mới
+        matched_restaurants = cls.filter_restaurants_spatial(
+            db=db,
+            lat=lat,
+            lng=lng,
+            radius_km=3.0,
+            cuisine=cuisine,
+            budget=budget,
+            has_parking=has_parking,
+            other_conditions=other_conditions,
+        )
+
+        ai_msg_text = f"Mình đã xóa tiêu chí **{removed_label}**. Đã cập nhật lại danh sách {len(matched_restaurants)} quán phù hợp cho bạn!"
+
+        # Lưu tin nhắn User & AI vào SearchMessage
+        user_msg = SearchMessage(
+            session_id=session_id,
+            sender_type="user",
+            content=f"Xóa tiêu chí: {removed_label}",
+            created_at=datetime.utcnow()
+        )
+        db.add(user_msg)
+
+        ai_msg = SearchMessage(
+            session_id=session_id,
+            sender_type="ai",
+            content=ai_msg_text,
+            created_at=datetime.utcnow()
+        )
+        db.add(ai_msg)
+
+        session.current_state = SearchSessionState.RESULT_PRESENTED.value
+        db.commit()
+
+        results_payload = [
+            {
+                "id": r[0].id,
+                "name": r[0].name,
+                "address": r[0].address,
+                "cuisine_type": r[0].cuisine_type,
+                "avg_rating": r[0].avg_rating,
+                "min_price": r[0].min_price,
+                "max_price": r[0].max_price,
+                "distance_km": r[1],
+                "cover_image_url": r[0].images[0].image_url if r[0].images else None,
+                "has_parking": r[0].amenities.has_parking if r[0].amenities else False,
+                "has_private_room": r[0].amenities.has_private_room if r[0].amenities else False,
+            }
+            for r in matched_restaurants
+        ]
+
+        return {
+            "session_id": session_id,
+            "removed_field": field_norm,
+            "status": "success",
+            "ai_message": ai_msg_text,
+            "updated_criteria": {
+                "criteria_id": new_criteria.criteria_id,
+                "location_text": new_criteria.location_text,
+                "latitude": new_criteria.latitude,
+                "longitude": new_criteria.longitude,
+                "cuisine": new_criteria.cuisine,
+                "budget": new_criteria.budget,
+                "has_parking": new_criteria.has_parking,
+                "other_conditions": other_conditions,
+                "is_obfuscated": new_criteria.is_obfuscated,
+                "created_at": new_criteria.created_at,
+            },
+            "results": results_payload,
+            "total_found": len(results_payload),
+        }

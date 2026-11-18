@@ -1016,6 +1016,85 @@
             background: var(--brand-red); color: #fff; border-color: var(--brand-red);
         }
 
+        /* ======================================================== */
+        /* PARSED CRITERIA CHIPS & BAR (TASK TE9C673)               */
+        /* ======================================================== */
+        .parsed-criteria-bar {
+            padding: 8px 14px; background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+            animation: fadeInCriteria 0.25s ease-out;
+        }
+        @keyframes fadeInCriteria {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .parsed-criteria-header {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .parsed-criteria-title {
+            font-size: 0.7rem; font-weight: 700; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-clear-all-chips {
+            background: transparent; border: none; color: var(--brand-red);
+            font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px;
+            border-radius: 4px; transition: background 0.15s;
+        }
+        .btn-clear-all-chips:hover {
+            background: rgba(220, 38, 38, 0.08); text-decoration: underline;
+        }
+        .parsed-chips-scroll {
+            display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+            padding-bottom: 2px; align-items: center;
+        }
+        .parsed-chips-scroll::-webkit-scrollbar { display: none; }
+
+        .parsed-chip {
+            white-space: nowrap; font-size: 0.75rem; font-weight: 500;
+            padding: 4px 8px 4px 10px; border-radius: 9999px;
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            color: var(--text-primary); display: inline-flex; align-items: center;
+            gap: 5px; flex-shrink: 0; transition: all 0.18s ease;
+        }
+        .parsed-chip.chip-location {
+            background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.3); color: #1d4ed8;
+        }
+        .parsed-chip.chip-cuisine {
+            background: rgba(249, 115, 22, 0.08); border-color: rgba(249, 115, 22, 0.3); color: #c2410c;
+        }
+        .parsed-chip.chip-budget {
+            background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); color: #047857;
+        }
+        .parsed-chip.chip-amenity {
+            background: rgba(168, 85, 247, 0.08); border-color: rgba(168, 85, 247, 0.3); color: #7e22ce;
+        }
+        .btn-remove-chip {
+            background: transparent; border: none; color: inherit;
+            font-size: 0.78rem; font-weight: 700; cursor: pointer;
+            padding: 0 3px; border-radius: 50%; line-height: 1;
+            display: inline-flex; align-items: center; justify-content: center;
+            opacity: 0.65; transition: all 0.15s ease;
+        }
+        .btn-remove-chip:hover {
+            opacity: 1; transform: scale(1.25); color: #dc2626;
+        }
+
+        /* In-bubble Parsed Criteria Box */
+        .chat-parsed-criteria-box {
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            border-radius: 12px; padding: 8px 10px; margin: 8px 0;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .chat-parsed-header {
+            font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 5px;
+        }
+        .chat-parsed-chips-list {
+            display: flex; flex-wrap: wrap; gap: 6px;
+        }
+
         /* Sample Prompt Chips (NFR-02) */
         .sample-prompts-bar {
             padding: 8px 14px; background: var(--bg-surface);
@@ -1354,6 +1433,20 @@
                     <span>Đóng phiên</span>
                 </button>
                 <button type="button" class="btn-ai-header-close" onclick="toggleAIDrawer()" aria-label="Thu nhỏ">✕</button>
+            </div>
+        </div>
+
+        <!-- Thanh Tiêu chí đã bóc tách (Parsed Criteria Chips - Task TE9C673) -->
+        <div class="parsed-criteria-bar" id="parsed-criteria-bar" style="display: none;">
+            <div class="parsed-criteria-header">
+                <div class="parsed-criteria-title">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                    <span>AI đã bóc tách tiêu chí:</span>
+                </div>
+                <button type="button" class="btn-clear-all-chips" onclick="clearAllCriteria()" title="Xóa toàn bộ tiêu chí">Xóa tất cả</button>
+            </div>
+            <div class="parsed-chips-scroll" id="parsed-chips-scroll">
+                <!-- Sẽ được render linh hoạt bằng JavaScript -->
             </div>
         </div>
 
@@ -2918,12 +3011,248 @@
         }
 
         // ========================================================
-        // AI CHATBOX & MULTI-TURN CONVERSATION LOGIC (TASK TE9C672)
+        // ========================================================
+        // AI CHATBOX & MULTI-TURN CONVERSATION LOGIC (TASK TE9C672 & TE9C673)
         // ========================================================
         let currentChatSessionId = null;
         let isChatAnalyzing = false;
         let isChatSessionClosed = false;
         let typingIndicatorTimer = null;
+        let currentActiveCriteria = null; // Quản lý tiêu chí đã bóc tách (TE9C673)
+
+        // ========================================================
+        // PARSED CRITERIA CHIPS LOGIC (TASK TE9C673)
+        // ========================================================
+        function formatBudgetLabel(budget) {
+            if (!budget) return '';
+            const b = Number(budget);
+            if (b >= 1000000) return (b / 1000000).toFixed(1).replace('.0', '') + 'tr';
+            if (b >= 1000) return Math.round(b / 1000) + 'k';
+            return b + 'đ';
+        }
+
+        function extractChipsFromCriteria(crit) {
+            if (!crit) return [];
+            const chips = [];
+
+            // 1. Vị trí
+            if (crit.location_text && String(crit.location_text).trim()) {
+                chips.push({
+                    key: 'location',
+                    label: `Vị trí: ${String(crit.location_text).trim()}`,
+                    icon: '📍',
+                    category: 'location'
+                });
+            }
+
+            // 2. Món ăn
+            if (crit.cuisine && String(crit.cuisine).trim()) {
+                chips.push({
+                    key: 'cuisine',
+                    label: `Món: ${String(crit.cuisine).trim()}`,
+                    icon: '🍲',
+                    category: 'cuisine'
+                });
+            }
+
+            // 3. Ngân sách
+            if (crit.budget && Number(crit.budget) > 0) {
+                chips.push({
+                    key: 'budget',
+                    label: `Ngân sách: ≤ ${formatBudgetLabel(crit.budget)}`,
+                    icon: '💵',
+                    category: 'budget'
+                });
+            }
+
+            // 4. Tiện ích: Đậu ô tô
+            if (crit.has_parking) {
+                chips.push({
+                    key: 'has_parking',
+                    label: 'Đậu ô tô',
+                    icon: '🚗',
+                    category: 'amenity'
+                });
+            }
+
+            // 5. Tiện ích mở rộng trong other_conditions
+            let other = {};
+            if (typeof crit.other_conditions === 'string') {
+                try { other = JSON.parse(crit.other_conditions); } catch (_) {}
+            } else if (typeof crit.other_conditions === 'object' && crit.other_conditions !== null) {
+                other = crit.other_conditions;
+            }
+
+            if (other.has_private_room || other.private_room) {
+                chips.push({
+                    key: 'has_private_room',
+                    label: 'Phòng riêng',
+                    icon: '🚪',
+                    category: 'amenity'
+                });
+            }
+            if (other.has_outdoor || other.outdoor) {
+                chips.push({
+                    key: 'has_outdoor',
+                    label: 'Ngoài trời',
+                    icon: '🌿',
+                    category: 'amenity'
+                });
+            }
+            if (other.has_pet_friendly || other.pet_friendly) {
+                chips.push({
+                    key: 'has_pet_friendly',
+                    label: 'Thú cưng',
+                    icon: '🐾',
+                    category: 'amenity'
+                });
+            }
+            if (other.vegetarian || other.vegetarian_support) {
+                chips.push({
+                    key: 'vegetarian',
+                    label: 'Món chay',
+                    icon: '🌱',
+                    category: 'amenity'
+                });
+            }
+
+            return chips;
+        }
+
+        function buildParsedChipsHtml(chips, inBubble = false) {
+            if (!chips || chips.length === 0) return '';
+            return chips.map(c => `
+                <span class="parsed-chip chip-${c.category}" data-key="${c.key}" title="Bấm ✕ để xóa nhanh tiêu chí này">
+                    <span>${c.icon}</span>
+                    <span>${c.label}</span>
+                    <button type="button" class="btn-remove-chip" onclick="removeCriterion('${c.key}', '${c.label.replace(/'/g, "\\'")}')" aria-label="Xóa tiêu chí ${c.label}">✕</button>
+                </span>
+            `).join('');
+        }
+
+        function renderParsedCriteriaChips(criteriaObj) {
+            currentActiveCriteria = criteriaObj;
+            const bar = document.getElementById('parsed-criteria-bar');
+            const scroll = document.getElementById('parsed-chips-scroll');
+            if (!bar || !scroll) return;
+
+            const chips = extractChipsFromCriteria(criteriaObj);
+            if (chips.length === 0) {
+                bar.style.display = 'none';
+                scroll.innerHTML = '';
+            } else {
+                bar.style.display = 'flex';
+                scroll.innerHTML = buildParsedChipsHtml(chips);
+            }
+        }
+
+        function buildInBubbleParsedCriteriaHtml(criteriaObj) {
+            const chips = extractChipsFromCriteria(criteriaObj);
+            if (chips.length === 0) return '';
+            return `
+                <div class="chat-parsed-criteria-box">
+                    <div class="chat-parsed-header">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                        <span>AI đã hiểu các tiêu chí:</span>
+                    </div>
+                    <div class="chat-parsed-chips-list">
+                        ${buildParsedChipsHtml(chips, true)}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function removeCriterion(fieldKey, labelText = '') {
+            if (!currentChatSessionId) return;
+
+            const cleanLabel = labelText || fieldKey;
+            console.log(`[Remove Criterion TE9C673] Xóa tiêu chí: ${fieldKey} (${cleanLabel})`);
+
+            // Hiệu ứng phân tích nhẹ
+            showTypingIndicator(`Đang cập nhật lại tiêu chí (đã bỏ ${cleanLabel})...`);
+
+            try {
+                const res = await fetch(`/api/chat/sessions/${currentChatSessionId}/criteria/remove-field`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ field: fieldKey })
+                });
+
+                hideTypingIndicator();
+
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('[Remove Criterion Response]:', data);
+
+                    // Cập nhật tiêu chí hiện tại & render lại chips trên bar
+                    currentActiveCriteria = data.updated_criteria;
+                    renderParsedCriteriaChips(currentActiveCriteria);
+
+                    // Hiển thị tin nhắn thông báo trong feed
+                    const feed = document.getElementById('ai-chat-feed');
+                    const aiRow = document.createElement('div');
+                    aiRow.className = 'chat-msg-row ai';
+
+                    const inBubbleChipsHtml = buildInBubbleParsedCriteriaHtml(currentActiveCriteria);
+
+                    aiRow.innerHTML = `
+                        <div class="chat-msg-avatar ai">AI</div>
+                        <div class="chat-msg-body">
+                            <div class="bubble bubble-ai">
+                                ${data.ai_message || `Mình đã xóa tiêu chí <strong>"${cleanLabel}"</strong> và cập nhật lại danh sách quán phù hợp!`}
+                                ${inBubbleChipsHtml}
+                            </div>
+                            <span class="bubble-meta">${getChatCurrentTime()}</span>
+                        </div>
+                    `;
+                    feed.appendChild(aiRow);
+
+                    // Cập nhật danh sách quán & markers
+                    if (data.results) {
+                        renderVenues(data.results);
+                        if (mapComponent) {
+                            mapComponent.renderMarkers(data.results);
+                        }
+                    }
+
+                    // Cập nhật status badge
+                    updateChatStatusBadge('presented', `Đã cập nhật (${data.total_found || data.results.length} quán)`);
+                    feed.scrollTop = feed.scrollHeight;
+
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    alert(errData.detail || 'Không thể xóa tiêu chí lúc này. Vui lòng thử lại!');
+                }
+            } catch (err) {
+                hideTypingIndicator();
+                console.warn('Lỗi khi gọi remove-field API, fallback client-side:', err);
+
+                // Fallback client-side nếu API gặp sự cố
+                if (currentActiveCriteria) {
+                    if (fieldKey === 'location') {
+                        currentActiveCriteria.location_text = null;
+                        currentActiveCriteria.latitude = null;
+                        currentActiveCriteria.longitude = null;
+                    } else if (fieldKey === 'cuisine') {
+                        currentActiveCriteria.cuisine = null;
+                    } else if (fieldKey === 'budget') {
+                        currentActiveCriteria.budget = null;
+                    } else if (fieldKey === 'has_parking') {
+                        currentActiveCriteria.has_parking = false;
+                    } else if (fieldKey === 'all') {
+                        currentActiveCriteria = null;
+                    }
+                    renderParsedCriteriaChips(currentActiveCriteria);
+                    renderVenues();
+                }
+            }
+        }
+
+        async function clearAllCriteria() {
+            if (confirm('Bạn có chắc chắn muốn xóa toàn bộ tiêu chí đã bóc tách để tìm lại từ đầu?')) {
+                await removeCriterion('all', 'Tất cả tiêu chí');
+            }
+        }
 
         // Danh sách câu hỏi mẫu cho người mới bắt đầu (NFR-02)
         const SAMPLE_PROMPTS_INITIAL = [
@@ -3147,6 +3476,8 @@
         async function startNewChatSession() {
             currentChatSessionId = null;
             isChatSessionClosed = false;
+            currentActiveCriteria = null;
+            renderParsedCriteriaChips(null);
 
             const notice = document.getElementById('session-closed-notice');
             if (notice) notice.classList.remove('visible');
@@ -3312,10 +3643,25 @@
                     aiRow.appendChild(aiBody);
                     feed.appendChild(aiRow);
 
+                    // Cập nhật thanh Parsed Criteria Bar (Task TE9C673)
+                    if (data.merged_criteria) {
+                        renderParsedCriteriaChips(data.merged_criteria);
+                    }
+
                     // Xử lý hiệu ứng Typewriter cho câu trả lời văn bản
                     const replyText = data.ai_message || 'Mình đã tìm kiếm các quán ăn theo tiêu chí của bạn!';
                     typewriterEffect(aiBubble, replyText, () => {
-                        // A. Nếu có Nới lỏng điều kiện (Query Relaxation - State 4)
+                        // A. Hiển thị Thẻ tiêu chí đã bóc tách ngay trong bubble AI (Task TE9C673)
+                        if (data.merged_criteria) {
+                            const chipsBoxHtml = buildInBubbleParsedCriteriaHtml(data.merged_criteria);
+                            if (chipsBoxHtml) {
+                                const chipsWrapper = document.createElement('div');
+                                chipsWrapper.innerHTML = chipsBoxHtml;
+                                aiBubble.appendChild(chipsWrapper);
+                            }
+                        }
+
+                        // B. Nếu có Nới lỏng điều kiện (Query Relaxation - State 4)
                         if (data.relaxation_applied) {
                             const relaxNotice = document.createElement('div');
                             relaxNotice.className = 'chat-relaxation-badge';
@@ -3328,7 +3674,7 @@
                             aiBubble.appendChild(relaxNotice);
                         }
 
-                        // B. Render Mini Cards danh sách nhà hàng gợi ý
+                        // C. Render Mini Cards danh sách nhà hàng gợi ý
                         if (data.results && data.results.length > 0) {
                             const listContainer = document.createElement('div');
                             listContainer.className = 'chat-venues-container';

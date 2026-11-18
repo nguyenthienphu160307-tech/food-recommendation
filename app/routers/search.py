@@ -35,6 +35,8 @@ from app.schemas.search import (
     SearchCriteriaCreateRequest,
     SearchCriteriaResponse,
     PurgeLocationResponse,
+    RemoveCriterionRequest,
+    RemoveCriterionResponse,
 )
 
 router = APIRouter(prefix="/api/chat", tags=["Trợ lý Chat AI & Geocoding (Module 2 & 3)"])
@@ -458,6 +460,53 @@ def get_session_criteria(
         is_obfuscated=getattr(crit_obj, "is_obfuscated", False),
         created_at=crit_obj.created_at
     )
+
+
+@router.post(
+    "/sessions/{session_id}/criteria/remove-field",
+    response_model=RemoveCriterionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xóa nhanh một tiêu chí đã bóc tách khỏi phiên hội thoại (POST - TE9C673)"
+)
+def remove_criterion_field(
+    session_id: int,
+    payload: RemoveCriterionRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Xóa nhanh một tiêu chí đã bóc tách (Parsed Criteria Chips - TE9C673):
+    - Cho phép người dùng bấm xóa nhanh từng tiêu chí (Vị trí, Món, Ngân sách, Đậu ô tô, v.v.).
+    - Tự động lưu bản ghi SearchCriteria mới và tính toán lại danh sách nhà hàng phù hợp nhất.
+    """
+    result = MultiTurnStateMachine.remove_criterion_and_update(
+        session_id=session_id,
+        field=payload.field,
+        db=db,
+    )
+    return RemoveCriterionResponse(**result)
+
+
+@router.delete(
+    "/sessions/{session_id}/criteria/{field}",
+    response_model=RemoveCriterionResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xóa nhanh một tiêu chí đã bóc tách khỏi phiên hội thoại (DELETE - TE9C673)"
+)
+def delete_criterion_field(
+    session_id: int,
+    field: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Xóa nhanh một tiêu chí đã bóc tách theo RESTful DELETE (TE9C673):
+    - Ví dụ: DELETE /api/chat/sessions/1/criteria/cuisine hoặc /location hoặc /has_parking.
+    """
+    result = MultiTurnStateMachine.remove_criterion_and_update(
+        session_id=session_id,
+        field=field,
+        db=db,
+    )
+    return RemoveCriterionResponse(**result)
 
 
 # =====================================================================
