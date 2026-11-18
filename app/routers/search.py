@@ -55,7 +55,7 @@ def create_session(
 @router.get(
     "/sessions/{session_id}",
     response_model=SessionHistoryResponse,
-    summary="Lấy chi tiết phiên và toàn bộ lịch sử tin nhắn theo thứ tự thời gian"
+    summary="Lấy chi tiết phiên và toàn bộ lịch sử tin nhắn theo thứ tự thời gian (TSK-16 / TSK-45)"
 )
 def get_session_history(
     session_id: int,
@@ -65,9 +65,12 @@ def get_session_history(
     Lấy thông tin phiên chat và danh sách toàn bộ tin nhắn đã trao đổi:
     - Sắp xếp tăng dần theo thời gian thực (created_at ASC).
     - Phân biệt rõ tin nhắn người dùng (sender_type='user') và trợ lý ảo (sender_type='ai').
+    - Hỗ trợ tải lại ngữ cảnh phiên cũ để tiếp tục trò chuyện (TSK-45 / UC-10).
     """
     session_obj = ChatSessionService.get_session(db, session_id)
     messages = ChatSessionService.get_session_messages(db, session_id)
+    title_prev = ChatSessionService.get_session_preview_title(session_obj)
+    last_msg_at = messages[-1].created_at if messages else session_obj.started_at
 
     return SessionHistoryResponse(
         session=SessionResponse(
@@ -75,7 +78,9 @@ def get_session_history(
             user_id=session_obj.user_id,
             status=session_obj.status,
             started_at=session_obj.started_at,
-            total_messages=len(messages)
+            total_messages=len(messages),
+            title_preview=title_prev,
+            last_message_at=last_msg_at
         ),
         messages=[
             MessageResponse(
@@ -145,25 +150,54 @@ def close_session(
 @router.get(
     "/sessions",
     response_model=List[SessionResponse],
-    summary="Lấy danh sách các phiên chat gần đây"
+    summary="Lấy danh sách các phiên chat gần đây của người dùng (TSK-45 / UC-10)"
 )
 def list_sessions(
     user_id: Optional[int] = None,
-    limit: int = 20,
+    limit: int = 30,
     db: Session = Depends(get_db)
 ):
-    """Lấy danh sách các phiên chat gần nhất (hỗ trợ lọc theo user_id)"""
+    """
+    Lấy danh sách các phiên chat gần nhất (TSK-45 / PBI-14):
+    - Hỗ trợ lọc theo `user_id` để nạp lịch sử phiên chat của người dùng đã đăng nhập.
+    - Trả về tiêu đề tóm tắt trích từ câu hỏi đầu tiên (`title_preview`).
+    - Trả về tổng số tin nhắn và thời gian tin nhắn cuối cùng (`last_message_at`).
+    """
     sessions = ChatSessionService.list_sessions(db, user_id=user_id, limit=limit)
-    return [
-        SessionResponse(
-            session_id=s.session_id,
-            user_id=s.user_id,
-            status=s.status,
-            started_at=s.started_at,
-            total_messages=len(s.messages) if s.messages else 0
+    res_list: List[SessionResponse] = []
+    for s in sessions:
+        title_prev = ChatSessionService.get_session_preview_title(s)
+        last_msg_at = s.messages[-1].created_at if s.messages else s.started_at
+        res_list.append(
+            SessionResponse(
+                session_id=s.session_id,
+                user_id=s.user_id,
+                status=s.status,
+                started_at=s.started_at,
+                total_messages=len(s.messages) if s.messages else 0,
+                title_preview=title_prev,
+                last_message_at=last_msg_at
+            )
         )
-        for s in sessions
-    ]
+    return res_list
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Xóa một phiên chat cũ khỏi lịch sử (TSK-45)"
+)
+def delete_session(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """Xóa hoàn toàn phiên chat cũ và toàn bộ tin nhắn liên quan (TSK-45)"""
+    ChatSessionService.delete_session(db, session_id)
+    return {
+        "status": "success",
+        "session_id": session_id,
+        "message": f"Đã xóa phiên chat #{session_id} thành công."
+    }
 
 
 # =====================================================================

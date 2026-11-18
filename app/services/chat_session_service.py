@@ -132,13 +132,47 @@ class ChatSessionService:
     def list_sessions(
         db: Session,
         user_id: Optional[int] = None,
-        limit: int = 20
+        limit: int = 30
     ) -> List[SearchSession]:
-        """Lấy danh sách các phiên chat gần đây (sắp xếp mới nhất lên đầu)"""
-        query = db.query(SearchSession)
+        """
+        Lấy danh sách các phiên chat gần đây (sắp xếp mới nhất lên đầu - TSK-45):
+        - Hỗ trợ lọc theo user_id cho người dùng đã đăng nhập (BR-02).
+        - Sử dụng eager loading messages để tối ưu hiệu năng không bị N+1.
+        """
+        from sqlalchemy.orm import joinedload
+        query = db.query(SearchSession).options(joinedload(SearchSession.messages))
         if user_id is not None:
             query = query.filter(SearchSession.user_id == user_id)
         return query.order_by(SearchSession.session_id.desc()).limit(limit).all()
+
+    @staticmethod
+    def delete_session(db: Session, session_id: int) -> bool:
+        """
+        Xóa một phiên chat cũ khỏi CSDL (TSK-45):
+        - Tự động xóa cascade toàn bộ tin nhắn (SearchMessages) và tiêu chí (SearchCriteria).
+        """
+        session_obj = ChatSessionService.get_session(db, session_id)
+        db.delete(session_obj)
+        db.commit()
+        return True
+
+    @staticmethod
+    def get_session_preview_title(session_obj: SearchSession) -> str:
+        """
+        Tạo tiêu đề tóm tắt cuộc trò chuyện từ câu hỏi đầu tiên của người dùng:
+        - Ví dụ: 'Tìm quán lẩu nướng Quận 1 có bãi ô tô...'
+        """
+        if session_obj.messages:
+            first_user_msg = next(
+                (m for m in session_obj.messages if m.sender_type == "user" and m.content),
+                None
+            )
+            if first_user_msg:
+                content = first_user_msg.content.strip().replace("\n", " ")
+                if len(content) > 42:
+                    return content[:40] + "..."
+                return content
+        return f"Cuộc trò chuyện #{session_obj.session_id}"
 
     @staticmethod
     def save_criteria(

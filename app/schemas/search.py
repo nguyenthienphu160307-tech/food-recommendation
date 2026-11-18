@@ -9,12 +9,14 @@ class CreateSessionRequest(BaseModel):
 
 
 class SessionResponse(BaseModel):
-    """Schema thông tin phản hồi phiên tìm kiếm / Chat AI"""
+    """Schema thông tin phản hồi phiên tìm kiếm / Chat AI (TSK-16 / TSK-45)"""
     session_id: int
     user_id: Optional[int] = None
     status: str
     started_at: datetime
     total_messages: int = 0
+    title_preview: Optional[str] = Field(None, description="Tiêu đề tóm tắt cuộc trò chuyện (trích từ câu hỏi đầu của user)")
+    last_message_at: Optional[datetime] = Field(None, description="Thời gian tin nhắn cuối cùng trong phiên")
 
     class Config:
         from_attributes = True
