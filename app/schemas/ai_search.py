@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from pydantic import BaseModel, Field
 
 
@@ -33,3 +33,27 @@ class ExtractCriteriaResponse(BaseModel):
     extracted_criteria: DiningCriteriaSchema = Field(..., description="Dữ liệu đã chuẩn hóa cấu trúc")
     ai_explanation: str = Field(..., description="Lời giải thích phản hồi tự nhiên (Explainable AI - TE9C66A)")
     extraction_engine: str = Field(..., description="Chế độ phân tích đang dùng (vd: 'rule_based_nlp', 'llm_api')")
+    
+    
+class AISearchRecommendRequest(BaseModel):
+    """Yêu cầu tìm kiếm AI trọn gói (Module 2 -> Module 4)."""
+    prompt: str = Field(..., min_length=2, max_length=500, description="Câu hỏi tự nhiên của người dùng")
+    user_lat: Optional[float] = Field(None, ge=-90.0, le=90.0, description="Vĩ độ GPS hiện tại của người dùng")
+    user_lng: Optional[float] = Field(None, ge=-180.0, le=180.0, description="Kinh độ GPS hiện tại của người dùng")
+    radius_km: float = Field(default=5.0, gt=0, le=50.0, description="Bán kính tìm kiếm (km)")
+    top_n: int = Field(default=5, ge=1, le=20, description="Số lượng nhà hàng Top N trả về")
+    session_id: Optional[int] = Field(None, description="ID phiên chat để lưu lịch sử")
+    current_context: Optional[Dict[str, Any]] = Field(None, description="Ngữ cảnh hội thoại lượt trước")
+
+
+class AISearchRecommendResponse(BaseModel):
+    """Kết quả trả về Top N nhà hàng đã qua Spatial Filter & RankingEngine."""
+    task_code: str = "TE9C670"
+    prompt: str
+    extracted_criteria: DiningCriteriaSchema
+    resolved_location: Dict[str, Any]
+    ai_explanation: str
+    extraction_engine: str
+    total_candidates: int
+    top_n: int
+    recommendations: List[Dict[str, Any]]
