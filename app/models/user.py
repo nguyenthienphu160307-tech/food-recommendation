@@ -23,6 +23,8 @@ class User(Base):
     search_sessions = relationship("SearchSession", back_populates="user", cascade="all, delete-orphan")
     # Quan hệ 1 - N với bảng Notifications (Module 6 - TSK-48)
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    # Quan hệ 1 - N với bảng RestaurantReviews (Module 5 - TSK-51)
+    reviews = relationship("RestaurantReview", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserProfile(Base):

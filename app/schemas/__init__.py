@@ -61,6 +61,15 @@ from .notification import (
     ReviewReplyNotificationRequest,
     AccountStatusNotificationRequest,
 )
+from .review import (
+    ReviewBase,
+    ReviewCreateRequest,
+    ReviewUpdateRequest,
+    ReviewUserSummary,
+    ReviewResponse,
+    RestaurantReviewListResponse,
+    DeleteReviewResponse,
+)
 
 __all__ = [
     "SendOTPRequest",
@@ -113,4 +122,11 @@ __all__ = [
     "MarkReadResponse",
     "ReviewReplyNotificationRequest",
     "AccountStatusNotificationRequest",
+    "ReviewBase",
+    "ReviewCreateRequest",
+    "ReviewUpdateRequest",
+    "ReviewUserSummary",
+    "ReviewResponse",
+    "RestaurantReviewListResponse",
+    "DeleteReviewResponse",
 ]

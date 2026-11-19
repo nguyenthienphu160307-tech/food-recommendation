@@ -8,6 +8,7 @@ from .restaurant import (
 )
 from .search import SearchSession, SearchMessage, SearchCriteria
 from .notification import Notification
+from .review import RestaurantReview
 
 __all__ = [
     "User",
@@ -24,4 +25,5 @@ __all__ = [
     "SearchMessage",
     "SearchCriteria",
     "Notification",
+    "RestaurantReview",
 ]

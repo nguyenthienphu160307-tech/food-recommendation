@@ -5,6 +5,7 @@ from .search import router as search_router, search_history_router
 from .menu import router as menu_router
 from .image import router as image_router
 from .notification import router as notification_router
+from .review import router as review_router
 
 __all__ = [
     "auth_router",
@@ -15,4 +16,5 @@ __all__ = [
     "menu_router",
     "image_router",
     "notification_router",
+    "review_router",
 ]

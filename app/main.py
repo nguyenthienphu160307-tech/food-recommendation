@@ -16,6 +16,7 @@ from app.routers import (
     menu_router,
     image_router,
     notification_router,
+    review_router,
 )
 
 # Tự động tạo các bảng CSDL (Users, UserProfiles, Roles, UserRoles, OTPStorage, Restaurants, SearchSessions, SearchMessages, SearchCriteria, ...)
@@ -40,6 +41,7 @@ app.include_router(search_history_router)
 app.include_router(menu_router)
 app.include_router(image_router)
 app.include_router(notification_router)
+app.include_router(review_router)
 
 # Mount thư mục static assets nếu tồn tại
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
