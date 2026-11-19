@@ -4,6 +4,7 @@ from .profile_api import router as profile_router
 from .geo import router as geo_router
 from .ai_search import router as ai_search_router
 from .users import router as users_router
+from .search import router as search_router
 from .admin import admin_router
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "geo_router",
     "ai_search_router",
     "users_router",
-    "admin_router"
+    "search_router",
+    "admin_router",
 ]
