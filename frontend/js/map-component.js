@@ -265,6 +265,138 @@ class FoodAIMapComponent {
             setTimeout(() => marker.openPopup(), 500);
         }
     }
+    /**
+     * Đồng bộ highlight 1 ghim khi hover/cuộn thẻ nhà hàng
+     */
+    highlightVenue(venueId, options = { panTo: false, openPopup: false }) {
+        this.venueMarkers.forEach((marker, id) => {
+            const el = marker.getElement();
+            if (!el) return;
+            el.classList.toggle('marker-active-sync', id === venueId);
+            marker.setZIndexOffset(id === venueId ? 850 : 0);
+        });
+
+        const target = this.venueMarkers.get(venueId);
+        if (target && this.map) {
+            if (options.panTo) {
+                this.map.panTo(target.getLatLng(), { animate: true, duration: 0.45 });
+            }
+            if (options.openPopup) {
+                target.openPopup();
+            }
+        }
+    }
+
+    /**
+     * Task TE9C674: Khi AI trả về Top N quán trong khung chat,
+     * bản đồ tự động flyTo / flyToBounds và làm nổi bật các ghim được đề xuất.
+     */
+    highlightRecommendedVenues(topVenues = []) {
+        if (!this.map || !Array.isArray(topVenues) || topVenues.length === 0) return;
+
+        // 1. Xóa highlight AI cũ trên các ghim hiện có
+        this.clearAIHighlights();
+
+        const validVenues = topVenues.filter(v => (v.lat ?? v.latitude) && (v.lng ?? v.longitude));
+        if (validVenues.length === 0) return;
+
+        // 2. Đảm bảo tất cả quán Top N đều có marker trên bản đồ, gắn badge Top #1..#N
+        const boundsLatLngs = [];
+        validVenues.forEach((v, idx) => {
+            const lat = Number(v.lat ?? v.latitude);
+            const lng = Number(v.lng ?? v.longitude);
+            const rank = idx + 1;
+            boundsLatLngs.push([lat, lng]);
+
+            // Xóa marker cũ của quán này nếu đã tồn tại để vẽ lại dạng ghim AI nổi bật
+            if (this.venueMarkers.has(v.id)) {
+                this.map.removeLayer(this.venueMarkers.get(v.id));
+            }
+
+            const shortPrice = `${Math.round((v.priceMin ?? v.min_price ?? 50000) / 1000)}k`;
+            const aiIcon = L.divIcon({
+                className: 'venue-marker-pin ai-recommended-pin',
+                html: `
+                    <div class="pin-bubble ai-pin-bubble">
+                        <span class="ai-rank-badge">#${rank}</span>
+                        <span>🍴 ${shortPrice}</span>
+                    </div>
+                    <div class="pin-arrow ai-pin-arrow"></div>
+                `,
+                iconSize: [74, 42],
+                iconAnchor: [37, 40],
+                popupAnchor: [0, -38]
+            });
+
+            const marker = L.marker([lat, lng], {
+                icon: aiIcon,
+                zIndexOffset: 1000 - idx
+            }).addTo(this.map);
+
+            const score = v.matchScore ?? v.match_score ?? 90;
+            const distKm = v.distanceKm ?? v.distance_km;
+            const distText = distKm != null
+                ? (distKm < 1 ? `${Math.round(distKm * 1000)} m` : `${Number(distKm).toFixed(2)} km`)
+                : '';
+            const imgUrl = v.image || v.cover_image_url || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80';
+            const rating = Number(v.rating ?? v.avg_rating ?? 4.5).toFixed(1);
+            const pMin = Number(v.priceMin ?? v.min_price ?? 50000).toLocaleString();
+            const pMax = Number(v.priceMax ?? v.max_price ?? 300000).toLocaleString();
+
+            const popupContent = `
+                <div class="map-venue-popup">
+                    <div class="popup-img-wrap">
+                        <img src="${imgUrl}" alt="${v.name}" loading="lazy">
+                        <span class="popup-rating">✨ Top ${rank} • ${Math.round(score)}%</span>
+                    </div>
+                    <div class="popup-body">
+                        <h4 class="popup-title">${v.name}</h4>
+                        <div class="popup-meta">
+                            <span>★ ${rating}</span>
+                            <span>•</span>
+                            <span>${v.cuisineLabel || v.cuisine_type || 'Ẩm thực'}</span>
+                            ${distText ? `<span>•</span><strong style="color:#e11d48;">Cách ${distText}</strong>` : ''}
+                        </div>
+                        <div class="popup-address">${v.address || ''}</div>
+                        <div class="popup-footer">
+                            <span class="popup-price">${pMin}đ - ${pMax}đ</span>
+                            <button type="button" class="popup-btn-detail" onclick="window.onMapPopupSelectVenue(${v.id})">
+                                Thực đơn →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent, { maxWidth: 300, minWidth: 255, className: 'custom-venue-popup-wrapper' });
+            marker.on('click', () => {
+                if (typeof this.onVenueClick === 'function') this.onVenueClick(v);
+            });
+
+            this.venueMarkers.set(v.id, marker);
+        });
+
+        // 3. Tự động di chuyển bản đồ (flyTo nếu 1 quán, flyToBounds nếu nhiều quán)
+        if (boundsLatLngs.length === 1) {
+            this.map.flyTo(boundsLatLngs[0], 15, { duration: 1.1 });
+        } else {
+            const bounds = L.latLngBounds(boundsLatLngs);
+            this.map.flyToBounds(bounds, { padding: [55, 55], maxZoom: 15, duration: 1.1 });
+        }
+
+        // 4. Mở popup quán Top 1 sau khi bản đồ bay tới nơi
+        const top1Marker = this.venueMarkers.get(validVenues[0].id);
+        if (top1Marker) {
+            setTimeout(() => top1Marker.openPopup(), 950);
+        }
+    }
+
+    clearAIHighlights() {
+        this.venueMarkers.forEach((marker) => {
+            const el = marker.getElement();
+            if (el) el.classList.remove('ai-recommended-pin');
+        });
+    }
 
     invalidateSize() {
         if (this.map) setTimeout(() => this.map.invalidateSize(), 150);

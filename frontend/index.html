@@ -515,18 +515,19 @@
     <div class="ai-drawer" id="ai-drawer">
         <div class="ai-drawer-header">
             <h4>Trợ lý Tìm kiếm Ẩm thực AI</h4>
-            <span style="cursor:pointer;" onclick="toggleAIDrawer()">✕</span>
-        </div>
-        <div class="ai-chat-feed" id="ai-chat-feed">
-            <div class="bubble bubble-ai">
-                Xin chào! Hãy mô tả nhu cầu của bạn (ví dụ: <em>"Nhóm 4 người muốn ăn nướng có bãi đỗ ô tô dưới 300k"</em>), mình sẽ lọc và xếp hạng các quán phù hợp nhất.
+            <div style="display:flex;align-items:center;gap:10px;">
+                <button type="button" id="btn-toggle-split-chat" onclick="AIChatMapSync.toggleSplitScreen()"
+                    style="background:rgba(255,255,255,0.14);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:0.74rem;cursor:pointer;">
+                    ◫ Split Map
+                </button>
+                <span style="cursor:pointer;" onclick="toggleAIDrawer()">✕</span>
             </div>
         </div>
-        <div class="ai-drawer-input">
-            <input type="text" id="drawer-input" placeholder="Nhập yêu cầu của bạn..." onkeypress="if(event.key==='Enter') sendDrawerMessage()">
-            <button class="btn-ai-ask" onclick="sendDrawerMessage()">Gửi</button>
+        <div id="guest-chat-limit-badge"
+            style="display:none;padding:6px 14px;background:#fff1f2;color:#9f1239;font-size:0.76rem;border-bottom:1px solid #fecdd3;justify-content:center;">
         </div>
     </div>
+
 
     <div class="modal-backdrop" id="venue-modal" onclick="if(event.target===this) closeVenueModal()">
         <div class="modal-card" id="venue-modal-content"></div>
@@ -1124,10 +1125,18 @@
                 </div>
             `;
             modal.classList.add('open');
+            <button type="button" onclick="handleWriteReview(${v.id})"
+                style="height:40px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);cursor:pointer;font-weight:600;">
+                ⭐ Đánh giá
+            </button>
         }
 
         function closeVenueModal() {
             document.getElementById('venue-modal').classList.remove('open');
+        }
+        function handleWriteReview(venueId) {
+            if (window.GuestModeGuard && !window.GuestModeGuard.requireAuth('review')) return;
+            alert('Mở form đánh giá cho nhà hàng #' + venueId + '!');
         }
 
         window.onMapPopupSelectVenue = function (venueId) {
@@ -1140,6 +1149,7 @@
 
         function toggleSaveVenue(e, id) {
             e.stopPropagation();
+            if (window.GuestModeGuard && !window.GuestModeGuard.requireAuth('favorite')) return;
             const wasSaved = savedIds.includes(id);
             savedIds = wasSaved ? savedIds.filter(x => x !== id) : [...savedIds, id];
             localStorage.setItem('smart_dining_saved_venues', JSON.stringify(savedIds));
@@ -1147,6 +1157,7 @@
         }
 
         function filterSavedVenues() {
+            if (window.GuestModeGuard && !window.GuestModeGuard.requireAuth('favorite')) return;
             document.getElementById('account-dropdown').classList.remove('open');
             const list = venues.filter(v => savedIds.includes(v.id));
             renderVenues(list);
@@ -1202,89 +1213,89 @@
             }
         }
 
+        let isSendingChat = false; // Khóa chống spam gửi nhiều lần cùng lúc
+
         async function sendDrawerMessage() {
+            if (isSendingChat) return;
+
             const input = document.getElementById('drawer-input');
-            const text = input.value.trim();
-            if (!text) return;
-
-            await initChatSessionIfNeeded();
-
+            const sendBtn = document.querySelector('#ai-drawer .ai-drawer-input button');
             const feed = document.getElementById('ai-chat-feed');
-            feed.innerHTML += `<div class="bubble bubble-user">${text}</div>`;
-            input.value = '';
-            feed.scrollTop = feed.scrollHeight;
+            const text = (input?.value || '').trim();
+            if (!text || !feed) return;
 
-            if (currentChatSessionId) {
-                try {
-                    await fetch(`/api/chat/sessions/${currentChatSessionId}/messages`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ content: text, sender_type: 'user' })
-                    });
-                } catch (_) {}
+            // 1. Task TE9C675 (BR-02): Kiểm tra lượt chat miễn phí của Guest trước khi gửi
+            if (window.GuestModeGuard && !window.GuestModeGuard.consumeGuestChatTurn()) {
+                return;
             }
 
-            let geocodedInfo = null;
+            // 2. Khóa form & hiển thị tin nhắn người dùng an toàn (dùng textContent chống XSS, không re-render cả feed)
+            isSendingChat = true;
+            input.value = '';
+            input.disabled = true;
+            if (sendBtn) sendBtn.disabled = true;
+
+            const userBubble = document.createElement('div');
+            userBubble.className = 'bubble bubble-user';
+            userBubble.textContent = text;
+            feed.appendChild(userBubble);
+
+            // Hiển thị bong bóng trạng thái đang xử lý (Typing indicator)
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'bubble bubble-ai';
+            loadingBubble.innerHTML = '<em style="color:var(--text-muted);">🤖 Trợ lý AI đang phân tích & tìm quán phù hợp...</em>';
+            feed.appendChild(loadingBubble);
+            feed.scrollTop = feed.scrollHeight;
+
             try {
-                const extRes = await fetch('/api/chat/extract', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
+                // Đảm bảo đã có phiên chat (không chặn luồng nếu backend tạm thời chưa kết nối)
+                await initChatSessionIfNeeded().catch(() => {});
+
+                // 3. Task TE9C674 + TE9C670: Gọi thẳng /api/search/ai-recommend
+                // (Backend đã tự lưu tin nhắn user & ai vào SearchMessages khi có session_id -> tránh gọi API lưu trùng)
+                window.mapComponent = mapComponent;
+                const result = await AIChatMapSync.fetchTopRecommendations(
+                    text,
+                    currentPos,
+                    searchRadiusKm,
+                    5,
+                    currentChatSessionId,
+                    venues
+                );
+
+                loadingBubble.remove();
+
+                // Nếu bị Backend chặn do vượt giới hạn Guest (403)
+                if (!result || result.blocked) return;
+
+                // 4. Đồng bộ tọa độ tâm & nhãn địa chỉ nếu AI bóc tách được khu vực mới (VD: "Quận 3")
+                const loc = result.resolvedLocation;
+                if (loc && Number.isFinite(loc.latitude) && Number.isFinite(loc.longitude)) {
+                    currentPos = { lat: loc.latitude, lng: loc.longitude };
+                    if (mapComponent) {
+                        mapComponent.setUserPosition(currentPos.lat, currentPos.lng, false);
+                    }
+                    if (typeof loc.source === 'string' && loc.source.startsWith('geocoded:')) {
+                        const addrLabel = document.getElementById('current-address-label');
+                        if (addrLabel) addrLabel.textContent = loc.source.replace('geocoded:', '').trim();
+                    }
+                }
+
+                // 5. Render Top N vào khung chat + tự động flyToBounds & highlight ghim #1..#N trên bản đồ
+                AIChatMapSync.syncResultsToChatAndMap(feed, mapComponent, result, (topList) => {
+                    renderVenues(topList);
                 });
-                if (extRes.ok) {
-                    const extData = await extRes.json();
-                    geocodedInfo = extData.criteria;
-
-                    // Lưu SearchCriteria kèm tọa độ GPS vào CSDL
-                    if (currentChatSessionId && geocodedInfo) {
-                        await fetch(`/api/chat/sessions/${currentChatSessionId}/criteria`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                location_text: geocodedInfo.location_text,
-                                latitude: geocodedInfo.latitude,
-                                longitude: geocodedInfo.longitude,
-                                cuisine: geocodedInfo.cuisine,
-                                budget: geocodedInfo.budget,
-                                has_parking: geocodedInfo.has_parking,
-                                other_conditions: JSON.stringify(geocodedInfo.other_conditions || {})
-                            })
-                        });
-                    }
-
-                    // Nếu nhận diện được tọa độ tâm mới, di chuyển bản đồ & vòng tròn bán kính đến khu vực đó
-                    if (geocodedInfo && geocodedInfo.latitude && geocodedInfo.longitude) {
-                        currentPos = { lat: geocodedInfo.latitude, lng: geocodedInfo.longitude };
-                        if (mapComponent) {
-                            mapComponent.setUserPosition(currentPos.lat, currentPos.lng, false);
-                            if (mapComponent.map) {
-                                mapComponent.map.flyTo([currentPos.lat, currentPos.lng], 14, { duration: 1.2 });
-                            }
-                        }
-                    }
-                }
-            } catch (_) {}
-
-            executeAISearch(text);
-
-            setTimeout(async () => {
-                const aiResponse = (geocodedInfo && geocodedInfo.location_text && geocodedInfo.latitude)
-                    ? `Mình đã định vị khu vực <strong>${geocodedInfo.location_text}</strong> (GPS: ${geocodedInfo.latitude.toFixed(4)}, ${geocodedInfo.longitude.toFixed(4)}) và cập nhật các quán phù hợp nhất ngay trên bản đồ!`
-                    : `Mình đã phân tích yêu cầu <strong>"${text}"</strong> và cập nhật danh sách các quán phù hợp nhất ngay trên bản đồ và màn hình chính.`;
-
-                feed.innerHTML += `<div class="bubble bubble-ai">${aiResponse}</div>`;
+            } catch (err) {
+                console.error('[AI Chat Error]:', err);
+                loadingBubble.innerHTML = 'Xin lỗi, hệ thống AI đang gặp sự cố kết nối. Bạn thử lại sau vài giây nhé!';
+            } finally {
+                // 6. Mở khóa form và focus lại ô nhập để người dùng chat tiếp mượt mà
+                isSendingChat = false;
+                input.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
+                input.focus();
                 feed.scrollTop = feed.scrollHeight;
-
-                if (currentChatSessionId) {
-                    try {
-                        await fetch(`/api/chat/sessions/${currentChatSessionId}/messages`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ content: aiResponse, sender_type: 'ai' })
-                        });
-                    } catch (_) {}
-                }
-            }, 300);
+            }
         }
 
         function toggleTheme() {
@@ -1343,5 +1354,7 @@
             🗺️ Bản đồ
         </button>
     </div>
+    <script src="js/guest-mode.js"></script>
+    <script src="js/ai-chat-map-sync.js"></script>
 </body>
 </html>
