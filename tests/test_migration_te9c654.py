@@ -83,16 +83,16 @@ def test_unique_constraints_and_foreign_keys(db_session):
     db_session.rollback()
 
     # 3. Kiểm tra SearchSession, SearchMessage, SearchCriteria & Notification
-    chat_session = SearchSession(session_code="SESS-001", user_id=user.id, title="Tìm quán phở Quận 3")
+    chat_session = SearchSession(user_id=user.id, status="active")
     db_session.add(chat_session)
     db_session.commit()
 
-    msg = SearchMessage(session_id=chat_session.id, sender_role="user", content="Gợi ý quán phở gần đây")
-    criteria = SearchCriteria(session_id=chat_session.id, cuisine_type="Phở", radius_km=3.0)
+    msg = SearchMessage(session_id=chat_session.session_id, sender_type="user", content="Gợi ý quán phở gần đây")
+    criteria = SearchCriteria(session_id=chat_session.session_id, cuisine="Phở")
     notif = Notification(user_id=user.id, title="Chào mừng", message="Tạo tài khoản thành công")
     db_session.add_all([msg, criteria, notif])
     db_session.commit()
 
-    assert chat_session.criteria.cuisine_type == "Phở"
+    assert chat_session.criteria[0].cuisine == "Phở"
     assert len(chat_session.messages) == 1
     assert notif.is_read is False

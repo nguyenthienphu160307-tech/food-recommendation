@@ -65,14 +65,27 @@ class StandardResponse(BaseModel):
     detail: Optional[str] = None
 
 
+class TokensResponse(BaseModel):
+    """Schema chứa cặp token JWT"""
+    access_token: str
+    token_type: str = "Bearer"
+
+
 class LoginRequest(BaseModel):
     """Schema dữ liệu gửi lên khi đăng nhập"""
+    account: Optional[str] = Field(None, description="Tài khoản đăng nhập (Email hoặc SĐT)")
     email: Optional[str] = Field(None, description="Địa chỉ Email đăng nhập")
     phone_number: Optional[str] = Field(None, description="Số điện thoại đăng nhập")
     password: str = Field(..., min_length=1, description="Mật khẩu tài khoản")
 
     @model_validator(mode="after")
     def check_login_input(self):
+        if self.account:
+            acc = self.account.strip()
+            if "@" in acc:
+                self.email = acc.lower()
+            else:
+                self.phone_number = acc
         if not self.email and not self.phone_number:
             raise ValueError("Vui lòng cung cấp ít nhất Email hoặc Số điện thoại để đăng nhập.")
         if self.email:
@@ -87,3 +100,4 @@ class LoginResponse(BaseModel):
     message: str
     user: UserDataResponse
     token: Optional[str] = None
+    tokens: Optional[TokensResponse] = None

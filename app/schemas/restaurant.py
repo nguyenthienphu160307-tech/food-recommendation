@@ -125,6 +125,7 @@ class AppliedFilterCriteria(BaseModel):
 class RestaurantFilterResponse(BaseModel):
     """Phản hồi API lọc nhà hàng đa điều kiện kết hợp (TE9C660)"""
     status: str = "success"
+    total: Optional[int] = Field(None, description="Tổng số nhà hàng khớp điều kiện (alias của pagination.total_items)")
     data: List[RestaurantFilterItemResponse]
     applied_filters: AppliedFilterCriteria
     pagination: PaginationMetadata

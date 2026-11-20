@@ -284,5 +284,9 @@ def run_admin_portal_tests():
     print("==================================================================")
 
 
+def test_admin():
+    run_admin_portal_tests()
+
+
 if __name__ == "__main__":
     run_admin_portal_tests()

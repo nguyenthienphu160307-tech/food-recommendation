@@ -223,6 +223,33 @@ function initDataStorage() {
     const storedUsers = localStorage.getItem(ADMIN_USERS_KEY);
     usersData = storedUsers ? JSON.parse(storedUsers) : [...INITIAL_USERS];
 
+    // Nạp đồng bộ từ API GET /api/admin/users nếu có auth_token
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.ok ? res.json() : null)
+        .then(apiData => {
+            if (apiData && Array.isArray(apiData.data) && apiData.data.length > 0) {
+                usersData = apiData.data.map(u => ({
+                    id: u.id,
+                    email: u.email,
+                    phone_number: u.phone_number,
+                    full_name: u.full_name,
+                    role: u.role || (u.roles && u.roles[0]) || 'user',
+                    status: u.status,
+                    created_at: u.created_at,
+                    avatar: u.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'
+                }));
+                localStorage.setItem(ADMIN_USERS_KEY, JSON.stringify(usersData));
+                renderUsersTable();
+                renderStatsOverview();
+            }
+        })
+        .catch(err => console.warn('Không thể nạp users từ API:', err));
+    }
+
     // 2. Venues (từ venues-data.js đã seed 50 quán)
     const storedVenues = localStorage.getItem(ADMIN_VENUES_KEY);
     if (storedVenues) {
@@ -371,10 +398,10 @@ function renderUsersTable(customList = null) {
 }
 
 /**
- * Nghiệp vụ BR-07: Khóa hoặc Mở khóa tài khoản người dùng vi phạm
+ * Nghiệp vụ BR-07: Khóa hoặc Mở khóa tài khoản người dùng vi phạm (TE9C678)
  * @param {number} userId 
  */
-function toggleUserLock(userId) {
+async function toggleUserLock(userId) {
     const user = usersData.find(u => u.id === userId);
     if (!user) return;
 
@@ -383,13 +410,44 @@ function toggleUserLock(userId) {
         return;
     }
 
-    if (user.status === 'active') {
-        if (confirm(`Bạn có chắc muốn KHÓA tài khoản '${user.full_name}' (${user.email}) theo quy định BR-07?`)) {
-            user.status = 'locked';
-            showToast(`Đã khóa tài khoản '${user.full_name}' thành công theo quy tắc BR-07!`, 'error');
+    const newStatus = user.status === 'active' ? 'locked' : 'active';
+    const actionName = newStatus === 'locked' ? 'KHÓA' : 'MỞ KHÓA';
+
+    if (newStatus === 'locked') {
+        if (!confirm(`Bạn có chắc muốn KHÓA tài khoản '${user.full_name}' (${user.email}) theo quy định BR-07?\nTất cả phiên đăng nhập và tìm kiếm đang hoạt động của người dùng sẽ bị thu hồi ngay lập tức.`)) {
+            return;
         }
+    }
+
+    // Gọi API Backend PATCH /api/admin/users/:id/status (TE9C678)
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        try {
+            const res = await fetch(`/api/admin/users/${userId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    status: newStatus,
+                    reason: `Thao tác ${actionName.toLowerCase()} tài khoản bởi Quản trị viên`
+                })
+            });
+            if (!res.ok) {
+                const errData = await res.json();
+                showToast(errData.detail || 'Không thể cập nhật trạng thái người dùng trên server.', 'error');
+                return;
+            }
+        } catch (err) {
+            console.warn('Lỗi gọi API PATCH user status:', err);
+        }
+    }
+
+    user.status = newStatus;
+    if (newStatus === 'locked') {
+        showToast(`Đã khóa tài khoản '${user.full_name}' thành công theo quy tắc BR-07!`, 'error');
     } else {
-        user.status = 'active';
         showToast(`Đã mở khóa tài khoản '${user.full_name}' hoạt động trở lại!`, 'success');
     }
 

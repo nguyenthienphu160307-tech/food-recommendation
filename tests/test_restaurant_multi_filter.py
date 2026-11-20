@@ -295,5 +295,9 @@ def run_multi_filter_tests():
     print("==================================================================")
 
 
+def test_multi_filter():
+    run_multi_filter_tests()
+
+
 if __name__ == "__main__":
     run_multi_filter_tests()
