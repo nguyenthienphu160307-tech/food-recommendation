@@ -1,0 +1,125 @@
+from typing import Any, Dict, List, Optional, Tuple
+from sqlalchemy.orm import Session
+
+from app.models.restaurant import Restaurant, RestaurantAmenity
+from app.schemas.ai_search import DiningCriteriaSchema
+from app.services.geo_service import calculate_bounding_box, calculate_haversine_distance
+from app.services.geocoding_service import GeocodingService
+from app.services.ranking_service import RankingEngine
+
+
+class AIRecommendationPipeline:
+    """
+    Task TE9C670: Chuyển đổi SearchCriteria (Module 2) thành tham số Spatial & Filter,
+    xếp hạng bằng RankingEngine.rank_and_sort (Module 4) và trả về Top N nhà hàng.
+    """
+
+    @staticmethod
+    def resolve_coordinates(
+        criteria: DiningCriteriaSchema,
+        user_lat: Optional[float],
+        user_lng: Optional[float],
+    ) -> Tuple[float, float, str]:
+        if criteria.location_text:
+            geo = GeocodingService.geocode(criteria.location_text)
+            if geo and geo.get("lat") is not None and geo.get("lng") is not None:
+                return float(geo["lat"]), float(geo["lng"]), f"geocoded:{criteria.location_text}"
+
+        if user_lat is not None and user_lng is not None:
+            return float(user_lat), float(user_lng), "user_gps"
+
+        default_lat, default_lng = GeocodingService.DEFAULT_CENTER
+        return default_lat, default_lng, "default_hcm_q1"
+
+    @classmethod
+    def query_and_rank(
+        cls,
+        db: Session,
+        criteria: DiningCriteriaSchema,
+        user_lat: Optional[float] = None,
+        user_lng: Optional[float] = None,
+        radius_km: float = 5.0,
+        top_n: int = 5,
+    ) -> Dict[str, Any]:
+        center_lat, center_lng, loc_source = cls.resolve_coordinates(criteria, user_lat, user_lng)
+        other = criteria.other_conditions
+
+        required_amenities = {
+            "has_parking": bool(criteria.has_parking),
+            "has_private_room": bool(other.has_private_room) if other else False,
+            "pet_friendly": bool(other.pet_friendly) if other else False,
+            "vegetarian_support": bool(other.vegetarian_support) if other else False,
+            "has_outdoor": bool(other.has_outdoor) if other else False,
+        }
+
+        bbox = calculate_bounding_box(center_lat, center_lng, radius_km)
+        query = db.query(Restaurant).filter(
+            Restaurant.status == "active",
+            Restaurant.latitude.between(bbox.min_lat, bbox.max_lat),
+            Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
+        )
+
+        if criteria.cuisine:
+            kw = f"%{criteria.cuisine.strip()}%"
+            query = query.filter(
+                (Restaurant.cuisine_type.ilike(kw)) | (Restaurant.name.ilike(kw))
+            )
+
+        if criteria.budget:
+            query = query.filter(Restaurant.min_price <= criteria.budget)
+
+        if any(required_amenities.values()):
+            query = query.join(RestaurantAmenity, Restaurant.id == RestaurantAmenity.restaurant_id)
+            if required_amenities["has_parking"]:
+                query = query.filter(RestaurantAmenity.has_parking.is_(True))
+            if required_amenities["has_private_room"]:
+                query = query.filter(RestaurantAmenity.has_private_room.is_(True))
+            if required_amenities["pet_friendly"]:
+                query = query.filter(RestaurantAmenity.pet_friendly.is_(True))
+            if required_amenities["vegetarian_support"]:
+                query = query.filter(RestaurantAmenity.vegetarian_support.is_(True))
+            if required_amenities["has_outdoor"]:
+                query = query.filter(RestaurantAmenity.has_outdoor.is_(True))
+
+        candidates: List[Dict[str, Any]] = []
+        for r in query.all():
+            dist_km = calculate_haversine_distance(center_lat, center_lng, r.latitude, r.longitude)
+            if dist_km <= radius_km:
+                candidates.append({
+                    "id": r.id,
+                    "name": r.name,
+                    "address": r.address,
+                    "cuisine_type": r.cuisine_type,
+                    "min_price": r.min_price,
+                    "max_price": r.max_price,
+                    "rating": r.avg_rating or 0.0,
+                    "latitude": r.latitude,
+                    "longitude": r.longitude,
+                    "distance_km": round(dist_km, 2),
+                    "amenities": {
+                        "has_parking": r.amenities.has_parking if r.amenities else False,
+                        "has_private_room": r.amenities.has_private_room if r.amenities else False,
+                        "has_outdoor": r.amenities.has_outdoor if r.amenities else False,
+                        "pet_friendly": r.amenities.pet_friendly if r.amenities else False,
+                        "vegetarian_support": r.amenities.vegetarian_support if r.amenities else False,
+                    },
+                })
+
+        ranked = RankingEngine.rank_and_sort(
+            restaurants=candidates,
+            radius_km=radius_km,
+            target_cuisine=criteria.cuisine,
+            target_budget=criteria.budget,
+            required_amenities=required_amenities,
+        )
+
+        return {
+            "resolved_location": {
+                "latitude": center_lat,
+                "longitude": center_lng,
+                "radius_km": radius_km,
+                "source": loc_source,
+            },
+            "total_candidates": len(candidates),
+            "recommendations": ranked[:top_n],
+        }
