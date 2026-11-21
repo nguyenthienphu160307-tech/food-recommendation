@@ -721,13 +721,15 @@
         }
 
         function setSearchRadius(km) {
-            searchRadiusKm = km;
-            syncRadiusRibbonUI(km);
-            if (mapComponent) {
-                mapComponent.setSearchRadius(km, true, false);
-            }
-            renderVenues();
-        }
+                    searchRadiusKm = km;
+                    syncRadiusRibbonUI(km);
+                    if (mapComponent) {
+                        if (typeof mapComponent.setRadiusKm === 'function') {
+                            mapComponent.setRadiusKm(km);
+                        }
+                    }
+                    renderVenues();
+                }
 
         function toggleScrollSync() {
             scrollSyncEnabled = !scrollSyncEnabled;

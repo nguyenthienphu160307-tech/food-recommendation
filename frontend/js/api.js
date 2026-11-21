@@ -76,7 +76,7 @@ async function registerAccount() {
 
 // Cấu hình URL mặc định của Backend (FastAPI chạy ở port 8000)
 // filepath: frontend/api.js
-const API_BASE_URL = "http://127.0.0.1:8000/api";
+
 
 async function apiRequest(endpoint, method = "GET", bodyData = null) {
     const headers = {
@@ -168,4 +168,57 @@ const GeoAPI = {
 
     deleteRestaurant: (id) =>
         apiRequest(`/geo/restaurants/${id}`, "DELETE")
+};
+
+// ==========================================
+// 3. ADAPTER TƯƠNG THÍCH CHO index.html (window.FoodAPI)
+// ==========================================
+window.FoodAPI = {
+    auth: {
+        getUser: () => {
+            try {
+                const raw = localStorage.getItem("current_user");
+                return raw ? JSON.parse(raw) : null;
+            } catch (_) { return null; }
+        },
+        isLoggedIn: () => !!localStorage.getItem("access_token"),
+        logout: () => AuthAPI.logout()
+    },
+    profile: {
+        get: () => apiRequest("/users/profile", "GET")
+    },
+    restaurants: {
+        listAll: async () => {
+            const res = await apiRequest("/restaurants?limit=100", "GET");
+            return Array.isArray(res) ? res : (res.items || res.data || []);
+        },
+        categoryOf: (r) => {
+            const text = `${r.cuisine_type || ""} ${r.name || ""}`.toLowerCase();
+            if (text.includes("nướng") || text.includes("bbq")) return "bbq";
+            if (text.includes("lẩu")) return "hotpot";
+            if (text.includes("hải sản") || text.includes("ốc")) return "seafood";
+            if (text.includes("chay")) return "vegan";
+            if (text.includes("nhật") || text.includes("sushi")) return "japanese";
+            return "other";
+        },
+        toVenue: (r) => ({
+            id: r.id,
+            name: r.name,
+            address: r.address || "",
+            lat: parseFloat(r.latitude ?? r.lat ?? 10.776889),
+            lng: parseFloat(r.longitude ?? r.lng ?? 106.700806),
+            category: window.FoodAPI.restaurants.categoryOf(r),
+            cuisineLabel: r.cuisine_type || "Ẩm thực",
+            priceMin: r.min_price || 50000,
+            priceMax: r.max_price || 300000,
+            rating: r.avg_rating || 4.5,
+            reviews: r.total_reviews || 0,
+            parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
+            private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
+            vegetarian: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support),
+            openHours: r.open_hours || "08:00 - 22:00",
+            image: r.cover_image || r.image_url || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+            menu: r.menu || []
+        })
+    }
 };
