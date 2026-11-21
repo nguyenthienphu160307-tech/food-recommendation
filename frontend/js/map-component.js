@@ -141,6 +141,9 @@ class FoodAIMapComponent {
     }
 
     setUserPosition(lat, lng, triggerCallback = true, source = 'manual') {
+        lat = parseFloat(lat);
+        lng = parseFloat(lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
         this.currentCenter = [Number(lat), Number(lng)];
         if (this.userMarker) this.userMarker.setLatLng(this.currentCenter);
         if (this.radiusCircle) this.radiusCircle.setLatLng(this.currentCenter);
@@ -156,6 +159,9 @@ class FoodAIMapComponent {
     }
 
     flyToPosition(lat, lng, zoom = 14) {
+        lat = parseFloat(lat);
+        lng = parseFloat(lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
         this.setUserPosition(lat, lng, false);
         if (this.map) {
             this.map.flyTo([lat, lng], zoom, { duration: 1.0 });
@@ -205,7 +211,9 @@ class FoodAIMapComponent {
         this.venueMarkers.clear();
 
         venues.forEach((v) => {
-            if (!v.lat || !v.lng) return;
+            const lat = parseFloat(v.lat ?? v.latitude);
+            const lng = parseFloat(v.lng ?? v.longitude);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
             const shortPrice = `${Math.round((v.priceMin || 50000) / 1000)}k`;
 
             const icon = L.divIcon({
@@ -221,8 +229,7 @@ class FoodAIMapComponent {
                 popupAnchor: [0, -32]
             });
 
-            const marker = L.marker([v.lat, v.lng], { icon }).addTo(this.map);
-            const distText = v.distanceKm != null
+            const marker = L.marker([lat, lng], { icon }).addTo(this.map);                      const distText = v.distanceKm != null
                 ? (v.distanceKm < 1 ? `${Math.round(v.distanceKm * 1000)} m` : `${v.distanceKm.toFixed(2)} km`)
                 : '';
 

@@ -1121,16 +1121,16 @@
                     <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
                         Mở chỉ đường Google Maps
                     </a>
+                    <button type="button" onclick="handleWriteReview(${v.id})"
+                        style="height:40px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);cursor:pointer;font-weight:600;">
+                        ⭐ Đánh giá
+                    </button>
                     <button type="button" onclick="closeVenueModal()" style="height:40px;padding:0 18px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);cursor:pointer;font-weight:600;">
                         Đóng
                     </button>
                 </div>
             `;
             modal.classList.add('open');
-            <button type="button" onclick="handleWriteReview(${v.id})"
-                style="height:40px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);cursor:pointer;font-weight:600;">
-                ⭐ Đánh giá
-            </button>
         }
 
         function closeVenueModal() {
