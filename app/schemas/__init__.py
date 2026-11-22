@@ -44,6 +44,14 @@ from .menu import (
     RestaurantMenuResponse,
     RestaurantMenuWithItemsResponse,
 )
+from .image import (
+    RestaurantImageBase,
+    RestaurantImageCreate,
+    RestaurantImageBatchCreate,
+    RestaurantImageUpdate,
+    RestaurantImageResponse,
+    SetCoverResponse,
+)
 
 __all__ = [
     "SendOTPRequest",
@@ -82,4 +90,10 @@ __all__ = [
     "RestaurantMenuUpdate",
     "RestaurantMenuResponse",
     "RestaurantMenuWithItemsResponse",
+    "RestaurantImageBase",
+    "RestaurantImageCreate",
+    "RestaurantImageBatchCreate",
+    "RestaurantImageUpdate",
+    "RestaurantImageResponse",
+    "SetCoverResponse",
 ]
