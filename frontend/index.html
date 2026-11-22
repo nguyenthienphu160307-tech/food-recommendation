@@ -1241,6 +1241,85 @@
             background: var(--brand-red); color: #fff; border-color: var(--brand-red);
         }
 
+        /* ======================================================== */
+        /* PARSED CRITERIA CHIPS & BAR (TASK TE9C673)               */
+        /* ======================================================== */
+        .parsed-criteria-bar {
+            padding: 8px 14px; background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+            animation: fadeInCriteria 0.25s ease-out;
+        }
+        @keyframes fadeInCriteria {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .parsed-criteria-header {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .parsed-criteria-title {
+            font-size: 0.7rem; font-weight: 700; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-clear-all-chips {
+            background: transparent; border: none; color: var(--brand-red);
+            font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px;
+            border-radius: 4px; transition: background 0.15s;
+        }
+        .btn-clear-all-chips:hover {
+            background: rgba(220, 38, 38, 0.08); text-decoration: underline;
+        }
+        .parsed-chips-scroll {
+            display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+            padding-bottom: 2px; align-items: center;
+        }
+        .parsed-chips-scroll::-webkit-scrollbar { display: none; }
+
+        .parsed-chip {
+            white-space: nowrap; font-size: 0.75rem; font-weight: 500;
+            padding: 4px 8px 4px 10px; border-radius: 9999px;
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            color: var(--text-primary); display: inline-flex; align-items: center;
+            gap: 5px; flex-shrink: 0; transition: all 0.18s ease;
+        }
+        .parsed-chip.chip-location {
+            background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.3); color: #1d4ed8;
+        }
+        .parsed-chip.chip-cuisine {
+            background: rgba(249, 115, 22, 0.08); border-color: rgba(249, 115, 22, 0.3); color: #c2410c;
+        }
+        .parsed-chip.chip-budget {
+            background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); color: #047857;
+        }
+        .parsed-chip.chip-amenity {
+            background: rgba(168, 85, 247, 0.08); border-color: rgba(168, 85, 247, 0.3); color: #7e22ce;
+        }
+        .btn-remove-chip {
+            background: transparent; border: none; color: inherit;
+            font-size: 0.78rem; font-weight: 700; cursor: pointer;
+            padding: 0 3px; border-radius: 50%; line-height: 1;
+            display: inline-flex; align-items: center; justify-content: center;
+            opacity: 0.65; transition: all 0.15s ease;
+        }
+        .btn-remove-chip:hover {
+            opacity: 1; transform: scale(1.25); color: #dc2626;
+        }
+
+        /* In-bubble Parsed Criteria Box */
+        .chat-parsed-criteria-box {
+            background: var(--bg-subtle); border: 1px solid var(--border);
+            border-radius: 12px; padding: 8px 10px; margin: 8px 0;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+        .chat-parsed-header {
+            font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 5px;
+        }
+        .chat-parsed-chips-list {
+            display: flex; flex-wrap: wrap; gap: 6px;
+        }
+
         /* Sample Prompt Chips (NFR-02) */
         .sample-prompts-bar {
             padding: 8px 14px; background: var(--bg-surface);
