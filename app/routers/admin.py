@@ -19,6 +19,7 @@ Cung cấp các API:
 """
 
 from datetime import datetime
+import math
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, Field
@@ -26,8 +27,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.core.database import get_db
 from app.core.rbac import get_current_admin
-from app.models.user import User, UserProfile, Role, UserRole
+from app.models.user import User, UserProfile, Role, UserRole, RevokedToken
 from app.models.restaurant import Restaurant, RestaurantAmenity, RestaurantImage
+from app.models.search import SearchSession
 
 admin_router = APIRouter(
     prefix="/api/admin",
@@ -42,6 +44,7 @@ admin_router = APIRouter(
 
 class UpdateUserStatusRequest(BaseModel):
     status: str = Field(..., description="Trạng thái tài khoản: 'active' hoặc 'locked' (BR-07)")
+    reason: Optional[str] = Field(None, description="Lý do khóa hoặc mở khóa tài khoản")
 
 
 class UpdateRestaurantStatusRequest(BaseModel):
@@ -210,27 +213,36 @@ def get_dashboard_stats(
 
 
 # ==============================================================================
-# 2. QUẢN LÝ NGƯỜI DÙNG (USER MANAGEMENT)
+# 2. QUẢN LÝ NGƯỜI DÙNG & KHÓA/MỞ KHÓA TÀI KHOẢN (FR-14, BR-07 - TE9C678)
 # ==============================================================================
 
 @admin_router.get(
     "/users",
-    summary="Lấy danh sách người dùng kèm bộ lọc và tìm kiếm"
+    summary="Lấy danh sách người dùng kèm bộ lọc, tìm kiếm và phân trang (FR-14 - TE9C678)"
 )
 def get_users_list(
     keyword: Optional[str] = Query(None, description="Tìm theo tên, email hoặc SĐT"),
+    search: Optional[str] = Query(None, description="Từ khóa tìm kiếm (alias của keyword)"),
     status_filter: Optional[str] = Query(None, description="Lọc theo trạng thái: 'active', 'locked'"),
+    status: Optional[str] = Query(None, description="Trạng thái lọc (alias của status_filter)"),
     role_filter: Optional[str] = Query(None, description="Lọc theo vai trò: 'user', 'admin'"),
+    role: Optional[str] = Query(None, description="Vai trò lọc (alias của role_filter)"),
+    page: int = Query(1, ge=1, description="Số trang hiện tại (mặc định 1)"),
+    limit: int = Query(50, ge=1, le=100, description="Số lượng bản ghi mỗi trang (mặc định 50)"),
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ) -> Dict[str, Any]:
+    effective_kw = keyword or search
+    effective_status = status_filter or status
+    effective_role = role_filter or role
+
     query = db.query(User)
 
-    if status_filter:
-        query = query.filter(User.status == status_filter)
+    if effective_status:
+        query = query.filter(User.status == effective_status)
 
-    if keyword:
-        kw = f"%{keyword.strip()}%"
+    if effective_kw:
+        kw = f"%{effective_kw.strip()}%"
         query = query.outerjoin(UserProfile).filter(
             (User.email.ilike(kw)) |
             (User.phone_number.ilike(kw)) |
@@ -239,10 +251,19 @@ def get_users_list(
 
     users = query.order_by(User.id.desc()).all()
 
+    # Thống kê số phiên tìm kiếm đang active của từng user
+    session_counts = (
+        db.query(SearchSession.user_id, func.count(SearchSession.session_id))
+        .filter(SearchSession.status == "active", SearchSession.user_id.isnot(None))
+        .group_by(SearchSession.user_id)
+        .all()
+    )
+    active_sessions_map = {uid: count for uid, count in session_counts}
+
     result = []
     for u in users:
         user_roles = [ur.role.name for ur in u.user_roles if ur.role]
-        if role_filter and role_filter not in user_roles:
+        if effective_role and effective_role not in user_roles:
             continue
 
         result.append({
@@ -250,20 +271,40 @@ def get_users_list(
             "email": u.email,
             "phone_number": u.phone_number,
             "status": u.status,
+            "role": user_roles[0] if user_roles else "user",
             "roles": user_roles,
             "full_name": u.profile.full_name if u.profile else "Chưa cập nhật",
             "avatar_url": u.profile.avatar_url if u.profile else None,
             "default_address": u.profile.default_address if u.profile else None,
-            "created_at": u.created_at.strftime("%d/%m/%Y %H:%M") if u.created_at else None
+            "last_login": u.last_login.strftime("%d/%m/%Y %H:%M") if hasattr(u, "last_login") and u.last_login else None,
+            "created_at": u.created_at.strftime("%d/%m/%Y %H:%M") if u.created_at else None,
+            "updated_at": u.updated_at.strftime("%d/%m/%Y %H:%M") if u.updated_at else None,
+            "active_sessions_count": active_sessions_map.get(u.id, 0)
         })
+
+    total_items = len(result)
+    start_idx = (page - 1) * limit
+    end_idx = start_idx + limit
+    paginated_data = result[start_idx:end_idx]
+    total_pages = math.ceil(total_items / limit) if total_items > 0 else 1
 
     return {
         "status": "success",
-        "total": len(result),
-        "data": result
+        "total": total_items,
+        "data": paginated_data,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_pages": total_pages,
+            "total_items": total_items
+        }
     }
 
 
+@admin_router.patch(
+    "/users/{user_id}/status",
+    summary="Khóa hoặc Mở khóa tài khoản người dùng & Thu hồi phiên đăng nhập (FR-14, BR-07 - TE9C678)"
+)
 @admin_router.put(
     "/users/{user_id}/status",
     summary="Khóa hoặc Mở khóa tài khoản người dùng theo chính sách vi phạm (BR-07)"
@@ -274,7 +315,8 @@ def update_user_status(
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ) -> Dict[str, Any]:
-    if req.status not in ["active", "locked"]:
+    new_status = req.status.strip().lower()
+    if new_status not in ["active", "locked"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Trạng thái không hợp lệ. Chỉ chấp nhận 'active' hoặc 'locked'."
@@ -287,25 +329,58 @@ def update_user_status(
             detail=f"Không tìm thấy người dùng với ID={user_id}."
         )
 
-    if target_user.id == admin.id and req.status == "locked":
+    if target_user.id == admin.id and new_status == "locked":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Không thể tự khóa tài khoản Quản trị viên đang đăng nhập."
         )
 
     old_status = target_user.status
-    target_user.status = req.status
-    target_user.updated_at = datetime.utcnow()
+    target_user.status = new_status
+    now_utc = datetime.utcnow()
+    target_user.updated_at = now_utc
+
+    revoked_sessions_count = 0
+    if new_status == "locked":
+        # 1. Thu hồi và đóng toàn bộ SearchSession đang active của người dùng bị khóa
+        active_sessions = (
+            db.query(SearchSession)
+            .filter(SearchSession.user_id == target_user.id, SearchSession.status == "active")
+            .all()
+        )
+        revoked_sessions_count = len(active_sessions)
+        for s in active_sessions:
+            s.status = "closed"
+            s.closed_at = now_utc
+
+        # 2. Ghi nhận thu hồi Token đăng nhập vào bảng RevokedToken
+        revoke_record = RevokedToken(
+            token=f"revoked_user_all_tokens_{target_user.id}_{int(now_utc.timestamp())}",
+            token_type="access",
+            user_id=target_user.id,
+            revoked_at=now_utc
+        )
+        db.add(revoke_record)
+
     db.commit()
     db.refresh(target_user)
 
-    action_text = "Khóa" if req.status == "locked" else "Mở khóa"
+    action_text = "Khóa" if new_status == "locked" else "Mở khóa"
+    message = (
+        f"Đã khóa tài khoản #{user_id} ({target_user.email}) thành công theo quy tắc BR-07."
+        if new_status == "locked"
+        else f"Đã mở khóa tài khoản #{user_id} ({target_user.email}) thành công."
+    )
+
     return {
         "status": "success",
-        "message": f"Đã {action_text.lower()} tài khoản #{user_id} ({target_user.email}) thành công theo quy tắc BR-07.",
+        "message": message,
         "user_id": target_user.id,
         "old_status": old_status,
-        "new_status": target_user.status
+        "new_status": target_user.status,
+        "revoked_sessions_count": revoked_sessions_count,
+        "reason": req.reason,
+        "updated_at": target_user.updated_at.strftime("%d/%m/%Y %H:%M") if target_user.updated_at else None
     }
 
 

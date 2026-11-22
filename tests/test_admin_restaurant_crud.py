@@ -240,5 +240,9 @@ def run_restaurant_crud_tests():
     print("==================================================================")
 
 
+def test_admin_restaurant_crud():
+    run_restaurant_crud_tests()
+
+
 if __name__ == "__main__":
     run_restaurant_crud_tests()

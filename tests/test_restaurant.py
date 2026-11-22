@@ -212,5 +212,9 @@ def run_tests():
     print("\n>>> TẤT CẢ CÁC CA KIỂM THỬ TASK TSK-09 ĐỀU ĐẠT CHUẨN (ALL TESTS PASSED)! <<<")
 
 
+def test_restaurant():
+    run_tests()
+
+
 if __name__ == "__main__":
     run_tests()

@@ -99,5 +99,8 @@ def run_tests():
     db.close()
     print("\n>>> TẤT CẢ 5 KỊCH BẢN KIỂM THỬ ĐÃ THÀNH CÔNG VƯỢT QUA (ALL TESTS PASSED)! <<<")
 
+def test_auth():
+    run_tests()
+
 if __name__ == "__main__":
     run_tests()

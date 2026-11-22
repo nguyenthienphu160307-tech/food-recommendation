@@ -115,7 +115,7 @@ def _rule_based_extract(user_prompt: str, current_context: Optional[Dict[str, An
         budget = int(float(m_tr.group(1).replace(",", ".")) * 1000000)
 
     has_parking = ctx.get("has_parking")
-    if any(k in text for k in ["đỗ ô tô", "đậu xe", "bãi xe"]):
+    if any(k in text for k in ["đỗ ô tô", "đậu ô tô", "đậu xe", "đỗ xe", "bãi xe", "bãi đỗ", "gửi xe", "gửi ô tô", "chỗ đậu"]):
         has_parking = False if "không cần" in text else True
 
     return DiningCriteriaSchema(

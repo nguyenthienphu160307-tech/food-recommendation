@@ -42,6 +42,38 @@ def test_ui_and_auth_suite():
     assert ".btn-primary" in res_css.text
     print("-> File CSS Design System tải thành công (HTTP 200)")
 
+    # Đảm bảo tài khoản test sinhvien@example.com tồn tại
+    from app.core.database import SessionLocal
+    from app.core.security import hash_password
+    from app.models.user import User, UserProfile, Role, UserRole
+
+    db = SessionLocal()
+    user = db.query(User).filter_by(email="sinhvien@example.com").first()
+    if not user:
+        user = User(
+            email="sinhvien@example.com",
+            hashed_password=hash_password("password123"),
+            status="active",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        profile = UserProfile(user_id=user.id, full_name="Nguyễn Văn A")
+        db.add(profile)
+        user_role = db.query(Role).filter_by(name="user").first()
+        if not user_role:
+            user_role = Role(name="user", description="Người dùng chuẩn")
+            db.add(user_role)
+            db.commit()
+            db.refresh(user_role)
+        db.add(UserRole(user_id=user.id, role_id=user_role.id))
+        db.commit()
+    else:
+        user.hashed_password = hash_password("password123")
+        user.status = "active"
+        db.commit()
+    db.close()
+
     print("\n--- [TEST 5] Kiểm tra API Đăng nhập với Mật khẩu SAI (Kỳ vọng HTTP 401) ---")
     res_login_fail = client.post("/api/auth/login", json={
         "email": "sinhvien@example.com",

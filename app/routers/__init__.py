@@ -6,6 +6,7 @@ from .ai_search import router as ai_search_router
 from .users import router as users_router
 from .search import router as search_router
 from .admin import admin_router
+from .preferences import router as preferences_router
 
 __all__ = [
     "auth_router",
@@ -16,4 +17,5 @@ __all__ = [
     "users_router",
     "search_router",
     "admin_router",
+    "preferences_router",
 ]

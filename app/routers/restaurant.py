@@ -413,6 +413,7 @@ def filter_restaurants(
 
     return RestaurantFilterResponse(
         status="success",
+        total=pagination.total_items,
         data=items,
         applied_filters=AppliedFilterCriteria(
             keyword=keyword,

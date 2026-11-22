@@ -13,8 +13,9 @@ from app.schemas.auth import (
     StandardResponse,
     LoginRequest,
     LoginResponse,
+    TokensResponse,
 )
-from app.core.security import hash_password, verify_password, generate_otp
+from app.core.security import hash_password, verify_password, generate_otp, create_access_token
 from app.core.email import send_otp_email
 
 router = APIRouter(prefix="/api/auth", tags=["Xác thực & Tài khoản (Auth)"])
@@ -242,6 +243,8 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     full_name = user.profile.full_name if user.profile else "Người dùng"
     role_name = user.user_roles[0].role.name if user.user_roles and user.user_roles[0].role else "user"
 
+    access_token = create_access_token(user.id, claims={"email": user.email, "role": role_name})
+
     return LoginResponse(
         message="Đăng nhập thành công!",
         user=UserDataResponse(
@@ -253,5 +256,6 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
             role=role_name,
             created_at=user.created_at
         ),
-        token=f"mock-jwt-token-{user.id}-{int(datetime.utcnow().timestamp())}"
+        token=access_token,
+        tokens=TokensResponse(access_token=access_token)
     )

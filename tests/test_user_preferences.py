@@ -27,7 +27,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.core.database import SessionLocal
 from app.models import (
-    User, UserProfile, UserPreference, UserRole, Role, Restaurant, RestaurantAmenity
+    User, UserProfile, UserPreference, UserRole, Role, Restaurant, RestaurantAmenity, RestaurantImage
 )
 from app.core.security import hash_password
 
@@ -94,7 +94,13 @@ def ensure_test_fixtures():
                 has_private_room=True,
                 vegetarian_support=True
             )
-            db.add(amenity_veg)
+            img_veg = RestaurantImage(
+                restaurant_id=veg_place.id,
+                image_url="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800",
+                caption="Hum Vegetarian",
+                is_cover=True
+            )
+            db.add_all([amenity_veg, img_veg])
             db.commit()
 
         seafood_place = db.query(Restaurant).filter(Restaurant.name == "Hải Sản Biển Đông — Lê Văn Thọ").first()
@@ -120,7 +126,13 @@ def ensure_test_fixtures():
                 has_private_room=True,
                 vegetarian_support=False
             )
-            db.add(amenity_sea)
+            img_sea = RestaurantImage(
+                restaurant_id=seafood_place.id,
+                image_url="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800",
+                caption="Hải Sản Biển Đông",
+                is_cover=True
+            )
+            db.add_all([amenity_sea, img_sea])
             db.commit()
 
     finally:
@@ -298,6 +310,10 @@ def run_user_preferences_tests():
     print("==================================================================")
     print(">>> TẤT CẢ 9 BÀI KIỂM THỬ USER PREFERENCES ĐỀU PASS THÀNH CÔNG 100%! <<<")
     print("==================================================================")
+
+
+def test_user_preferences():
+    run_user_preferences_tests()
 
 
 if __name__ == "__main__":

@@ -36,9 +36,18 @@ def run_map_feature_tests():
     print("==================================================================")
 
     map_js_path = os.path.join(FRONTEND_DIR, "map-component.js")
-    map_css_path = os.path.join(FRONTEND_DIR, "map-component.css")
+    if not os.path.exists(map_js_path):
+        map_js_path = os.path.join(FRONTEND_DIR, "js", "map-component.js")
+
+    map_css_path = os.path.join(FRONTEND_DIR, "css", "map-component.css")
+    if not os.path.exists(map_css_path):
+        map_css_path = os.path.join(FRONTEND_DIR, "map-component.css")
+
     index_path = os.path.join(FRONTEND_DIR, "index.html")
-    venues_js_path = os.path.join(FRONTEND_DIR, "venues-data.js")
+
+    venues_js_path = os.path.join(FRONTEND_DIR, "js", "venues-data.js")
+    if not os.path.exists(venues_js_path):
+        venues_js_path = os.path.join(FRONTEND_DIR, "venues-data.js")
 
     for p in (map_js_path, map_css_path, index_path, venues_js_path):
         assert os.path.exists(p), f"Thiếu file bắt buộc: {p}"
@@ -114,6 +123,10 @@ def run_map_feature_tests():
     print("==================================================================")
     print(">>> TẤT CẢ 5 NHÓM KIỂM THỬ BẢN ĐỒ ĐỀU PASS THÀNH CÔNG 100%! <<<")
     print("==================================================================")
+
+
+def test_map_markers_radius_popup():
+    run_map_feature_tests()
 
 
 if __name__ == "__main__":

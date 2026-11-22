@@ -49,5 +49,9 @@ def run_prompt_schema_tests():
     print("\n>>> TẤT CẢ KỊCH BẢN KIỂM THỬ TE9C65A ĐỀU VƯỢT QUA (ALL PASSED)! <<<")
 
 
+def test_prompt_schema():
+    run_prompt_schema_tests()
+
+
 if __name__ == "__main__":
     run_prompt_schema_tests()

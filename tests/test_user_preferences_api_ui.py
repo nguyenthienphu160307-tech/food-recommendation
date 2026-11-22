@@ -231,5 +231,9 @@ def run_te9c64e_tests():
     print("==================================================================")
 
 
+def test_te9c64e_preferences():
+    run_te9c64e_tests()
+
+
 if __name__ == "__main__":
     run_te9c64e_tests()

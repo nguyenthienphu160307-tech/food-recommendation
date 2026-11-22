@@ -16,6 +16,7 @@ from app.routers import (
     ai_search_router,
     search_router,
     admin_router,
+    preferences_router,
 )
 
 # Tự động tạo bảng CSDL
@@ -45,11 +46,13 @@ app.include_router(geo_router)
 app.include_router(ai_search_router)
 app.include_router(search_router)
 app.include_router(admin_router)
+app.include_router(preferences_router)
 
 # Mount thư mục frontend để chạy trực tiếp HTML trên cổng 8000
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
 if os.path.isdir(FRONTEND_DIR):
     app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
 
 # Các route phục vụ Giao diện Người dùng (Frontend UI - TSK-12)

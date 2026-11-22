@@ -1,4 +1,12 @@
-from .user import User, UserProfile, Role, UserRole, OTPStorage
+from .user import (
+    User,
+    UserProfile,
+    Role,
+    UserRole,
+    OTPStorage,
+    RevokedToken,
+    UserPreference,
+)
 from .restaurant import (
     Restaurant,
     RestaurantAmenity,
@@ -7,7 +15,13 @@ from .restaurant import (
     RestaurantImage,
 )
 from .search import SearchSession, SearchMessage, SearchCriteria
-from app.models.restaurant import Restaurant
+from .interaction import (
+    RestaurantReview,
+    UserFavorite,
+    Notification,
+    GeoRestaurant,
+)
+
 __all__ = [
     "User",
     "UserProfile",
@@ -15,6 +29,7 @@ __all__ = [
     "UserRole",
     "OTPStorage",
     "RevokedToken",
+    "UserPreference",
     "Restaurant",
     "RestaurantAmenity",
     "RestaurantMenu",
@@ -23,4 +38,8 @@ __all__ = [
     "SearchSession",
     "SearchMessage",
     "SearchCriteria",
+    "RestaurantReview",
+    "UserFavorite",
+    "Notification",
+    "GeoRestaurant",
 ]

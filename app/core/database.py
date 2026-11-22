@@ -20,7 +20,10 @@ except Exception as e:
     print(f"[CANH BAO] Khong the tu dong khoi tao database: {e}")
 
 # 3. Khởi tạo engine kết nối trực tiếp
-engine = create_engine(DATABASE_URL)
+if DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 
 # 4. Quản lý Session phiên làm việc
 SessionLocal = sessionmaker(
