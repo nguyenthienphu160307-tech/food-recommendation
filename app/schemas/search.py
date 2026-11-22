@@ -13,6 +13,7 @@ class SessionResponse(BaseModel):
     session_id: int
     user_id: Optional[int] = None
     status: str
+    current_state: str = "SESSION_IDLE"
     started_at: datetime
     total_messages: int = 0
 

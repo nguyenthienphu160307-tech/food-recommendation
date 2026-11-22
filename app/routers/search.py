@@ -4,11 +4,20 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.models.search import SearchCriteria, SearchSession, SearchMessage
 from app.services.chat_session_service import ChatSessionService
 from app.services.geocoding_service import GeocodingService
 from app.services.privacy_service import LocationPrivacyService
 from app.services.llm_service import LLMService
-from app.schemas.ai_search import LLMParseAndSaveRequest, LLMParseAndSaveResponse
+from app.services.multi_turn_state_machine import MultiTurnStateMachine, SearchSessionState
+from app.schemas.ai_search import (
+    LLMParseAndSaveRequest,
+    LLMParseAndSaveResponse,
+    MultiTurnChatRequest,
+    MultiTurnChatResponse,
+    SessionStateResponse,
+    DiningCriteriaSchema,
+)
 from app.schemas.search import (
     CreateSessionRequest,
     SessionResponse,
@@ -49,6 +58,7 @@ def create_session(
         session_id=session_obj.session_id,
         user_id=session_obj.user_id,
         status=session_obj.status,
+        current_state=getattr(session_obj, "current_state", "SESSION_IDLE") or "SESSION_IDLE",
         started_at=session_obj.started_at,
         total_messages=0
     )
@@ -76,6 +86,7 @@ def get_session_history(
             session_id=session_obj.session_id,
             user_id=session_obj.user_id,
             status=session_obj.status,
+            current_state=getattr(session_obj, "current_state", "SESSION_IDLE") or "SESSION_IDLE",
             started_at=session_obj.started_at,
             total_messages=len(messages)
         ),
@@ -161,6 +172,7 @@ def list_sessions(
             session_id=s.session_id,
             user_id=s.user_id,
             status=s.status,
+            current_state=getattr(s, "current_state", "SESSION_IDLE") or "SESSION_IDLE",
             started_at=s.started_at,
             total_messages=len(s.messages) if s.messages else 0
         )
@@ -388,6 +400,10 @@ def parse_and_save_session_message(
     return LLMParseAndSaveResponse(**result)
 
 
+
+
+
+
 @router.post(
     "/parse-and-save",
     response_model=LLMParseAndSaveResponse,
@@ -416,4 +432,108 @@ def parse_and_save_auto_session(
         user_id=payload.user_id,
     )
     return LLMParseAndSaveResponse(**result)
+
+
+# =====================================================================
+# MULTI-TURN STATE MACHINE & CONTEXT MANAGER (TASK TE9C669 / HÌNH 8.2)
+# =====================================================================
+
+@router.post(
+    "/sessions/{session_id}/multi-turn",
+    response_model=MultiTurnChatResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Xử lý câu hỏi tiếp theo đa lượt theo State Diagram Hình 8.2 (TE9C669)"
+)
+def process_multi_turn_chat(
+    session_id: int,
+    payload: MultiTurnChatRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    API Hội thoại nhiều lượt (Multi-turn State Machine - TE9C669 / Hình 8.2 SRS):
+    - Nhận câu hỏi tiếp nối của người dùng (VD: 'Quán nào rẻ hơn?', 'Đổi sang Quận 3', 'Có phòng riêng không?').
+    - Thực thi vòng đời State Diagram:
+      + State 6 (Result Presented) -> State 7 (Context Refining): Hợp nhất tiêu chí mới vào SearchCriteria hiện tại.
+      + State 2 (Parsing Intent): Phân tích NLP trích xuất thực thể mới.
+      + State 3 (Spatial Filtering): Quét bán kính GPS và lọc tiện ích.
+      + State 4 (Query Relaxation): Tự động nới lỏng bán kính/ngân sách khi 0 kết quả.
+      + State 5 (Ranking & AI): Xếp hạng độ khớp, sinh lý do đề xuất và lưu DB.
+      + State 6 (Result Presented): Trả về danh sách quán và trạng thái mới.
+      + Nếu người dùng muốn kết thúc -> State 8 (Session Closed).
+    """
+    result = MultiTurnStateMachine.process_turn(
+        session_id=session_id,
+        user_message=payload.message,
+        db=db,
+        user_id=payload.user_id,
+        provider=payload.provider or "auto",
+    )
+    return MultiTurnChatResponse(**result)
+
+
+@router.get(
+    "/sessions/{session_id}/state",
+    response_model=SessionStateResponse,
+    summary="Truy vấn trạng thái hiện tại trong State Machine & lịch sử tiêu chí (TE9C669)"
+)
+def get_session_state_machine_info(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Lấy thông tin trạng thái State Machine hiện tại của phiên hội thoại (Hình 8.2):
+    - Trạng thái hiện tại: SESSION_IDLE, RESULT_PRESENTED, CONTEXT_REFINING, SESSION_CLOSED...
+    - Tổng số lượt tin nhắn đã trao đổi.
+    - Toàn bộ lịch sử các phiên bản SearchCriteria đã được merge qua các lượt chat.
+    """
+    session = ChatSessionService.get_session(db, session_id)
+    current_st = MultiTurnStateMachine.get_current_state(session)
+    messages = ChatSessionService.get_session_messages(db, session_id)
+
+    # Lấy toàn bộ tiêu chí đã lưu theo thứ tự thời gian tăng dần
+    criteria_list = (
+        db.query(SearchCriteria)
+        .filter(SearchCriteria.session_id == session_id)
+        .order_by(SearchCriteria.created_at.asc())
+        .all()
+    )
+
+    history = []
+    for c in criteria_list:
+        other_d = {}
+        if c.other_conditions:
+            try:
+                other_d = json.loads(c.other_conditions)
+            except Exception:
+                pass
+        history.append({
+            "criteria_id": c.criteria_id,
+            "location_text": c.location_text,
+            "latitude": c.latitude,
+            "longitude": c.longitude,
+            "cuisine": c.cuisine,
+            "budget": c.budget,
+            "has_parking": c.has_parking,
+            "other_conditions": other_d,
+            "is_obfuscated": c.is_obfuscated,
+            "created_at": c.created_at,
+        })
+
+    latest = history[-1] if history else None
+
+    return SessionStateResponse(
+        session_id=session.session_id,
+        current_state=current_st.value,
+        status=session.status,
+        started_at=session.started_at,
+        total_messages=len(messages),
+        total_criteria_versions=len(history),
+        latest_criteria=latest,
+        criteria_history=history,
+    )
+
+
+
+
+
 

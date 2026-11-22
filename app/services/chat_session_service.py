@@ -64,6 +64,7 @@ class ChatSessionService:
             return session_obj
 
         session_obj.status = "closed"
+        session_obj.current_state = "SESSION_CLOSED"
         db.commit()
         db.refresh(session_obj)
 

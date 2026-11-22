@@ -58,6 +58,10 @@ from .ai_search import (
     OtherConditionsSchema,
     LLMParseAndSaveRequest,
     LLMParseAndSaveResponse,
+    MultiTurnChatRequest,
+    MultiTurnChatResponse,
+    MultiTurnRestaurantItem,
+    SessionStateResponse,
 )
 
 __all__ = [
