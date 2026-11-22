@@ -1,6 +1,6 @@
 import json
 from typing import List, Optional
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -21,7 +21,11 @@ from app.schemas.ai_search import (
 from app.schemas.search import (
     CreateSessionRequest,
     SessionResponse,
+    CloseSessionRequest,
     CloseSessionResponse,
+    SessionStatusResponse,
+    TimeoutCleanupRequest,
+    TimeoutCleanupResponse,
     SendMessageRequest,
     MessageResponse,
     SessionHistoryResponse,
@@ -137,36 +141,126 @@ def send_message(
 @router.put(
     "/sessions/{session_id}/close",
     response_model=CloseSessionResponse,
-    summary="Đóng phiên hội thoại chat (status='closed')"
+    summary="Đóng phiên hội thoại chat (status='closed' - PUT)"
+)
+@router.post(
+    "/sessions/{session_id}/close",
+    response_model=CloseSessionResponse,
+    summary="Đóng phiên hội thoại chat (status='closed' - POST)"
 )
 def close_session(
     session_id: int,
+    payload: Optional[CloseSessionRequest] = None,
     db: Session = Depends(get_db)
 ):
     """
-    Chuyển trạng thái phiên sang 'closed':
-    - Được gọi khi người dùng đã tìm được quán ưng ý hoặc kết thúc phiên hội thoại.
+    Chuyển trạng thái phiên sang 'closed' (TE9C66C):
+    - Được gọi khi người dùng đã tìm được quán ưng ý, chủ động kết thúc hoặc hết thời gian chờ (Timeout).
+    - Cập nhật status='closed', current_state='SESSION_CLOSED', ended_at và closed_reason.
+    - Hỗ trợ ghi nhận selected_restaurant_id nếu người dùng chốt quán.
     """
-    session_obj = ChatSessionService.close_session(db, session_id)
+    reason = payload.reason if payload and payload.reason else "user_ended"
+    selected_restaurant_id = payload.selected_restaurant_id if payload else None
+    note = payload.note if payload else None
+
+    session_obj = ChatSessionService.close_session(
+        db=db,
+        session_id=session_id,
+        reason=reason,
+        selected_restaurant_id=selected_restaurant_id,
+        note=note,
+    )
+
+    total_msgs = len(session_obj.messages) if session_obj.messages else 0
+    duration_sec = None
+    if session_obj.ended_at and session_obj.started_at:
+        duration_sec = round((session_obj.ended_at - session_obj.started_at).total_seconds(), 2)
+
     return CloseSessionResponse(
         session_id=session_obj.session_id,
         status=session_obj.status,
-        message=f"Phiên chat #{session_id} đã được đóng thành công."
+        current_state=getattr(session_obj, "current_state", "SESSION_CLOSED") or "SESSION_CLOSED",
+        started_at=session_obj.started_at,
+        ended_at=session_obj.ended_at,
+        duration_seconds=duration_sec,
+        closed_reason=session_obj.closed_reason or reason,
+        selected_restaurant_id=selected_restaurant_id,
+        total_messages=total_msgs,
+        message=f"Phiên chat #{session_id} đã được đóng thành công (lý do: {session_obj.closed_reason or reason})."
     )
+
+
+@router.get(
+    "/sessions/{session_id}/status",
+    response_model=SessionStatusResponse,
+    summary="Truy vấn trạng thái phiên tìm kiếm và thông số hoạt động (TE9C66C)"
+)
+def get_session_status(
+    session_id: int,
+    timeout_minutes: Optional[int] = Query(None, description="Ngưỡng phút tùy chọn để kiểm tra timeout"),
+    db: Session = Depends(get_db)
+):
+    """
+    Truy vấn trạng thái chi tiết của phiên tìm kiếm:
+    - Kiểm tra xem phiên đang active hay closed.
+    - Tự động áp dụng đóng phiên nếu đã vượt quá thời gian chờ (Timeout).
+    - Cung cấp thời gian không hoạt động (idle_seconds) và thời lượng hoạt động (duration_seconds).
+    """
+    status_info = ChatSessionService.get_session_status(db, session_id, timeout_minutes=timeout_minutes)
+    return SessionStatusResponse(**status_info)
+
+
+@router.post(
+    "/sessions/cleanup-timeout",
+    response_model=TimeoutCleanupResponse,
+    summary="Quét và tự động đóng các phiên tìm kiếm hết thời gian chờ (TE9C66C)"
+)
+def cleanup_expired_sessions(
+    payload: Optional[TimeoutCleanupRequest] = None,
+    timeout_minutes: Optional[int] = Query(None, description="Ngưỡng phút tính timeout"),
+    db: Session = Depends(get_db)
+):
+    """
+    Quét toàn bộ các phiên đang ở trạng thái 'active':
+    - Nếu thời gian không hoạt động vượt quá ngưỡng (mặc định 30 phút), tự động cập nhật:
+      + status='closed'
+      + current_state='SESSION_CLOSED'
+      + closed_reason='timeout'
+      + ended_at=now
+    - Trả về danh sách và số lượng phiên đã tự động đóng.
+    """
+    mins = (payload.timeout_minutes if payload and payload.timeout_minutes else None) or timeout_minutes
+    result = ChatSessionService.cleanup_expired_sessions(db, timeout_minutes=mins)
+    return TimeoutCleanupResponse(**result)
 
 
 @router.get(
     "/sessions",
     response_model=List[SessionResponse],
-    summary="Lấy danh sách các phiên chat gần đây"
+    summary="Lấy danh sách các phiên chat gần đây (TE9C66C)"
 )
 def list_sessions(
     user_id: Optional[int] = None,
-    limit: int = 20,
+    status: Optional[str] = Query(None, description="Lọc trạng thái: 'active', 'closed' hoặc để trống (tất cả)"),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    auto_timeout_check: bool = Query(True, description="Tự động quét và đóng các phiên quá hạn trước khi trả về"),
     db: Session = Depends(get_db)
 ):
-    """Lấy danh sách các phiên chat gần nhất (hỗ trợ lọc theo user_id)"""
-    sessions = ChatSessionService.list_sessions(db, user_id=user_id, limit=limit)
+    """
+    Lấy danh sách các phiên chat gần nhất:
+    - Hỗ trợ lọc theo user_id (User hoặc Khách).
+    - Hỗ trợ lọc theo trạng thái: 'active' (đang mở) hoặc 'closed' (đã đóng).
+    - Phân trang bằng offset và limit.
+    """
+    sessions = ChatSessionService.list_sessions(
+        db,
+        user_id=user_id,
+        status=status,
+        limit=limit,
+        offset=offset,
+        auto_timeout_check=auto_timeout_check
+    )
     return [
         SessionResponse(
             session_id=s.session_id,
@@ -174,6 +268,8 @@ def list_sessions(
             status=s.status,
             current_state=getattr(s, "current_state", "SESSION_IDLE") or "SESSION_IDLE",
             started_at=s.started_at,
+            ended_at=s.ended_at,
+            closed_reason=s.closed_reason,
             total_messages=len(s.messages) if s.messages else 0
         )
         for s in sessions

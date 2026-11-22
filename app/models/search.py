@@ -18,6 +18,8 @@ class SearchSession(Base):
     status = Column(String(20), default="active", nullable=False)  # 'active', 'closed'
     current_state = Column(String(50), default="SESSION_IDLE", nullable=False)  # Multi-turn State Machine (TE9C669 / Hình 8.2)
     started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    ended_at = Column(DateTime, nullable=True)  # Thời điểm đóng phiên hoặc timeout (TE9C66C)
+    closed_reason = Column(String(50), nullable=True)  # Lý do đóng: 'user_ended', 'timeout', 'restaurant_selected', 'manual' (TE9C66C)
 
     # Quan hệ với bảng Users (1 User có nhiều phiên tìm kiếm)
     user = relationship("User", back_populates="search_sessions")

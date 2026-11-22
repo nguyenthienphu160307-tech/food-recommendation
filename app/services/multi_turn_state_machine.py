@@ -136,6 +136,10 @@ class MultiTurnStateMachine:
         session.current_state = target_state.value
         if target_state == SearchSessionState.SESSION_CLOSED:
             session.status = "closed"
+            if not session.ended_at:
+                session.ended_at = datetime.utcnow()
+            if not session.closed_reason:
+                session.closed_reason = "manual"
 
         db.commit()
         db.refresh(session)
@@ -462,7 +466,17 @@ class MultiTurnStateMachine:
             )
 
         current_st = cls.get_current_state(session)
-        if current_st == SearchSessionState.SESSION_CLOSED:
+        from app.services.chat_session_service import ChatSessionService
+
+        # Kiểm tra tự động timeout khi có truy cập mới (TE9C66C)
+        if session.status == "active" and ChatSessionService.is_session_timed_out(session):
+            ChatSessionService.check_and_apply_timeout(db, session)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phiên tìm kiếm này đã hết thời gian chờ (Timeout) và đã tự động đóng. Vui lòng khởi tạo phiên mới.",
+            )
+
+        if current_st == SearchSessionState.SESSION_CLOSED or session.status == "closed":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Phiên chat này đã kết thúc (closed). Không thể gửi thêm tin nhắn mới.",
@@ -480,7 +494,7 @@ class MultiTurnStateMachine:
             "kết thúc", "ket thuc", "đóng phiên", "dong phien", "tạm biệt", "tam biet", "chọn được quán rồi", "cảm ơn bạn nhé"
         ])
         if is_closing_intent:
-            cls.transition_to(session, SearchSessionState.SESSION_CLOSED, db)
+            ChatSessionService.close_session(db, session_id, reason="user_ended")
             # Lưu tin nhắn kết thúc
             user_msg = SearchMessage(session_id=session_id, sender_type="user", content=clean_msg, created_at=datetime.utcnow())
             ai_msg = SearchMessage(
