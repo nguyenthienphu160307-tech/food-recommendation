@@ -3369,6 +3369,44 @@
                     </div>
                 </div>
 
+                <!-- TSK-51: Khối Đánh giá & Nhận xét từ khách hàng (FR-10, BR-06) -->
+                <div style="margin-top:16px;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">
+                        <h4 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;display:flex;align-items:center;gap:6px;">
+                            <span>⭐ Đánh giá &amp; Nhận xét</span>
+                        </h4>
+                        <span id="modal-review-stats-badge" style="font-size:0.75rem;font-weight:600;color:#ca8a04;background:rgba(234,179,8,0.12);padding:3px 10px;border-radius:999px;">
+                            ★ ${Number(v.rating).toFixed(1)} (${v.reviews || 0} đánh giá)
+                        </span>
+                    </div>
+
+                    <!-- Form gửi hoặc chỉnh sửa đánh giá -->
+                    <div class="review-form-card" id="modal-review-form-box" style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <span style="font-size:0.83rem;font-weight:600;color:var(--text-primary);" id="review-form-title">Chấm điểm &amp; Viết nhận xét</span>
+                            <div class="star-rating-selector" id="star-rating-selector" style="display:flex;gap:4px;cursor:pointer;">
+                                <span class="star-btn active" data-val="1" onclick="selectStarRating(1)" title="1 sao">★</span>
+                                <span class="star-btn active" data-val="2" onclick="selectStarRating(2)" title="2 sao">★</span>
+                                <span class="star-btn active" data-val="3" onclick="selectStarRating(3)" title="3 sao">★</span>
+                                <span class="star-btn active" data-val="4" onclick="selectStarRating(4)" title="4 sao">★</span>
+                                <span class="star-btn active" data-val="5" onclick="selectStarRating(5)" title="5 sao">★</span>
+                            </div>
+                        </div>
+                        <textarea id="review-comment-input" placeholder="Chia sẻ cảm nhận của bạn về hương vị món ăn, không gian, phục vụ..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.83rem;font-family:inherit;background:var(--bg-surface);color:var(--text-primary);resize:vertical;"></textarea>
+                        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                            <button type="button" id="btn-cancel-edit-review" onclick="cancelEditReview()" style="display:none;background:none;border:none;font-size:0.78rem;color:var(--text-muted);cursor:pointer;">Hủy sửa</button>
+                            <button type="button" class="btn-action btn-primary" onclick="submitRestaurantReview(${v.id})" id="btn-submit-review" style="padding:6px 16px;border-radius:6px;font-size:0.8rem;font-weight:600;">
+                                Gửi đánh giá
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách các đánh giá đã có -->
+                    <div id="modal-reviews-list" style="display:flex;flex-direction:column;gap:10px;max-height:240px;overflow-y:auto;padding-right:4px;">
+                        <div class="skeleton-shimmer" style="height:45px;border-radius:8px;"></div>
+                    </div>
+                </div>
+
                 <div style="display:flex;gap:10px;">
                     <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:42px;justify-content:center;text-decoration:none;border-radius:8px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
@@ -3388,6 +3426,8 @@
             // Đồng bộ thực đơn thật & thư viện ảnh từ CSDL MySQL (TSK-27, TSK-28 & TSK-30)
             loadRestaurantMenuInModal(v.id, v.menu);
             loadRestaurantImagesInModal(v.id, v.image, v.name);
+            // TSK-51: Nạp danh sách đánh giá & nhận xét của nhà hàng (FR-10)
+            loadRestaurantReviewsInModal(v.id);
         }
 
         /**
@@ -3593,6 +3633,218 @@
             // Fallback nếu chỉ có ảnh bìa
             currentLightboxImages = [{ image_url: coverUrl, caption: restaurantName }];
             galleryRow.style.display = 'none';
+        }
+
+        /**
+         * TSK-51 / FR-10: Quản lý Đánh giá (1-5 sao), Nhận xét & Tự động tính lại avg_rating
+         */
+        let currentSelectedStar = 5;
+        let currentEditingReviewId = null;
+        let currentModalRestaurantId = null;
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function selectStarRating(stars) {
+            currentSelectedStar = stars;
+            const starBtns = document.querySelectorAll('#star-rating-selector .star-btn');
+            starBtns.forEach(btn => {
+                const val = parseInt(btn.getAttribute('data-val') || '1', 10);
+                if (val <= stars) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function cancelEditReview() {
+            currentEditingReviewId = null;
+            selectStarRating(5);
+            const commentInput = document.getElementById('review-comment-input');
+            if (commentInput) commentInput.value = '';
+            const btnSubmit = document.getElementById('btn-submit-review');
+            if (btnSubmit) btnSubmit.innerText = 'Gửi đánh giá';
+            const btnCancel = document.getElementById('btn-cancel-edit-review');
+            if (btnCancel) btnCancel.style.display = 'none';
+            const titleEl = document.getElementById('review-form-title');
+            if (titleEl) titleEl.innerText = 'Chấm điểm & Viết nhận xét';
+        }
+
+        async function loadRestaurantReviewsInModal(restaurantId) {
+            currentModalRestaurantId = restaurantId;
+            cancelEditReview();
+            const listEl = document.getElementById('modal-reviews-list');
+            const statsBadge = document.getElementById('modal-review-stats-badge');
+            if (!listEl) return;
+
+            let authUser = null;
+            try {
+                const rawAuth = localStorage.getItem('smart_dining_user');
+                if (rawAuth) authUser = JSON.parse(rawAuth);
+            } catch (_) {}
+
+            // 1. Kiểm tra xem người dùng hiện tại đã từng đánh giá quán này chưa (BR-06)
+            if (authUser && authUser.id) {
+                try {
+                    const myRes = await fetch(`/api/reviews/restaurant/${restaurantId}/my-review?user_id=${authUser.id}`);
+                    if (myRes.ok) {
+                        const myRev = await myRes.json();
+                        if (myRev && myRev.id) {
+                            currentEditingReviewId = myRev.id;
+                            selectStarRating(myRev.rating || 5);
+                            const commentInput = document.getElementById('review-comment-input');
+                            if (commentInput) commentInput.value = myRev.comment || '';
+                            const btnSubmit = document.getElementById('btn-submit-review');
+                            if (btnSubmit) btnSubmit.innerText = 'Cập nhật đánh giá';
+                            const btnCancel = document.getElementById('btn-cancel-edit-review');
+                            if (btnCancel) btnCancel.style.display = 'inline-block';
+                            const titleEl = document.getElementById('review-form-title');
+                            if (titleEl) titleEl.innerText = 'Đánh giá của bạn (Chỉnh sửa theo BR-06)';
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            // 2. Tải danh sách đánh giá của nhà hàng
+            try {
+                const res = await fetch(`/api/reviews/restaurant/${restaurantId}?limit=20`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (statsBadge) {
+                        statsBadge.innerText = `★ ${Number(data.avg_rating).toFixed(1)} (${data.total_reviews} đánh giá)`;
+                    }
+
+                    if (!data.items || data.items.length === 0) {
+                        listEl.innerHTML = `
+                            <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.83rem;">
+                                <span>Chưa có nhận xét nào. Hãy là người đầu tiên trải nghiệm và chấm điểm quán!</span>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    listEl.innerHTML = data.items.map(r => {
+                        const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                        const userName = (r.user && r.user.full_name) || 'Người dùng';
+                        const userAvatar = (r.user && r.user.avatar_url) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
+                        const timeAgo = formatTimeAgo(r.created_at);
+                        const isMyReview = authUser && authUser.id === r.user_id;
+
+                        return `
+                            <div class="review-card-item">
+                                <div class="review-card-header">
+                                    <div class="review-card-user">
+                                        <img src="${userAvatar}" alt="${escapeHtml(userName)}">
+                                        <span>${escapeHtml(userName)} ${isMyReview ? '<span style="font-size:0.72rem;color:var(--brand-primary);font-weight:700;">(Bạn)</span>' : ''}</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span class="review-stars">${starsStr}</span>
+                                        <span class="review-card-time">${timeAgo}</span>
+                                    </div>
+                                </div>
+                                ${r.comment ? `<div class="review-card-comment">${escapeHtml(r.comment)}</div>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                    return;
+                }
+            } catch (err) {
+                console.warn('[Review API] Lỗi tải đánh giá:', err);
+            }
+
+            listEl.innerHTML = `
+                <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.83rem;">
+                    <span>Chưa có nhận xét nào cho quán này.</span>
+                </div>
+            `;
+        }
+
+        async function submitRestaurantReview(restaurantId) {
+            let authUser = null;
+            try {
+                const rawAuth = localStorage.getItem('smart_dining_user');
+                if (rawAuth) authUser = JSON.parse(rawAuth);
+            } catch (_) {}
+
+            if (!authUser || !authUser.id) {
+                alert('Vui lòng đăng nhập tài khoản để gửi đánh giá và nhận xét (Quy tắc BR-01).');
+                if (typeof openAuthModal === 'function') openAuthModal();
+                return;
+            }
+
+            const commentInput = document.getElementById('review-comment-input');
+            const comment = commentInput ? commentInput.value.trim() : '';
+            const btnSubmit = document.getElementById('btn-submit-review');
+
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerText = 'Đang lưu...';
+            }
+
+            try {
+                let res;
+                if (currentEditingReviewId) {
+                    // Cập nhật đánh giá cũ theo BR-06
+                    res = await fetch(`/api/reviews/${currentEditingReviewId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: authUser.id,
+                            rating: currentSelectedStar,
+                            comment: comment
+                        })
+                    });
+                } else {
+                    // Tạo đánh giá mới
+                    res = await fetch('/api/reviews', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            restaurant_id: restaurantId,
+                            user_id: authUser.id,
+                            rating: currentSelectedStar,
+                            comment: comment
+                        })
+                    });
+                }
+
+                if (res.ok) {
+                    alert(currentEditingReviewId ? 'Cập nhật đánh giá thành công!' : 'Đã gửi đánh giá thành công! Cảm ơn bạn đã đóng góp cho cộng đồng.');
+                    await loadRestaurantReviewsInModal(restaurantId);
+                    // Cập nhật điểm và số đánh giá ngoài thẻ quán
+                    const targetVenue = venues.find(v => v.id === restaurantId);
+                    if (targetVenue) {
+                        try {
+                            const vRes = await fetch(`/api/restaurants/${restaurantId}`);
+                            if (vRes.ok) {
+                                const vData = await vRes.json();
+                                targetVenue.rating = vData.avg_rating;
+                                targetVenue.reviews = vData.total_reviews;
+                                renderVenues();
+                            }
+                        } catch (_) {}
+                    }
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    alert(errData.detail || 'Không thể lưu đánh giá. Vui lòng kiểm tra lại.');
+                }
+            } catch (err) {
+                console.warn('Lỗi gửi đánh giá:', err);
+                alert('Có lỗi kết nối khi gửi đánh giá.');
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerText = currentEditingReviewId ? 'Cập nhật đánh giá' : 'Gửi đánh giá';
+                }
+            }
         }
 
         function selectModalGalleryImage(url, index) {

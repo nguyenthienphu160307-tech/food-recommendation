@@ -67,6 +67,15 @@ from .notification import (
     ReviewReplyNotificationRequest,
     AccountStatusNotificationRequest,
 )
+from .review import (
+    ReviewBase,
+    ReviewCreateRequest,
+    ReviewUpdateRequest,
+    ReviewUserSummary,
+    ReviewResponse,
+    RestaurantReviewListResponse,
+    DeleteReviewResponse,
+)
 
 from .ai_search import (
     DiningCriteriaSchema,
@@ -138,4 +147,11 @@ __all__ = [
     "MarkReadResponse",
     "ReviewReplyNotificationRequest",
     "AccountStatusNotificationRequest",
+    "ReviewBase",
+    "ReviewCreateRequest",
+    "ReviewUpdateRequest",
+    "ReviewUserSummary",
+    "ReviewResponse",
+    "RestaurantReviewListResponse",
+    "DeleteReviewResponse",
 ]
