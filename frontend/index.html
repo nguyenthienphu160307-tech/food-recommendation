@@ -747,55 +747,217 @@
         }
 
         .cards-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 22px;
         }
+
+        /* Component Thẻ Nhà Hàng (Restaurant Card - TSK-29) */
         .venue-card {
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: 14px; overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.2s ease;
             cursor: pointer; display: flex; flex-direction: column;
+            position: relative;
         }
-        .venue-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .venue-card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12), 0 8px 12px -6px rgba(0, 0, 0, 0.08);
+            border-color: rgba(225, 29, 72, 0.35);
+        }
         .venue-img-wrap {
-            position: relative; height: 176px; width: 100%; background: var(--bg-subtle);
+            position: relative; height: 180px; width: 100%; 
+            background: var(--bg-subtle); overflow: hidden;
         }
-        .venue-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+        .venue-img-wrap img { 
+            width: 100%; height: 100%; object-fit: cover; 
+            transition: transform 0.4s ease, opacity 0.25s ease;
+            display: block;
+        }
+        .venue-card:hover .venue-img-wrap img {
+            transform: scale(1.04);
+        }
         .match-badge {
             position: absolute; top: 12px; left: 12px;
             background: rgba(17, 24, 39, 0.88); color: #ffffff;
             padding: 4px 10px; border-radius: 999px; font-size: 0.74rem;
             font-weight: 600; backdrop-filter: blur(4px);
+            display: inline-flex; align-items: center; z-index: 2;
         }
         .fav-btn {
             position: absolute; top: 12px; right: 12px;
             width: 34px; height: 34px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.9); border: none;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: #111827;
+            cursor: pointer; color: #4b5563;
+            transition: transform 0.2s, background 0.2s, color 0.2s;
+            z-index: 2; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
-        .fav-btn.saved { color: var(--brand-red); }
+        .fav-btn:hover { transform: scale(1.1); color: var(--brand-red); background: #ffffff; }
+        .fav-btn.saved { color: var(--brand-red); background: #ffffff; }
+        [data-theme="dark"] .fav-btn {
+            background: rgba(30, 41, 59, 0.9); color: #94a3b8;
+        }
+        [data-theme="dark"] .fav-btn.saved {
+            color: var(--brand-red); background: rgba(30, 41, 59, 0.95);
+        }
 
         .venue-body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
         .venue-title-row {
             display: flex; justify-content: space-between;
-            align-items: flex-start; gap: 8px; margin-bottom: 4px;
+            align-items: flex-start; gap: 8px; margin-bottom: 6px;
         }
-        .venue-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+        .venue-name { 
+            font-size: 1.05rem; font-weight: 700; color: var(--text-primary); 
+            line-height: 1.35; margin: 0;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
         .rating-pill {
             display: inline-flex; align-items: center; gap: 4px;
-            background: var(--bg-subtle); padding: 3px 8px;
-            border-radius: 6px; font-size: 0.78rem; font-weight: 700; flex-shrink: 0;
+            background: rgba(245, 158, 11, 0.12); color: #d97706;
+            padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; 
+            flex-shrink: 0; border: 1px solid rgba(245, 158, 11, 0.25);
         }
-        .venue-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; }
+        [data-theme="dark"] .rating-pill {
+            color: #fbbf24; background: rgba(245, 158, 11, 0.18);
+        }
+        .rating-count { font-size: 0.72rem; font-weight: 500; opacity: 0.8; }
+        
+        .venue-meta { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px; }
+        .venue-meta-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+        .venue-cuisine { font-weight: 600; color: var(--text-secondary); }
+        .venue-dot { opacity: 0.4; }
+        .venue-distance { color: #0284c7; font-weight: 600; }
+        .venue-price-line { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .venue-price { font-weight: 700; color: var(--brand-red); font-size: 0.86rem; }
+
         .venue-tags {
             display: flex; flex-wrap: wrap; gap: 6px;
             margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border);
         }
         .venue-tag {
-            font-size: 0.74rem; color: var(--text-secondary);
+            font-size: 0.73rem; color: var(--text-secondary);
             background: var(--bg-subtle); padding: 3px 8px;
-            border-radius: 6px; font-weight: 500;
+            border-radius: 6px; font-weight: 600; border: 1px solid var(--border);
+            display: inline-flex; align-items: center; gap: 4px;
+            transition: all 0.2s;
+        }
+        .venue-tag:hover {
+            background: var(--bg-surface);
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        /* Component Skeleton Loading (TSK-29 / NFR-01) */
+        @keyframes shimmerWave {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .skeleton-shimmer {
+            background: linear-gradient(
+                90deg,
+                var(--bg-subtle) 25%,
+                rgba(255, 255, 255, 0.3) 37%,
+                var(--bg-subtle) 63%
+            );
+            background-size: 200% 100%;
+            animation: shimmerWave 1.4s ease-in-out infinite;
+            will-change: background-position;
+        }
+
+        [data-theme="light"] .skeleton-shimmer {
+            background: linear-gradient(
+                90deg,
+                #f1f5f9 25%,
+                #e2e8f0 37%,
+                #f1f5f9 63%
+            );
+            background-size: 200% 100%;
+            animation: shimmerWave 1.4s ease-in-out infinite;
+        }
+
+        [data-theme="dark"] .skeleton-shimmer {
+            background: linear-gradient(
+                90deg,
+                #1e293b 25%,
+                #334155 37%,
+                #1e293b 63%
+            );
+            background-size: 200% 100%;
+            animation: shimmerWave 1.4s ease-in-out infinite;
+        }
+
+        .skeleton-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
+            user-select: none;
+            min-height: 360px;
+        }
+
+        .skeleton-img {
+            height: 180px;
+            width: 100%;
+            position: relative;
+        }
+
+        .skeleton-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .skeleton-line {
+            border-radius: 6px;
+            height: 14px;
+        }
+
+        .skeleton-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .skeleton-title {
+            height: 20px;
+            width: 65%;
+            border-radius: 6px;
+        }
+
+        .skeleton-rating {
+            height: 22px;
+            width: 52px;
+            border-radius: 6px;
+        }
+
+        .skeleton-meta-1 {
+            height: 14px;
+            width: 85%;
+        }
+
+        .skeleton-meta-2 {
+            height: 14px;
+            width: 55%;
+        }
+
+        .skeleton-tags-row {
+            display: flex;
+            gap: 6px;
+            margin-top: auto;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .skeleton-pill {
+            height: 24px;
+            border-radius: 6px;
         }
 
         .map-column {
@@ -1727,6 +1889,7 @@
             }
 
             const grid = document.getElementById('venues-grid');
+            if (!grid) return;
             grid.innerHTML = '';
 
             if (list.length === 0) {
@@ -2296,7 +2459,21 @@
 
             activeAmenities.parking = lower.includes('ô tô') || lower.includes('đậu xe') || lower.includes('đỗ xe');
             activeAmenities.private_room = lower.includes('phòng riêng') || lower.includes('yên tĩnh');
+            activeAmenities.outdoor = lower.includes('ngoài trời') || lower.includes('thoáng mát') || lower.includes('view đẹp');
+            activeAmenities.pet_friendly = lower.includes('thú cưng') || lower.includes('chó') || lower.includes('mèo') || lower.includes('pet');
             activeAmenities.vegetarian = lower.includes('chay');
+
+            // Đồng bộ trạng thái các nút lọc
+            const btnParking = document.getElementById('btn-parking');
+            if (btnParking) btnParking.classList.toggle('active', activeAmenities.parking);
+            const btnRoom = document.getElementById('btn-room');
+            if (btnRoom) btnRoom.classList.toggle('active', activeAmenities.private_room);
+            const btnOutdoor = document.getElementById('btn-outdoor');
+            if (btnOutdoor) btnOutdoor.classList.toggle('active', activeAmenities.outdoor);
+            const btnPet = document.getElementById('btn-pet');
+            if (btnPet) btnPet.classList.toggle('active', activeAmenities.pet_friendly);
+            const btnVegan = document.getElementById('btn-vegan');
+            if (btnVegan) btnVegan.classList.toggle('active', activeAmenities.vegetarian);
 
             const priceMatch = lower.match(/(\d+)\s*(k|nghìn|triệu)/);
             if (priceMatch) {
@@ -2344,6 +2521,15 @@
             const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentPos.lat},${currentPos.lng}&destination=${lat},${lng}&travelmode=two-wheeler`;
             const imageUrl = v.image || v.cover_image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
 
+            let amenitiesModalHtml = '';
+            if (v.parking) amenitiesModalHtml += '<span class="venue-tag" title="Có chỗ đỗ xe ô tô">🚗 Đỗ ô tô</span>';
+            if (v.private_room) amenitiesModalHtml += '<span class="venue-tag" title="Có phòng riêng">🚪 Phòng riêng</span>';
+            if (v.outdoor) amenitiesModalHtml += '<span class="venue-tag" title="Có bàn ngoài trời">🌿 Ngoài trời</span>';
+            if (v.pet_friendly) amenitiesModalHtml += '<span class="venue-tag" title="Thân thiện thú cưng">🐾 Thú cưng</span>';
+            if (v.vegetarian) amenitiesModalHtml += '<span class="venue-tag" title="Có phục vụ món chay">🥗 Món chay</span>';
+
+            const priceFormatted = `${v.priceMin.toLocaleString('vi-VN')}đ - ${v.priceMax.toLocaleString('vi-VN')}đ/người`;
+
             box.innerHTML = `
                 <img src="${imageUrl}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
                 <h3 style="font-size:1.3rem;margin-bottom:4px;">${v.name}</h3>
@@ -2353,8 +2539,29 @@
                     <span class="venue-tag">Cách ${formatExactDistance(v.distanceKm !== undefined ? v.distanceKm : (v.distance_km || 0))}</span>
                     <span class="venue-tag">${Number(v.priceMin || v.min_price || 50000).toLocaleString()}đ - ${Number(v.priceMax || v.max_price || 300000).toLocaleString()}đ/người</span>
                 </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+                    ${amenitiesModalHtml}
+                </div>
+
+                <!-- Khu vực hiển thị Thực đơn thật đồng bộ từ Admin (TSK-27 / TSK-30) -->
+                <div style="margin-top:10px;margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">
+                        <h4 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;display:flex;align-items:center;gap:6px;">
+                            <span>📋 Thực đơn &amp; Món ăn của quán</span>
+                        </h4>
+                        <span id="modal-menu-count-badge" style="font-size:0.75rem;font-weight:600;color:var(--brand-red);background:rgba(225,29,72,0.1);padding:2px 8px;border-radius:999px;">
+                            Đang tải món ăn...
+                        </span>
+                    </div>
+                    <div id="modal-menu-list" style="display:flex;flex-direction:column;gap:12px;max-height:280px;overflow-y:auto;padding-right:4px;">
+                        <div class="skeleton-shimmer" style="height:38px;border-radius:8px;"></div>
+                        <div class="skeleton-shimmer" style="height:38px;border-radius:8px;"></div>
+                    </div>
+                </div>
+
                 <div style="display:flex;gap:10px;">
-                    <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
+                    <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:42px;justify-content:center;text-decoration:none;border-radius:8px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
                         Mở chỉ đường Google Maps
                     </a>
                     <button type="button" onclick="handleWriteReview(${v.id})"
@@ -2367,6 +2574,122 @@
                 </div>
             `;
             modal.classList.add('open');
+
+            // Đồng bộ thực đơn thật & hình ảnh thật từ CSDL MySQL (TSK-27 & TSK-28)
+            loadRestaurantMenuInModal(v.id, v.menu);
+            loadRestaurantImagesInModal(v.id);
+        }
+
+        /**
+         * TSK-27 / TSK-30: Tự động nạp danh sách thực đơn & món ăn thật từ API GET /api/restaurants/{id}/menus
+         * Hiển thị nhóm thực đơn (RestaurantMenus) và từng món ăn kèm giá tiền, trạng thái còn/hết món (MenuItems).
+         */
+        async function loadRestaurantMenuInModal(restaurantId, fallbackMenu) {
+            const listEl = document.getElementById('modal-menu-list');
+            const badgeEl = document.getElementById('modal-menu-count-badge');
+            if (!listEl) return;
+
+            try {
+                const res = await fetch(`/api/restaurants/${restaurantId}/menus`);
+                if (res.ok) {
+                    const menus = await res.json();
+                    const totalItems = menus.reduce((acc, m) => acc + (m.items ? m.items.length : 0), 0);
+
+                    if (menus.length > 0 && totalItems > 0) {
+                        if (badgeEl) badgeEl.innerText = `${menus.length} danh mục • ${totalItems} món`;
+                        let html = '';
+                        menus.forEach(group => {
+                            const items = group.items || [];
+                            if (items.length === 0) return;
+                            html += `
+                                <div class="modal-menu-group" style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:10px;padding:12px;">
+                                    <div style="font-weight:700;font-size:0.92rem;color:var(--brand-red);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+                                        <span>🍽️ ${group.name}</span>
+                                        <small style="color:var(--text-muted);font-weight:normal;font-size:0.75rem;">${items.length} món</small>
+                                    </div>
+                                    ${group.description ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;font-style:italic;">${group.description}</p>` : ''}
+                                    <div style="display:flex;flex-direction:column;gap:8px;">
+                                        ${items.map(it => `
+                                            <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 10px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);">
+                                                <div style="flex:1;padding-right:12px;">
+                                                    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                                        <span style="font-weight:600;font-size:0.9rem;${!it.is_available ? 'text-decoration:line-through;opacity:0.6;' : 'color:var(--text-primary);'}">${it.name}</span>
+                                                        ${it.is_available 
+                                                            ? '<span style="font-size:0.68rem;font-weight:700;color:#059669;background:rgba(16,185,129,0.12);padding:1px 6px;border-radius:4px;">Còn món</span>'
+                                                            : '<span style="font-size:0.68rem;font-weight:700;color:#dc2626;background:rgba(239,68,68,0.12);padding:1px 6px;border-radius:4px;">Hết món</span>'}
+                                                    </div>
+                                                    ${it.description ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">${it.description}</div>` : ''}
+                                                </div>
+                                                <div style="font-weight:700;font-size:0.92rem;color:var(--brand-red);white-space:nowrap;">
+                                                    ${Number(it.price).toLocaleString('vi-VN')}đ
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        listEl.innerHTML = html;
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn('[Modal Menu] Không thể tải menu từ API:', err);
+            }
+
+            // Fallback nếu nhà hàng chưa có menu trong CSDL
+            if (badgeEl) badgeEl.innerText = 'Thực đơn tiêu biểu';
+            if (fallbackMenu && fallbackMenu.length > 0) {
+                listEl.innerHTML = `
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        ${fallbackMenu.map(m => `
+                            <div style="display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border);font-size:0.88rem;">
+                                <span>${m.name}</span>
+                                <strong style="color:var(--brand-red);">${Number(m.price).toLocaleString('vi-VN')}đ</strong>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                listEl.innerHTML = `
+                    <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem;background:var(--bg-subtle);border-radius:10px;">
+                        Nhà hàng chưa cập nhật thực đơn chi tiết.
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * TSK-28 / TSK-30: Tự động nạp thư viện ảnh của quán từ API GET /api/restaurants/{id}/images
+         * Cho phép khách hàng xem nhiều góc chụp và bấm vào ảnh nhỏ để đổi ảnh đại diện xem trước.
+         */
+        async function loadRestaurantImagesInModal(restaurantId) {
+            const galleryRow = document.getElementById('modal-gallery-row');
+            if (!galleryRow) return;
+            try {
+                const res = await fetch(`/api/restaurants/${restaurantId}/images`);
+                if (res.ok) {
+                    const images = await res.json();
+                    if (images && images.length > 1) {
+                        let html = '';
+                        images.forEach(img => {
+                            html += `
+                                <img src="${img.image_url}" 
+                                     alt="${img.caption || 'Ảnh nhà hàng'}" 
+                                     title="${img.caption || 'Nhấp để xem ảnh này'}"
+                                     onclick="document.getElementById('modal-main-cover').src='${img.image_url}'" 
+                                     style="width:72px;height:52px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:border-color 0.2s;" 
+                                     onmouseover="this.style.borderColor='var(--brand-red)'" 
+                                     onmouseout="this.style.borderColor='transparent'">
+                            `;
+                        });
+                        galleryRow.innerHTML = html;
+                        galleryRow.style.display = 'flex';
+                        return;
+                    }
+                }
+            } catch (_) {}
+            galleryRow.style.display = 'none';
         }
 
         function closeVenueModal() {
