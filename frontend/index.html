@@ -1404,6 +1404,19 @@
             border-radius: 10px; border: 2px solid var(--bg-surface);
         }
 
+        @media (max-width: 768px) {
+            .ai-drawer {
+                bottom: 12px; right: 12px; left: 12px; width: auto !important;
+                height: 80vh; max-height: 80vh;
+            }
+            .ai-drawer.show-sidebar .chat-history-sidebar {
+                width: 100%; min-width: 100%;
+            }
+            .ai-drawer.show-sidebar .ai-chat-main {
+                display: none;
+            }
+        }
+
         .modal-backdrop {
             position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55);
             display: none; align-items: center; justify-content: center;

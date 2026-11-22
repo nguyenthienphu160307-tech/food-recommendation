@@ -73,7 +73,7 @@ def create_session(
 @router.get(
     "/sessions/{session_id}",
     response_model=SessionHistoryResponse,
-    summary="Lấy chi tiết phiên và toàn bộ lịch sử tin nhắn theo thứ tự thời gian"
+    summary="Lấy chi tiết phiên và toàn bộ lịch sử tin nhắn theo thứ tự thời gian (TSK-16 / TSK-45)"
 )
 def get_session_history(
     session_id: int,
@@ -83,9 +83,12 @@ def get_session_history(
     Lấy thông tin phiên chat và danh sách toàn bộ tin nhắn đã trao đổi:
     - Sắp xếp tăng dần theo thời gian thực (created_at ASC).
     - Phân biệt rõ tin nhắn người dùng (sender_type='user') và trợ lý ảo (sender_type='ai').
+    - Hỗ trợ tải lại ngữ cảnh phiên cũ để tiếp tục trò chuyện (TSK-45 / UC-10).
     """
     session_obj = ChatSessionService.get_session(db, session_id)
     messages = ChatSessionService.get_session_messages(db, session_id)
+    title_prev = ChatSessionService.get_session_preview_title(session_obj)
+    last_msg_at = messages[-1].created_at if messages else session_obj.started_at
 
     return SessionHistoryResponse(
         session=SessionResponse(
@@ -94,7 +97,9 @@ def get_session_history(
             status=session_obj.status,
             current_state=getattr(session_obj, "current_state", "SESSION_IDLE") or "SESSION_IDLE",
             started_at=session_obj.started_at,
-            total_messages=len(messages)
+            total_messages=len(messages),
+            title_preview=title_prev,
+            last_message_at=last_msg_at
         ),
         messages=[
             MessageResponse(
@@ -274,8 +279,25 @@ def list_sessions(
             closed_reason=s.closed_reason,
             total_messages=len(s.messages) if s.messages else 0
         )
-        for s in sessions
-    ]
+    return res_list
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Xóa một phiên chat cũ khỏi lịch sử (TSK-45)"
+)
+def delete_session(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """Xóa hoàn toàn phiên chat cũ và toàn bộ tin nhắn liên quan (TSK-45)"""
+    ChatSessionService.delete_session(db, session_id)
+    return {
+        "status": "success",
+        "session_id": session_id,
+        "message": f"Đã xóa phiên chat #{session_id} thành công."
+    }
 
 
 # =====================================================================

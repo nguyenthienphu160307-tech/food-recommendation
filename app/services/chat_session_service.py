@@ -343,6 +343,35 @@ class ChatSessionService:
         return query.order_by(SearchSession.session_id.desc()).offset(offset).limit(limit).all()
 
     @staticmethod
+    def delete_session(db: Session, session_id: int) -> bool:
+        """
+        Xóa một phiên chat cũ khỏi CSDL (TSK-45):
+        - Tự động xóa cascade toàn bộ tin nhắn (SearchMessages) và tiêu chí (SearchCriteria).
+        """
+        session_obj = ChatSessionService.get_session(db, session_id)
+        db.delete(session_obj)
+        db.commit()
+        return True
+
+    @staticmethod
+    def get_session_preview_title(session_obj: SearchSession) -> str:
+        """
+        Tạo tiêu đề tóm tắt cuộc trò chuyện từ câu hỏi đầu tiên của người dùng:
+        - Ví dụ: 'Tìm quán lẩu nướng Quận 1 có bãi ô tô...'
+        """
+        if session_obj.messages:
+            first_user_msg = next(
+                (m for m in session_obj.messages if m.sender_type == "user" and m.content),
+                None
+            )
+            if first_user_msg:
+                content = first_user_msg.content.strip().replace("\n", " ")
+                if len(content) > 42:
+                    return content[:40] + "..."
+                return content
+        return f"Cuộc trò chuyện #{session_obj.session_id}"
+
+    @staticmethod
     def save_criteria(
         db: Session,
         session_id: int,
