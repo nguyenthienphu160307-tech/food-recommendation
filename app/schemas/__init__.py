@@ -53,6 +53,13 @@ from .image import (
     SetCoverResponse,
 )
 
+from .ai_search import (
+    DiningCriteriaSchema,
+    OtherConditionsSchema,
+    LLMParseAndSaveRequest,
+    LLMParseAndSaveResponse,
+)
+
 __all__ = [
     "SendOTPRequest",
     "RegisterRequest",

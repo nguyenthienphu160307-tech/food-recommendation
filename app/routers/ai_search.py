@@ -40,6 +40,7 @@ def get_prompt_and_schema():
         "json_schema": get_dining_criteria_json_schema(),
         "system_prompt_template": SYSTEM_PROMPT_TEMPLATE,
         "rendered_prompt_example": build_extraction_prompt(sample_query),
+        "configured_providers": LLMService.get_configured_providers(),
     }
 
 
