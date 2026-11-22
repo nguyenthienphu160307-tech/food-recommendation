@@ -35,6 +35,14 @@ from app.services.open_hours_service import (
     get_vietnam_now,
     DEFAULT_OPEN_BONUS_WEIGHT,
 )
+from app.services.recommendation_service import (
+    calculate_distance_km,
+    calculate_match_score,
+    generate_match_reasons,
+    generate_recommendation_summary,
+    DEFAULT_USER_LAT,
+    DEFAULT_USER_LON,
+)
 
 router = APIRouter(prefix="/api/restaurants", tags=["Nhà hàng & Bộ lọc đa điều kiện (Restaurants)"])
 
@@ -65,6 +73,29 @@ def _build_list_item(r: Restaurant) -> RestaurantListItemResponse:
         )
     else:
         amenities_data = AmenityResponse()
+
+    dist_km = None
+    if r.latitude is not None and r.longitude is not None:
+        dist_km = calculate_distance_km(
+            effective_lat, effective_lon, float(r.latitude), float(r.longitude)
+        )
+
+    match_score = calculate_match_score(
+        distance_km=dist_km if dist_km is not None else 3.0,
+        avg_rating=r.avg_rating or 4.0,
+        amenities=r.amenities,
+        is_open=open_info["is_open"],
+    )
+
+    match_reasons = generate_match_reasons(
+        restaurant=r,
+        user_lat=effective_lat,
+        user_lon=effective_lon,
+        check_dt=now_vn,
+        is_open=open_info["is_open"],
+    )
+
+    summary = generate_recommendation_summary(match_score, match_reasons)
 
     return RestaurantListItemResponse(
         id=r.id,
