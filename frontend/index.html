@@ -1133,6 +1133,22 @@
             font-weight: 700; font-size: 0.94rem; color: var(--brand-red); white-space: nowrap;
         }
 
+        /* Trạng thái Giờ mở cửa hoạt động thực tế (TSK-37 / BR-03) */
+        .open-status-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
+            border-radius: 999px; line-height: 1.25; flex-shrink: 0;
+            user-select: none; transition: all 0.2s;
+        }
+        .open-status-badge.open {
+            color: #047857; background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.28);
+        }
+        .open-status-badge.closed {
+            color: #b91c1c; background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.22);
+        }
+
         /* Lightbox Viewer Styles (TSK-30) */
         .lightbox-backdrop {
             position: fixed; inset: 0;
