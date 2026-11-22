@@ -747,289 +747,55 @@
         }
 
         .cards-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
             gap: 22px;
         }
-
-        /* Component Thẻ Nhà Hàng (Restaurant Card - TSK-29) */
         .venue-card {
             background: var(--bg-surface); border: 1px solid var(--border);
             border-radius: 14px; overflow: hidden;
-            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+            transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer; display: flex; flex-direction: column;
-            position: relative;
         }
-        .venue-card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12), 0 8px 12px -6px rgba(0, 0, 0, 0.08);
-            border-color: rgba(225, 29, 72, 0.35);
-        }
+        .venue-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
         .venue-img-wrap {
-            position: relative; height: 180px; width: 100%; 
-            background: var(--bg-subtle); overflow: hidden;
+            position: relative; height: 176px; width: 100%; background: var(--bg-subtle);
         }
-        .venue-img-wrap img { 
-            width: 100%; height: 100%; object-fit: cover; 
-            transition: transform 0.4s ease, opacity 0.25s ease;
-            display: block;
-        }
-        .venue-card:hover .venue-img-wrap img {
-            transform: scale(1.04);
-        }
-        /* Phân cấp màu sắc Huy hiệu Match Score (TSK-40 / BR-05) */
+        .venue-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .match-badge {
             position: absolute; top: 12px; left: 12px;
-            color: #ffffff;
+            background: rgba(17, 24, 39, 0.88); color: #ffffff;
             padding: 4px 10px; border-radius: 999px; font-size: 0.74rem;
-            font-weight: 700; backdrop-filter: blur(6px);
-            display: inline-flex; align-items: center; gap: 4px; z-index: 2;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-            transition: transform 0.2s ease;
-        }
-        .match-badge.high {
-            background: linear-gradient(135deg, #e11d48, #be123c);
-        }
-        .match-badge.medium {
-            background: linear-gradient(135deg, #059669, #047857);
-        }
-        .match-badge.standard {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-        }
-
-        /* Hàng Tag Lý do Đề xuất Trực quan (TSK-40 / PBI-11) */
-        .match-reasons-row {
-            display: flex; flex-wrap: wrap; gap: 5px;
-            margin: 6px 0 10px 0;
-        }
-        .match-chip {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 0.72rem; font-weight: 600; padding: 2px 8px;
-            border-radius: 999px; line-height: 1.35;
-            background: #f1f5f9; color: #334155;
-            border: 1px solid #e2e8f0;
-            transition: all 0.2s ease;
-        }
-        .match-chip:hover {
-            transform: translateY(-1px);
-            background: #e2e8f0;
-        }
-        [data-theme="dark"] .match-chip {
-            background: rgba(51, 65, 85, 0.45);
-            color: #cbd5e1;
-            border: 1px solid rgba(148, 163, 184, 0.2);
-        }
-        [data-theme="dark"] .match-chip:hover {
-            background: rgba(51, 65, 85, 0.7);
-            color: #f8fafc;
-        }
-        .recommendation-summary-bar {
-            display: flex; align-items: center; gap: 6px;
-            font-size: 0.75rem; color: var(--text-muted);
-            margin-bottom: 8px; font-weight: 500;
-        }
-        .recommendation-summary-bar svg {
-            color: var(--brand-red); flex-shrink: 0;
-        }
-
-        /* Khối Điểm nổi bật phù hợp trong Modal chi tiết (TSK-40) */
-        .match-highlight-box {
-            background: linear-gradient(135deg, rgba(225, 29, 72, 0.05), rgba(2, 132, 199, 0.05));
-            border: 1px solid rgba(225, 29, 72, 0.18);
-            border-radius: 12px; padding: 12px 14px;
-            margin-bottom: 14px;
-        }
-        .match-highlight-title {
-            font-size: 0.85rem; font-weight: 700; color: var(--text-primary);
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 6px;
-        }
-        .match-highlight-score-badge {
-            background: var(--brand-red); color: #ffffff;
-            font-size: 0.74rem; font-weight: 700; padding: 2px 8px;
-            border-radius: 999px; display: inline-flex; align-items: center; gap: 3px;
-        }
-        .match-highlight-summary {
-            font-size: 0.8rem; color: var(--text-secondary);
-            margin-bottom: 8px; line-height: 1.4;
-        }
-        .match-highlight-chips {
-            display: flex; flex-wrap: wrap; gap: 6px;
+            font-weight: 600; backdrop-filter: blur(4px);
         }
         .fav-btn {
             position: absolute; top: 12px; right: 12px;
             width: 34px; height: 34px; border-radius: 50%;
             background: rgba(255, 255, 255, 0.9); border: none;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; color: #4b5563;
-            transition: transform 0.2s, background 0.2s, color 0.2s;
-            z-index: 2; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            cursor: pointer; color: #111827;
         }
-        .fav-btn:hover { transform: scale(1.1); color: var(--brand-red); background: #ffffff; }
-        .fav-btn.saved { color: var(--brand-red); background: #ffffff; }
-        [data-theme="dark"] .fav-btn {
-            background: rgba(30, 41, 59, 0.9); color: #94a3b8;
-        }
-        [data-theme="dark"] .fav-btn.saved {
-            color: var(--brand-red); background: rgba(30, 41, 59, 0.95);
-        }
+        .fav-btn.saved { color: var(--brand-red); }
 
         .venue-body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
         .venue-title-row {
             display: flex; justify-content: space-between;
-            align-items: flex-start; gap: 8px; margin-bottom: 6px;
+            align-items: flex-start; gap: 8px; margin-bottom: 4px;
         }
-        .venue-name { 
-            font-size: 1.05rem; font-weight: 700; color: var(--text-primary); 
-            line-height: 1.35; margin: 0;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        }
+        .venue-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; }
         .rating-pill {
             display: inline-flex; align-items: center; gap: 4px;
-            background: rgba(245, 158, 11, 0.12); color: #d97706;
-            padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; 
-            flex-shrink: 0; border: 1px solid rgba(245, 158, 11, 0.25);
+            background: var(--bg-subtle); padding: 3px 8px;
+            border-radius: 6px; font-size: 0.78rem; font-weight: 700; flex-shrink: 0;
         }
-        [data-theme="dark"] .rating-pill {
-            color: #fbbf24; background: rgba(245, 158, 11, 0.18);
-        }
-        .rating-count { font-size: 0.72rem; font-weight: 500; opacity: 0.8; }
-        
-        .venue-meta { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 12px; }
-        .venue-meta-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
-        .venue-cuisine { font-weight: 600; color: var(--text-secondary); }
-        .venue-dot { opacity: 0.4; }
-        .venue-distance { color: #0284c7; font-weight: 600; }
-        .venue-price-line { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-        .venue-price { font-weight: 700; color: var(--brand-red); font-size: 0.86rem; }
-
+        .venue-meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; }
         .venue-tags {
             display: flex; flex-wrap: wrap; gap: 6px;
             margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border);
         }
         .venue-tag {
-            font-size: 0.73rem; color: var(--text-secondary);
+            font-size: 0.74rem; color: var(--text-secondary);
             background: var(--bg-subtle); padding: 3px 8px;
-            border-radius: 6px; font-weight: 600; border: 1px solid var(--border);
-            display: inline-flex; align-items: center; gap: 4px;
-            transition: all 0.2s;
-        }
-        .venue-tag:hover {
-            background: var(--bg-surface);
-            border-color: var(--border-hover);
-            color: var(--text-primary);
-        }
-
-        /* Component Skeleton Loading (TSK-29 / NFR-01) */
-        @keyframes shimmerWave {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-
-        .skeleton-shimmer {
-            background: linear-gradient(
-                90deg,
-                var(--bg-subtle) 25%,
-                rgba(255, 255, 255, 0.3) 37%,
-                var(--bg-subtle) 63%
-            );
-            background-size: 200% 100%;
-            animation: shimmerWave 1.4s ease-in-out infinite;
-            will-change: background-position;
-        }
-
-        [data-theme="light"] .skeleton-shimmer {
-            background: linear-gradient(
-                90deg,
-                #f1f5f9 25%,
-                #e2e8f0 37%,
-                #f1f5f9 63%
-            );
-            background-size: 200% 100%;
-            animation: shimmerWave 1.4s ease-in-out infinite;
-        }
-
-        [data-theme="dark"] .skeleton-shimmer {
-            background: linear-gradient(
-                90deg,
-                #1e293b 25%,
-                #334155 37%,
-                #1e293b 63%
-            );
-            background-size: 200% 100%;
-            animation: shimmerWave 1.4s ease-in-out infinite;
-        }
-
-        .skeleton-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            pointer-events: none;
-            user-select: none;
-            min-height: 360px;
-        }
-
-        .skeleton-img {
-            height: 180px;
-            width: 100%;
-            position: relative;
-        }
-
-        .skeleton-body {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .skeleton-line {
-            border-radius: 6px;
-            height: 14px;
-        }
-
-        .skeleton-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .skeleton-title {
-            height: 20px;
-            width: 65%;
-            border-radius: 6px;
-        }
-
-        .skeleton-rating {
-            height: 22px;
-            width: 52px;
-            border-radius: 6px;
-        }
-
-        .skeleton-meta-1 {
-            height: 14px;
-            width: 85%;
-        }
-
-        .skeleton-meta-2 {
-            height: 14px;
-            width: 55%;
-        }
-
-        .skeleton-tags-row {
-            display: flex;
-            gap: 6px;
-            margin-top: auto;
-            padding-top: 10px;
-            border-top: 1px solid var(--border);
-        }
-
-        .skeleton-pill {
-            height: 24px;
-            border-radius: 6px;
+            border-radius: 6px; font-weight: 500;
         }
 
         .map-column {
@@ -1038,383 +804,39 @@
         }
         #main-map { width: 100%; height: 100%; }
 
-        /* ======================================================== */
-        /* AI CONVERSATIONAL DRAWER & FLOATING CHAT (TASK TE9C672)  */
-        /* ======================================================== */
+        /* AI Conversational Drawer & Modals */
         .ai-drawer {
-            position: fixed; bottom: 24px; right: 24px; width: 420px;
-            max-width: calc(100vw - 32px); height: 600px; max-height: calc(100vh - 40px);
+            position: fixed; bottom: 24px; right: 24px; width: 390px;
+            max-width: calc(100vw - 32px); height: 520px;
             background: var(--bg-surface); border: 1px solid var(--border);
-            border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22), 0 0 0 1px var(--border);
+            border-radius: 18px; box-shadow: var(--shadow-lg);
             display: none; flex-direction: column; overflow: hidden; z-index: 2000;
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
         }
-        .ai-drawer.open { display: flex; animation: drawerSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
-
-        @keyframes drawerSlideUp {
-            from { opacity: 0; transform: translateY(20px) scale(0.97); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
+        .ai-drawer.open { display: flex; }
         .ai-drawer-header {
-            padding: 12px 16px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #ffffff; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08); flex-shrink: 0;
-        }
-        .ai-drawer-header-left {
-            display: flex; align-items: center; gap: 10px;
-        }
-        .ai-drawer-avatar-glow {
-            width: 34px; height: 34px; border-radius: 50%;
-            background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5); color: #fff; flex-shrink: 0;
-        }
-        .ai-drawer-titles {
-            display: flex; flex-direction: column;
-        }
-        .ai-drawer-titles h4 {
-            font-size: 0.92rem; font-weight: 600; color: #f8fafc; margin: 0;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .ai-status-badge {
-            display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #94a3b8; font-weight: 400;
-        }
-        .ai-status-dot {
-            width: 7px; height: 7px; border-radius: 50%; background: #10b981;
-            box-shadow: 0 0 6px #10b981; flex-shrink: 0;
-        }
-        .ai-status-dot.analyzing {
-            background: #f59e0b; box-shadow: 0 0 6px #f59e0b;
-            animation: pulseDot 1s infinite alternate;
-        }
-        .ai-status-dot.closed {
-            background: #64748b; box-shadow: none;
-        }
-        @keyframes pulseDot {
-            from { opacity: 0.4; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1.15); }
-        }
-
-        .ai-drawer-header-actions {
-            display: flex; align-items: center; gap: 6px;
-        }
-        .btn-ai-header {
-            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #e2e8f0; border-radius: 8px; padding: 4px 8px; font-size: 0.74rem; font-weight: 500;
-            cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;
-        }
-        .btn-ai-header:hover {
-            background: rgba(255, 255, 255, 0.2); color: #fff;
-        }
-        .btn-ai-header-close {
-            background: transparent; border: none; color: #94a3b8; font-size: 1.1rem;
-            cursor: pointer; padding: 4px 6px; border-radius: 6px; line-height: 1;
-            transition: color 0.15s;
-        }
-        .btn-ai-header-close:hover { color: #f8fafc; }
-
-        .ai-chat-feed {
-            flex: 1; padding: 16px; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 14px; background: var(--bg-page);
-            scroll-behavior: smooth;
-        }
-
-        /* Message Bubbles */
-        .chat-msg-row {
-            display: flex; gap: 8px; width: 100%;
-        }
-        .chat-msg-row.user {
-            justify-content: flex-end;
-        }
-        .chat-msg-avatar {
-            width: 28px; height: 28px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.72rem; flex-shrink: 0; font-weight: 600;
-        }
-        .chat-msg-avatar.ai {
-            background: linear-gradient(135deg, #ef4444, #f97316); color: #fff;
-        }
-        .chat-msg-avatar.user {
-            background: var(--bg-subtle); border: 1px solid var(--border); color: var(--text-primary);
-        }
-
-        .chat-msg-body {
-            max-width: 84%; display: flex; flex-direction: column; gap: 4px;
-        }
-        .chat-msg-row.user .chat-msg-body {
-            align-items: flex-end;
-        }
-
-        .bubble {
-            padding: 10px 14px; border-radius: 16px; font-size: 0.85rem; line-height: 1.5;
-            word-break: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .bubble-ai {
-            background: var(--bg-surface); border: 1px solid var(--border);
-            border-top-left-radius: 4px; color: var(--text-primary);
-        }
-        .bubble-user {
-            background: linear-gradient(135deg, var(--brand-red) 0%, #b91c1c 100%);
-            color: #ffffff; border-top-right-radius: 4px;
-        }
-        .bubble-meta {
-            font-size: 0.68rem; color: var(--text-muted); padding: 0 4px;
-        }
-
-        /* Typing & Analyzing Indicator (State Diagram Steps) */
-        .ai-typing-indicator {
-            display: none; align-items: center; gap: 10px;
-            background: var(--bg-surface); border: 1px solid var(--border);
-            border-radius: 14px; border-top-left-radius: 4px; padding: 10px 14px;
-            max-width: 85%;
-        }
-        .ai-typing-indicator.active { display: flex; }
-        .typing-dots {
-            display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
-        }
-        .typing-dots span {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: var(--brand-red); display: inline-block;
-            animation: typingBounce 1.2s infinite ease-in-out;
-        }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes typingBounce {
-            0%, 80%, 100% { transform: scale(0.6); opacity: 0.35; }
-            40% { transform: scale(1.1); opacity: 1; }
-        }
-
-        .typing-status-text {
-            font-size: 0.78rem; color: var(--text-secondary); font-style: italic;
-        }
-
-        /* Relaxed Banner (UC-02 Ngoại lệ / State 4) */
-        .chat-relaxation-badge {
-            background: rgba(245, 158, 11, 0.1); border: 1px dashed #f59e0b;
-            color: #b45309; border-radius: 10px; padding: 8px 12px;
-            margin-top: 8px; font-size: 0.78rem; line-height: 1.4;
-            display: flex; align-items: flex-start; gap: 8px;
-        }
-
-        /* Mini Restaurant Cards inside Chat Feed */
-        .chat-venues-container {
-            display: flex; flex-direction: column; gap: 8px; margin-top: 10px;
-        }
-        .chat-card-mini {
-            background: var(--bg-subtle); border: 1px solid var(--border);
-            border-radius: 12px; padding: 8px 10px; display: flex; gap: 10px;
-            align-items: center; transition: transform 0.15s, border-color 0.15s;
-        }
-        .chat-card-mini:hover {
-            transform: translateY(-1px); border-color: var(--brand-red);
-        }
-        .chat-card-thumb {
-            width: 52px; height: 52px; border-radius: 8px; object-fit: cover; flex-shrink: 0;
-        }
-        .chat-card-info {
-            flex: 1; min-width: 0;
-        }
-        .chat-card-name {
-            font-size: 0.83rem; font-weight: 600; color: var(--text-primary);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
-            cursor: pointer;
-        }
-        .chat-card-name:hover { color: var(--brand-red); text-decoration: underline; }
-        .chat-card-meta {
-            display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--text-secondary);
-        }
-        .chat-card-rating {
-            color: #eab308; font-weight: 600; display: inline-flex; align-items: center; gap: 2px;
-        }
-        .chat-card-actions {
-            display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;
-        }
-        .btn-chat-action {
-            border: 1px solid var(--border); background: var(--bg-surface);
-            color: var(--text-primary); font-size: 0.7rem; font-weight: 500;
-            padding: 3px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap;
-            transition: all 0.15s;
-        }
-        .btn-chat-action:hover {
-            background: var(--brand-red); color: #fff; border-color: var(--brand-red);
-        }
-
-        /* ======================================================== */
-        /* PARSED CRITERIA CHIPS & BAR (TASK TE9C673)               */
-        /* ======================================================== */
-        .parsed-criteria-bar {
-            padding: 8px 14px; background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
-            animation: fadeInCriteria 0.25s ease-out;
-        }
-        @keyframes fadeInCriteria {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .parsed-criteria-header {
+            padding: 14px 18px; background: #111827; color: #ffffff;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .parsed-criteria-title {
-            font-size: 0.7rem; font-weight: 700; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: 0.5px;
-            display: flex; align-items: center; gap: 5px;
+        .ai-drawer-header h4 { font-size: 0.92rem; font-weight: 600; }
+        .ai-chat-feed {
+            flex: 1; padding: 16px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 12px; background: var(--bg-page);
         }
-        .btn-clear-all-chips {
-            background: transparent; border: none; color: var(--brand-red);
-            font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 2px 4px;
-            border-radius: 4px; transition: background 0.15s;
+        .bubble {
+            max-width: 85%; padding: 10px 14px;
+            border-radius: 14px; font-size: 0.85rem; line-height: 1.45;
         }
-        .btn-clear-all-chips:hover {
-            background: rgba(220, 38, 38, 0.08); text-decoration: underline;
-        }
-        .parsed-chips-scroll {
-            display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
-            padding-bottom: 2px; align-items: center;
-        }
-        .parsed-chips-scroll::-webkit-scrollbar { display: none; }
-
-        .parsed-chip {
-            white-space: nowrap; font-size: 0.75rem; font-weight: 500;
-            padding: 4px 8px 4px 10px; border-radius: 9999px;
-            background: var(--bg-subtle); border: 1px solid var(--border);
-            color: var(--text-primary); display: inline-flex; align-items: center;
-            gap: 5px; flex-shrink: 0; transition: all 0.18s ease;
-        }
-        .parsed-chip.chip-location {
-            background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.3); color: #1d4ed8;
-        }
-        .parsed-chip.chip-cuisine {
-            background: rgba(249, 115, 22, 0.08); border-color: rgba(249, 115, 22, 0.3); color: #c2410c;
-        }
-        .parsed-chip.chip-budget {
-            background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.3); color: #047857;
-        }
-        .parsed-chip.chip-amenity {
-            background: rgba(168, 85, 247, 0.08); border-color: rgba(168, 85, 247, 0.3); color: #7e22ce;
-        }
-        .btn-remove-chip {
-            background: transparent; border: none; color: inherit;
-            font-size: 0.78rem; font-weight: 700; cursor: pointer;
-            padding: 0 3px; border-radius: 50%; line-height: 1;
-            display: inline-flex; align-items: center; justify-content: center;
-            opacity: 0.65; transition: all 0.15s ease;
-        }
-        .btn-remove-chip:hover {
-            opacity: 1; transform: scale(1.25); color: #dc2626;
-        }
-
-        /* In-bubble Parsed Criteria Box */
-        .chat-parsed-criteria-box {
-            background: var(--bg-subtle); border: 1px solid var(--border);
-            border-radius: 12px; padding: 8px 10px; margin: 8px 0;
-            display: flex; flex-direction: column; gap: 6px;
-        }
-        .chat-parsed-header {
-            font-size: 0.72rem; font-weight: 600; color: var(--text-secondary);
-            display: flex; align-items: center; gap: 5px;
-        }
-        .chat-parsed-chips-list {
-            display: flex; flex-wrap: wrap; gap: 6px;
-        }
-
-        /* Sample Prompt Chips (NFR-02) */
-        .sample-prompts-bar {
-            padding: 8px 14px; background: var(--bg-surface);
-            border-top: 1px solid var(--border);
-            display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
-        }
-        .sample-prompts-label {
-            font-size: 0.7rem; font-weight: 600; color: var(--text-muted);
-            text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;
-        }
-        .sample-prompts-scroll {
-            display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
-            padding-bottom: 2px;
-        }
-        .sample-prompts-scroll::-webkit-scrollbar { display: none; }
-        .prompt-chip {
-            white-space: nowrap; font-size: 0.75rem; font-weight: 500;
-            padding: 5px 11px; border-radius: 9999px;
-            background: var(--bg-subtle); border: 1px solid var(--border);
-            color: var(--text-secondary); cursor: pointer;
-            display: inline-flex; align-items: center; gap: 4px;
-            transition: all 0.18s ease; flex-shrink: 0;
-        }
-        .prompt-chip:hover {
-            border-color: var(--brand-red); color: var(--brand-red);
-            background: rgba(220, 38, 38, 0.06); transform: translateY(-1px);
-        }
-
-        /* Drawer Input Area */
+        .bubble-ai { background: var(--bg-surface); border: 1px solid var(--border); align-self: flex-start; }
+        .bubble-user { background: var(--brand-red); color: #ffffff; align-self: flex-end; }
         .ai-drawer-input {
-            padding: 10px 14px; border-top: 1px solid var(--border);
-            background: var(--bg-surface); display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+            padding: 12px; border-top: 1px solid var(--border);
+            background: var(--bg-surface); display: flex; gap: 8px;
         }
         .ai-drawer-input input {
-            flex: 1; height: 40px; padding: 0 14px;
-            border: 1px solid var(--border); border-radius: 10px;
+            flex: 1; height: 38px; padding: 0 12px;
+            border: 1px solid var(--border); border-radius: 8px;
             background: var(--bg-subtle); color: var(--text-primary);
-            outline: none; font-size: 0.85rem; transition: border-color 0.15s;
-        }
-        .ai-drawer-input input:focus {
-            border-color: var(--brand-red); background: var(--bg-surface);
-        }
-        .btn-ai-send {
-            height: 40px; padding: 0 16px; background: var(--brand-red);
-            color: #ffffff; border: none; border-radius: 10px;
-            font-size: 0.85rem; font-weight: 600; cursor: pointer;
-            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-            transition: background 0.15s, opacity 0.15s;
-        }
-        .btn-ai-send:hover { background: #b91c1c; }
-        .btn-ai-send:disabled { opacity: 0.55; cursor: not-allowed; }
-
-        /* Session Closed Banner */
-        .session-closed-notice {
-            background: var(--bg-subtle); border: 1px solid var(--border);
-            border-radius: 10px; padding: 8px 12px; font-size: 0.78rem;
-            color: var(--text-muted); text-align: center; display: none;
-            margin: 6px 14px;
-        }
-        .session-closed-notice.visible { display: block; }
-        .session-closed-notice button {
-            background: var(--brand-red); color: #fff; border: none;
-            padding: 4px 10px; border-radius: 6px; font-size: 0.75rem;
-            font-weight: 500; cursor: pointer; margin-left: 6px;
-        }
-
-        /* Floating Chat Trigger Button */
-        .floating-chat-trigger {
-            position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
-            border-radius: 50%; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #ffffff; box-shadow: 0 10px 25px rgba(220, 38, 38, 0.4);
-            display: flex; align-items: center; justify-content: center;
-            border: none; cursor: pointer; z-index: 1990; transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .floating-chat-trigger:hover {
-            transform: scale(1.08); box-shadow: 0 12px 30px rgba(220, 38, 38, 0.5);
-        }
-        .floating-chat-trigger.hidden { display: none; }
-        .floating-chat-badge {
-            position: absolute; top: -3px; right: -3px; background: #10b981;
-            color: #ffffff; font-size: 0.65rem; font-weight: 700; padding: 2px 5px;
-            border-radius: 10px; border: 2px solid var(--bg-surface);
-        }
-
-        @media (max-width: 768px) {
-            .ai-drawer {
-                bottom: 12px; right: 12px; left: 12px; width: auto !important;
-                height: 80vh; max-height: 80vh;
-            }
-            .ai-drawer.show-sidebar .chat-history-sidebar {
-                width: 100%; min-width: 100%;
-            }
-            .ai-drawer.show-sidebar .ai-chat-main {
-                display: none;
-            }
+            outline: none; font-size: 0.85rem;
         }
 
         .modal-backdrop {
@@ -1427,222 +849,6 @@
             background: var(--bg-surface); border-radius: 16px;
             width: 560px; max-width: 100%; max-height: 88vh;
             overflow-y: auto; padding: 24px; position: relative;
-        }
-        .modal-card.venue-detail-modal {
-            width: 680px; max-width: 95vw; max-height: 90vh; padding: 24px 26px;
-        }
-
-        /* Component Thư viện ảnh Lightbox & Bảng Thực đơn (TSK-30) */
-        .detail-cover-wrapper {
-            position: relative; width: 100%; height: 240px; border-radius: 14px;
-            overflow: hidden; margin-bottom: 12px; background: var(--bg-subtle);
-        }
-        .detail-cover-wrapper img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
-            transition: transform 0.35s ease;
-        }
-        .detail-cover-wrapper:hover img {
-            transform: scale(1.02);
-        }
-        .btn-open-lightbox {
-            position: absolute; bottom: 12px; right: 12px;
-            background: rgba(17, 24, 39, 0.85); color: #ffffff;
-            border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px;
-            padding: 6px 14px; font-size: 0.78rem; font-weight: 600;
-            display: inline-flex; align-items: center; gap: 6px;
-            cursor: pointer; backdrop-filter: blur(6px); transition: all 0.2s;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-        }
-        .btn-open-lightbox:hover {
-            background: var(--brand-red); border-color: var(--brand-red); transform: scale(1.05);
-        }
-        .gallery-thumbs-strip {
-            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;
-            scrollbar-width: thin;
-        }
-        .gallery-thumb-img {
-            width: 76px; height: 54px; border-radius: 8px; object-fit: cover;
-            cursor: pointer; border: 2px solid transparent; flex-shrink: 0;
-            transition: all 0.2s;
-        }
-        .gallery-thumb-img:hover {
-            border-color: var(--brand-red); transform: translateY(-2px);
-        }
-        .gallery-thumb-img.active {
-            border-color: var(--brand-red); box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.3);
-        }
-
-        /* Menu Quick Filter & Accordion (TSK-30) */
-        .menu-search-bar {
-            display: flex; align-items: center; gap: 8px; background: var(--bg-subtle);
-            border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
-            margin-bottom: 12px; transition: border-color 0.2s, background 0.2s;
-        }
-        .menu-search-bar:focus-within {
-            border-color: var(--brand-red); background: var(--bg-surface);
-            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
-        }
-        .menu-search-bar input {
-            border: none; background: transparent; width: 100%; outline: none;
-            font-size: 0.88rem; color: var(--text-primary);
-        }
-        .menu-category-card {
-            background: var(--bg-subtle); border: 1px solid var(--border);
-            border-radius: 12px; padding: 14px; margin-bottom: 12px;
-            transition: all 0.2s;
-        }
-        .menu-category-header {
-            display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; user-select: none; padding: 2px 0;
-        }
-        .menu-category-header:hover .menu-category-title {
-            color: var(--brand-red);
-        }
-        .menu-category-arrow {
-            display: inline-block; font-size: 0.72rem; color: var(--text-muted);
-            transition: transform 0.2s ease; margin-right: 4px;
-        }
-        .menu-category-title {
-            font-weight: 700; font-size: 0.96rem; color: var(--text-primary);
-            display: flex; align-items: center; gap: 6px;
-        }
-        .menu-category-count {
-            font-size: 0.74rem; font-weight: 600; color: var(--text-muted);
-            background: var(--bg-surface); border: 1px solid var(--border);
-            padding: 2px 8px; border-radius: 999px;
-        }
-        .menu-item-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 12px; border-radius: 10px; background: var(--bg-surface);
-            border: 1px solid var(--border); margin-top: 8px; transition: all 0.2s;
-            gap: 12px;
-        }
-        .menu-item-row:hover {
-            border-color: rgba(225, 29, 72, 0.35); transform: translateX(2px);
-        }
-        .menu-item-row.unavailable {
-            opacity: 0.65; background: var(--bg-subtle);
-        }
-        .menu-item-name {
-            font-weight: 600; font-size: 0.92rem; color: var(--text-primary);
-        }
-        .menu-item-row.unavailable .menu-item-name {
-            text-decoration: line-through;
-        }
-        .menu-item-thumb {
-            width: 54px; height: 54px; border-radius: 8px; object-fit: cover;
-            flex-shrink: 0; cursor: zoom-in; border: 1px solid var(--border);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .menu-item-thumb:hover {
-            transform: scale(1.06); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
-        }
-        .badge-status-available {
-            font-size: 0.68rem; font-weight: 700; color: #059669;
-            background: rgba(16, 185, 129, 0.12); padding: 2px 7px; border-radius: 4px;
-        }
-        .badge-status-unavailable {
-            font-size: 0.68rem; font-weight: 700; color: #dc2626;
-            background: rgba(239, 68, 68, 0.12); padding: 2px 7px; border-radius: 4px;
-        }
-        .menu-item-price {
-            font-weight: 700; font-size: 0.94rem; color: var(--brand-red); white-space: nowrap;
-        }
-
-        /* Trạng thái Giờ mở cửa hoạt động thực tế (TSK-37 / BR-03) */
-        .open-status-badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
-            border-radius: 999px; line-height: 1.25; flex-shrink: 0;
-            user-select: none; transition: all 0.2s;
-        }
-        .open-status-badge.open {
-            color: #047857; background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.28);
-        }
-        .open-status-badge.closed {
-            color: #b91c1c; background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.22);
-        }
-
-        /* Lightbox Viewer Styles (TSK-30) */
-        .lightbox-backdrop {
-            position: fixed; inset: 0;
-            background: rgba(10, 15, 29, 0.94);
-            backdrop-filter: blur(8px);
-            display: none; align-items: center; justify-content: center;
-            z-index: 3200; padding: 20px;
-            user-select: none;
-        }
-        .lightbox-backdrop.open { display: flex; animation: lightboxFadeIn 0.2s ease-out; }
-        @keyframes lightboxFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .lightbox-container {
-            position: relative; max-width: 960px; width: 100%;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .lightbox-close-btn {
-            position: absolute; top: -45px; right: 0;
-            width: 40px; height: 40px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25);
-            color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s; z-index: 10;
-        }
-        .lightbox-close-btn:hover {
-            background: var(--brand-red); border-color: var(--brand-red); transform: scale(1.08);
-        }
-        .lightbox-nav-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            width: 48px; height: 48px; border-radius: 50%;
-            background: rgba(0, 0, 0, 0.65); border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s; z-index: 10;
-        }
-        .lightbox-nav-btn:hover {
-            background: var(--brand-red); border-color: var(--brand-red); transform: translateY(-50%) scale(1.1);
-        }
-        .lightbox-prev { left: -24px; }
-        .lightbox-next { right: -24px; }
-        @media (max-width: 768px) {
-            .lightbox-prev { left: 8px; width: 40px; height: 40px; }
-            .lightbox-next { right: 8px; width: 40px; height: 40px; }
-            .lightbox-close-btn { top: -40px; right: 8px; }
-            .modal-card.venue-detail-modal { padding: 18px 16px; }
-        }
-        .lightbox-image-wrap {
-            max-width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center;
-            overflow: hidden; border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-            background: #000000; position: relative;
-        }
-        .lightbox-image-wrap img {
-            max-width: 100%; max-height: 70vh; object-fit: contain; display: block;
-            transition: opacity 0.2s ease;
-        }
-        .lightbox-footer {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 6px; color: #ffffff; font-size: 0.9rem;
-        }
-        .lightbox-caption {
-            font-weight: 500; color: #f3f4f6; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .lightbox-counter {
-            font-size: 0.82rem; font-weight: 700; color: #9ca3af; background: rgba(0,0,0,0.5);
-            padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15);
-        }
-        .lightbox-thumbs {
-            display: flex; gap: 8px; max-width: 100%; overflow-x: auto; padding: 6px 0;
-            scrollbar-width: thin;
-        }
-        .lightbox-thumb-item {
-            width: 64px; height: 46px; border-radius: 6px; object-fit: cover;
-            cursor: pointer; opacity: 0.5; transition: all 0.2s; border: 2px solid transparent;
-            flex-shrink: 0;
-        }
-        .lightbox-thumb-item:hover, .lightbox-thumb-item.active {
-            opacity: 1; border-color: var(--brand-red); transform: scale(1.05);
         }
 
         .site-footer {
@@ -1712,33 +918,6 @@
             <button type="button" class="btn-icon-only" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
             </button>
-
-            <!-- Nút Chuông Thông báo người dùng (TSK-48 / PBI-17) -->
-            <div class="notification-wrapper">
-                <button type="button" class="btn-icon-only" onclick="toggleNotificationDropdown()" id="btn-notification-bell" title="Thông báo hệ thống">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    <span class="notification-badge" id="notification-unread-badge" style="display:none;">0</span>
-                </button>
-                <div class="notification-dropdown" id="notification-dropdown">
-                    <div class="notification-header">
-                        <div class="notification-title-row">
-                            <span style="font-weight:700;font-size:0.92rem;color:var(--text-primary);display:flex;align-items:center;gap:6px;">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                                Thông báo
-                            </span>
-                            <span class="notification-count-tag" id="notification-count-tag">0 mới</span>
-                        </div>
-                        <button type="button" class="btn-notification-action" onclick="markAllNotificationsAsRead()" title="Đánh dấu tất cả là đã đọc">
-                            Đã đọc tất cả
-                        </button>
-                    </div>
-                    <div class="notification-list" id="notification-items-list">
-                        <div class="notification-empty">
-                            <span>⏳ Đang tải thông báo...</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <button type="button" class="btn-icon-only" onclick="toggleAIDrawer()" title="Mở Trợ lý hội thoại AI">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -1886,11 +1065,7 @@
         </aside>
     </main>
 
-    <!-- ======================================================== -->
-    <!-- AI CONVERSATIONAL DRAWER & CHATBOX (TASK TE9C672)        -->
-    <!-- ======================================================== -->
-    <div class="ai-drawer" id="ai-drawer" role="dialog" aria-labelledby="ai-drawer-title" aria-modal="true">
-        <!-- Header -->
+    <div class="ai-drawer" id="ai-drawer">
         <div class="ai-drawer-header">
             <h4>Trợ lý Tìm kiếm Ẩm thực AI</h4>
             <div style="display:flex;align-items:center;gap:10px;">
@@ -2096,30 +1271,7 @@
     </aside>
 
     <div class="modal-backdrop" id="venue-modal" onclick="if(event.target===this) closeVenueModal()">
-        <div class="modal-card venue-detail-modal" id="venue-modal-content"></div>
-    </div>
-
-    <!-- Lightbox Viewer Modal (TSK-30) -->
-    <div class="lightbox-backdrop" id="lightbox-modal" onclick="if(event.target===this) closeLightbox()" ontouchstart="handleLightboxTouchStart(event)" ontouchend="handleLightboxTouchEnd(event)">
-        <div class="lightbox-container">
-            <button type="button" class="lightbox-close-btn" onclick="closeLightbox()" title="Đóng (ESC)">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-            <button type="button" class="lightbox-nav-btn lightbox-prev" onclick="lightboxPrev()" title="Ảnh trước (←)">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <button type="button" class="lightbox-nav-btn lightbox-next" onclick="lightboxNext()" title="Ảnh tiếp theo (→)">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-            <div class="lightbox-image-wrap">
-                <img id="lightbox-image" src="" alt="Ảnh nhà hàng">
-            </div>
-            <div class="lightbox-footer">
-                <div class="lightbox-caption" id="lightbox-caption">Mô tả ảnh</div>
-                <div class="lightbox-counter" id="lightbox-counter">1 / 1</div>
-            </div>
-            <div class="lightbox-thumbs" id="lightbox-thumbs"></div>
-        </div>
+        <div class="modal-card" id="venue-modal-content"></div>
     </div>
 
     <footer class="site-footer">
@@ -2575,7 +1727,6 @@
             }
 
             const grid = document.getElementById('venues-grid');
-            if (!grid) return;
             grid.innerHTML = '';
 
             if (list.length === 0) {
@@ -2631,12 +1782,6 @@
                             <h3 class="venue-name">${v.name}</h3>
                             <span class="rating-pill">★ ${Number(v.rating || v.avg_rating || 4.5).toFixed(1)}</span>
                         </div>
-
-                        <!-- TSK-40: Dải Tag Lý do Đề xuất Trực quan (Match Reasons Chips) -->
-                        <div class="match-reasons-row">
-                            ${reasonsChipsHtml}
-                        </div>
-
                         <div class="venue-meta">
                             ${v.cuisineLabel || v.cuisine_type || v.category || "Nhà hàng"} • <strong style="color:var(--brand-red);">${distFormatted}</strong> (~${travelMins} phút) • ${priceMin.toLocaleString()}đ - ${priceMax.toLocaleString()}đ
                         </div>
@@ -2649,10 +1794,6 @@
                             ${(v.outdoor || v.has_outdoor) ? '<span class="venue-tag">🌿 Ngoài trời</span>' : ''}
                             ${(v.pet_friendly || v.has_pet_friendly) ? '<span class="venue-tag">🐾 Thú cưng</span>' : ''}
                             ${(v.vegetarian || v.vegetarian_support) ? '<span class="venue-tag">🌱 Món chay</span>' : ''}
-                        </div>
-                        <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-size:0.78rem;color:var(--text-muted);">Thực đơn & Tiện ích</span>
-                            <span style="font-size:0.82rem;font-weight:700;color:var(--brand-red);">Chi tiết →</span>
                         </div>
                     </div>
                 `;
@@ -3155,21 +2296,7 @@
 
             activeAmenities.parking = lower.includes('ô tô') || lower.includes('đậu xe') || lower.includes('đỗ xe');
             activeAmenities.private_room = lower.includes('phòng riêng') || lower.includes('yên tĩnh');
-            activeAmenities.outdoor = lower.includes('ngoài trời') || lower.includes('thoáng mát') || lower.includes('view đẹp');
-            activeAmenities.pet_friendly = lower.includes('thú cưng') || lower.includes('chó') || lower.includes('mèo') || lower.includes('pet');
             activeAmenities.vegetarian = lower.includes('chay');
-
-            // Đồng bộ trạng thái các nút lọc
-            const btnParking = document.getElementById('btn-parking');
-            if (btnParking) btnParking.classList.toggle('active', activeAmenities.parking);
-            const btnRoom = document.getElementById('btn-room');
-            if (btnRoom) btnRoom.classList.toggle('active', activeAmenities.private_room);
-            const btnOutdoor = document.getElementById('btn-outdoor');
-            if (btnOutdoor) btnOutdoor.classList.toggle('active', activeAmenities.outdoor);
-            const btnPet = document.getElementById('btn-pet');
-            if (btnPet) btnPet.classList.toggle('active', activeAmenities.pet_friendly);
-            const btnVegan = document.getElementById('btn-vegan');
-            if (btnVegan) btnVegan.classList.toggle('active', activeAmenities.vegetarian);
 
             const priceMatch = lower.match(/(\d+)\s*(k|nghìn|triệu)/);
             if (priceMatch) {
@@ -3209,105 +2336,6 @@
             renderVenues(filtered);
         }
 
-        // =====================================================================
-        // TSK-30: QUẢN LÝ LIGHTBOX XEM ẢNH PHÓNG TO & BẢNG THỰC ĐƠN PHÂN CẤP
-        // =====================================================================
-        let currentLightboxImages = [];
-        let currentLightboxIndex = 0;
-        let currentLoadedMenus = [];
-        let lightboxTouchStartX = 0;
-        let lightboxTouchEndX = 0;
-
-        function openLightbox(startIndex = currentLightboxIndex) {
-            if (!currentLightboxImages || currentLightboxImages.length === 0) return;
-            currentLightboxIndex = Math.max(0, Math.min(startIndex, currentLightboxImages.length - 1));
-            updateLightboxView();
-            const modal = document.getElementById('lightbox-modal');
-            if (modal) modal.classList.add('open');
-            document.addEventListener('keydown', handleLightboxKeydown);
-        }
-
-        function openSingleImageLightbox(url, caption) {
-            currentLightboxImages = [{ image_url: url, caption: caption || 'Hình ảnh món ăn' }];
-            currentLightboxIndex = 0;
-            openLightbox(0);
-        }
-
-        function closeLightbox() {
-            const modal = document.getElementById('lightbox-modal');
-            if (modal) modal.classList.remove('open');
-            document.removeEventListener('keydown', handleLightboxKeydown);
-        }
-
-        function lightboxNext() {
-            if (currentLightboxImages.length <= 1) return;
-            currentLightboxIndex = (currentLightboxIndex + 1) % currentLightboxImages.length;
-            updateLightboxView();
-        }
-
-        function lightboxPrev() {
-            if (currentLightboxImages.length <= 1) return;
-            currentLightboxIndex = (currentLightboxIndex - 1 + currentLightboxImages.length) % currentLightboxImages.length;
-            updateLightboxView();
-        }
-
-        function handleLightboxKeydown(e) {
-            if (e.key === 'Escape') closeLightbox();
-            else if (e.key === 'ArrowRight') lightboxNext();
-            else if (e.key === 'ArrowLeft') lightboxPrev();
-        }
-
-        function handleLightboxTouchStart(e) {
-            if (e.changedTouches && e.changedTouches.length > 0) {
-                lightboxTouchStartX = e.changedTouches[0].screenX;
-            }
-        }
-
-        function handleLightboxTouchEnd(e) {
-            if (e.changedTouches && e.changedTouches.length > 0) {
-                lightboxTouchEndX = e.changedTouches[0].screenX;
-                const diff = lightboxTouchEndX - lightboxTouchStartX;
-                if (Math.abs(diff) > 45) {
-                    if (diff < 0) lightboxNext();
-                    else lightboxPrev();
-                }
-            }
-        }
-
-        function updateLightboxView() {
-            const imgData = currentLightboxImages[currentLightboxIndex];
-            if (!imgData) return;
-
-            const mainImg = document.getElementById('lightbox-image');
-            const captionEl = document.getElementById('lightbox-caption');
-            const counterEl = document.getElementById('lightbox-counter');
-            const thumbsEl = document.getElementById('lightbox-thumbs');
-
-            if (mainImg) {
-                mainImg.style.opacity = '0.3';
-                mainImg.src = imgData.image_url;
-                mainImg.onload = () => { mainImg.style.opacity = '1'; };
-            }
-
-            if (captionEl) {
-                captionEl.innerText = imgData.caption || 'Hình ảnh không gian nhà hàng';
-            }
-
-            if (counterEl) {
-                counterEl.innerText = `${currentLightboxIndex + 1} / ${currentLightboxImages.length}`;
-            }
-
-            if (thumbsEl) {
-                thumbsEl.innerHTML = currentLightboxImages.map((im, idx) => `
-                    <img src="${im.image_url}" 
-                         class="lightbox-thumb-item ${idx === currentLightboxIndex ? 'active' : ''}" 
-                         onclick="openLightbox(${idx})" 
-                         alt="Thumb ${idx + 1}"
-                         title="${im.caption || 'Ảnh ' + (idx + 1)}">
-                `).join('');
-            }
-        }
-
         function openVenueModal(v) {
             const modal = document.getElementById('venue-modal');
             const box = document.getElementById('venue-modal-content');
@@ -3315,19 +2343,6 @@
             const lng = v.longitude || v.lng;
             const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentPos.lat},${currentPos.lng}&destination=${lat},${lng}&travelmode=two-wheeler`;
             const imageUrl = v.image || v.cover_image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
-
-            let amenitiesModalHtml = '';
-            if (v.parking) amenitiesModalHtml += '<span class="venue-tag" title="Có chỗ đỗ xe ô tô">🚗 Đỗ ô tô</span>';
-            if (v.private_room) amenitiesModalHtml += '<span class="venue-tag" title="Có phòng riêng">🚪 Phòng riêng</span>';
-            if (v.outdoor) amenitiesModalHtml += '<span class="venue-tag" title="Có bàn ngoài trời">🌿 Ngoài trời</span>';
-            if (v.pet_friendly) amenitiesModalHtml += '<span class="venue-tag" title="Thân thiện thú cưng">🐾 Thú cưng</span>';
-            if (v.vegetarian) amenitiesModalHtml += '<span class="venue-tag" title="Có phục vụ món chay">🥗 Món chay</span>';
-
-            const priceFormatted = `${v.priceMin.toLocaleString('vi-VN')}đ - ${v.priceMax.toLocaleString('vi-VN')}đ/người`;
-
-            // Khởi tạo ảnh mặc định cho Lightbox
-            currentLightboxImages = [{ image_url: v.image, caption: v.name + " (Ảnh đại diện quán)" }];
-            currentLightboxIndex = 0;
 
             box.innerHTML = `
                 <img src="${imageUrl}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
@@ -3338,78 +2353,8 @@
                     <span class="venue-tag">Cách ${formatExactDistance(v.distanceKm !== undefined ? v.distanceKm : (v.distance_km || 0))}</span>
                     <span class="venue-tag">${Number(v.priceMin || v.min_price || 50000).toLocaleString()}đ - ${Number(v.priceMax || v.max_price || 300000).toLocaleString()}đ/người</span>
                 </div>
-
-                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
-                    ${amenitiesModalHtml}
-                </div>
-
-                <!-- Bảng Thực đơn Món ăn Phân cấp & Tìm kiếm Nhanh (TSK-30) -->
-                <div style="margin-top:12px;margin-bottom:20px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">
-                        <h4 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;display:flex;align-items:center;gap:6px;">
-                            <span>📋 Thực đơn &amp; Món ăn</span>
-                        </h4>
-                        <span id="modal-menu-count-badge" style="font-size:0.75rem;font-weight:600;color:var(--brand-red);background:rgba(225,29,72,0.1);padding:3px 10px;border-radius:999px;">
-                            Đang nạp thực đơn...
-                        </span>
-                    </div>
-
-                    <!-- Thanh tìm kiếm món ăn nhanh trong quán -->
-                    <div class="menu-search-bar" id="modal-menu-search-box" style="display:none;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0;">
-                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                        <input type="text" id="modal-menu-search-input" placeholder="Tìm nhanh món ăn trong thực đơn của quán..." oninput="filterModalMenuItems(this.value)">
-                        <span id="modal-menu-search-count" style="font-size:0.75rem;font-weight:600;color:var(--text-muted);white-space:nowrap;display:none;"></span>
-                    </div>
-
-                    <div id="modal-menu-list" style="display:flex;flex-direction:column;gap:12px;max-height:300px;overflow-y:auto;padding-right:4px;">
-                        <div class="skeleton-shimmer" style="height:40px;border-radius:8px;"></div>
-                        <div class="skeleton-shimmer" style="height:40px;border-radius:8px;"></div>
-                    </div>
-                </div>
-
-                <!-- TSK-51: Khối Đánh giá & Nhận xét từ khách hàng (FR-10, BR-06) -->
-                <div style="margin-top:16px;margin-bottom:20px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);">
-                        <h4 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin:0;display:flex;align-items:center;gap:6px;">
-                            <span>⭐ Đánh giá &amp; Nhận xét</span>
-                        </h4>
-                        <span id="modal-review-stats-badge" style="font-size:0.75rem;font-weight:600;color:#ca8a04;background:rgba(234,179,8,0.12);padding:3px 10px;border-radius:999px;">
-                            ★ ${Number(v.rating).toFixed(1)} (${v.reviews || 0} đánh giá)
-                        </span>
-                    </div>
-
-                    <!-- Form gửi hoặc chỉnh sửa đánh giá -->
-                    <div class="review-form-card" id="modal-review-form-box" style="background:var(--bg-subtle);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                            <span style="font-size:0.83rem;font-weight:600;color:var(--text-primary);" id="review-form-title">Chấm điểm &amp; Viết nhận xét</span>
-                            <div class="star-rating-selector" id="star-rating-selector" style="display:flex;gap:4px;cursor:pointer;">
-                                <span class="star-btn active" data-val="1" onclick="selectStarRating(1)" title="1 sao">★</span>
-                                <span class="star-btn active" data-val="2" onclick="selectStarRating(2)" title="2 sao">★</span>
-                                <span class="star-btn active" data-val="3" onclick="selectStarRating(3)" title="3 sao">★</span>
-                                <span class="star-btn active" data-val="4" onclick="selectStarRating(4)" title="4 sao">★</span>
-                                <span class="star-btn active" data-val="5" onclick="selectStarRating(5)" title="5 sao">★</span>
-                            </div>
-                        </div>
-                        <textarea id="review-comment-input" placeholder="Chia sẻ cảm nhận của bạn về hương vị món ăn, không gian, phục vụ..." rows="2" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:0.83rem;font-family:inherit;background:var(--bg-surface);color:var(--text-primary);resize:vertical;"></textarea>
-                        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
-                            <button type="button" id="btn-cancel-edit-review" onclick="cancelEditReview()" style="display:none;background:none;border:none;font-size:0.78rem;color:var(--text-muted);cursor:pointer;">Hủy sửa</button>
-                            <button type="button" class="btn-action btn-primary" onclick="submitRestaurantReview(${v.id})" id="btn-submit-review" style="padding:6px 16px;border-radius:6px;font-size:0.8rem;font-weight:600;">
-                                Gửi đánh giá
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Danh sách các đánh giá đã có -->
-                    <div id="modal-reviews-list" style="display:flex;flex-direction:column;gap:10px;max-height:240px;overflow-y:auto;padding-right:4px;">
-                        <div class="skeleton-shimmer" style="height:45px;border-radius:8px;"></div>
-                    </div>
-                </div>
-
                 <div style="display:flex;gap:10px;">
-                    <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:42px;justify-content:center;text-decoration:none;border-radius:8px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                    <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
                         Mở chỉ đường Google Maps
                     </a>
                     <button type="button" onclick="handleWriteReview(${v.id})"
@@ -3422,443 +2367,10 @@
                 </div>
             `;
             modal.classList.add('open');
-
-            // Đồng bộ thực đơn thật & thư viện ảnh từ CSDL MySQL (TSK-27, TSK-28 & TSK-30)
-            loadRestaurantMenuInModal(v.id, v.menu);
-            loadRestaurantImagesInModal(v.id, v.image, v.name);
-            // TSK-51: Nạp danh sách đánh giá & nhận xét của nhà hàng (FR-10)
-            loadRestaurantReviewsInModal(v.id);
-        }
-
-        /**
-         * TSK-27 / TSK-30: Nạp danh mục thực đơn & món ăn thật từ API GET /api/restaurants/{id}/menus
-         */
-        async function loadRestaurantMenuInModal(restaurantId, fallbackMenu) {
-            const listEl = document.getElementById('modal-menu-list');
-            const badgeEl = document.getElementById('modal-menu-count-badge');
-            const searchBox = document.getElementById('modal-menu-search-box');
-            if (!listEl) return;
-
-            try {
-                const res = await fetch(`/api/restaurants/${restaurantId}/menus`);
-                if (res.ok) {
-                    const menus = await res.json();
-                    const totalItems = menus.reduce((acc, m) => acc + (m.items ? m.items.length : 0), 0);
-
-                    if (menus.length > 0 && totalItems > 0) {
-                        currentLoadedMenus = menus;
-                        if (badgeEl) badgeEl.innerText = `${menus.length} danh mục • ${totalItems} món`;
-                        if (searchBox) searchBox.style.display = 'flex';
-                        renderCategorizedMenus(menus);
-                        return;
-                    }
-                }
-            } catch (err) {
-                console.warn('[Modal Menu] Không thể tải menu từ API:', err);
-            }
-
-            // Fallback nếu nhà hàng chưa có menu trong CSDL
-            currentLoadedMenus = [];
-            if (badgeEl) badgeEl.innerText = 'Thực đơn tiêu biểu';
-            if (searchBox) searchBox.style.display = 'none';
-
-            if (fallbackMenu && fallbackMenu.length > 0) {
-                listEl.innerHTML = `
-                    <div style="display:flex;flex-direction:column;gap:8px;">
-                        ${fallbackMenu.map(m => `
-                            <div class="menu-item-row" style="margin-top:0;">
-                                <div>
-                                    <span class="menu-item-name">${m.name}</span>
-                                </div>
-                                <div class="menu-item-price">${Number(m.price).toLocaleString('vi-VN')}đ</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                listEl.innerHTML = `
-                    <div style="text-align:center;padding:22px;color:var(--text-muted);font-size:0.86rem;background:var(--bg-subtle);border-radius:10px;">
-                        Nhà hàng chưa cập nhật thực đơn chi tiết.
-                    </div>
-                `;
-            }
-        }
-
-        /**
-         * Render bảng thực đơn phân cấp theo từng nhóm thực đơn (RestaurantMenus)
-         */
-        function renderCategorizedMenus(menus, isFiltered = false) {
-            const listEl = document.getElementById('modal-menu-list');
-            if (!listEl) return;
-
-            let html = '';
-            menus.forEach(group => {
-                const items = group.items || [];
-                if (items.length === 0) return;
-
-                html += `
-                    <div class="menu-category-card">
-                        <div class="menu-category-header" onclick="toggleMenuCategory(this)" title="Nhấp để thu gọn hoặc mở rộng danh mục">
-                            <span class="menu-category-title">
-                                <span class="menu-category-arrow">▼</span>
-                                <span>🍽️</span>
-                                <span>${group.name}</span>
-                            </span>
-                            <span class="menu-category-count">${items.length} món</span>
-                        </div>
-                        ${group.description ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;margin-bottom:6px;font-style:italic;">${group.description}</p>` : ''}
-                        <div class="menu-category-body" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
-                            ${items.map(it => `
-                                <div class="menu-item-row ${!it.is_available ? 'unavailable' : ''}">
-                                    ${it.image_url ? `
-                                        <img src="${it.image_url}" class="menu-item-thumb" 
-                                             alt="${it.name}" 
-                                             title="Nhấp để phóng to ảnh món ăn"
-                                             onclick="event.stopPropagation(); openSingleImageLightbox('${it.image_url}', '${it.name} • ${Number(it.price).toLocaleString('vi-VN')}đ')"
-                                             onerror="this.style.display='none';">
-                                    ` : ''}
-                                    <div style="flex:1;padding-right:8px;">
-                                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                                            <span class="menu-item-name">${it.name}</span>
-                                            ${it.is_available 
-                                                ? '<span class="badge-status-available">Còn món</span>' 
-                                                : '<span class="badge-status-unavailable">Tạm hết</span>'}
-                                        </div>
-                                        ${it.description ? `<div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">${it.description}</div>` : ''}
-                                    </div>
-                                    <div class="menu-item-price">
-                                        ${Number(it.price).toLocaleString('vi-VN')}đ
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            listEl.innerHTML = html;
-        }
-
-        /**
-         * Thu gọn / mở rộng Accordion từng nhóm thực đơn
-         */
-        function toggleMenuCategory(headerEl) {
-            const card = headerEl.closest('.menu-category-card');
-            if (!card) return;
-            const body = card.querySelector('.menu-category-body');
-            const arrow = card.querySelector('.menu-category-arrow');
-            if (!body) return;
-            const isHidden = body.style.display === 'none';
-            body.style.display = isHidden ? 'flex' : 'none';
-            if (arrow) arrow.innerText = isHidden ? '▼' : '▶';
-        }
-
-        /**
-         * Lọc nhanh món ăn trong thực đơn theo từ khóa gõ vào ô tìm kiếm
-         */
-        function filterModalMenuItems(keyword) {
-            const listEl = document.getElementById('modal-menu-list');
-            const countEl = document.getElementById('modal-menu-search-count');
-            if (!listEl || !currentLoadedMenus) return;
-
-            const q = (keyword || '').trim().toLowerCase();
-            if (!q) {
-                renderCategorizedMenus(currentLoadedMenus);
-                if (countEl) countEl.style.display = 'none';
-                return;
-            }
-
-            let matchTotal = 0;
-            const filteredMenus = currentLoadedMenus.map(group => {
-                const matchedItems = (group.items || []).filter(it => 
-                    (it.name || '').toLowerCase().includes(q) || 
-                    (it.description || '').toLowerCase().includes(q)
-                );
-                matchTotal += matchedItems.length;
-                return { ...group, items: matchedItems };
-            }).filter(group => group.items.length > 0);
-
-            if (countEl) {
-                countEl.style.display = 'inline';
-                countEl.innerText = `${matchTotal} món khớp`;
-            }
-
-            if (matchTotal === 0) {
-                listEl.innerHTML = `
-                    <div style="text-align:center;padding:24px 12px;background:var(--bg-subtle);border-radius:10px;color:var(--text-muted);">
-                        <div style="font-size:1.8rem;margin-bottom:6px;">🔍</div>
-                        <div style="font-weight:600;font-size:0.9rem;color:var(--text-primary);margin-bottom:4px;">Không tìm thấy món ăn phù hợp</div>
-                        <div style="font-size:0.8rem;">Không có món nào chứa từ khóa "${keyword}" trong thực đơn của quán.</div>
-                    </div>
-                `;
-            } else {
-                renderCategorizedMenus(filteredMenus, true);
-            }
-        }
-
-        /**
-         * TSK-28 / TSK-30: Nạp toàn bộ ảnh của quán và kết nối Trình xem ảnh phóng to Lightbox
-         */
-        async function loadRestaurantImagesInModal(restaurantId, coverUrl, restaurantName) {
-            const galleryRow = document.getElementById('modal-gallery-row');
-            if (!galleryRow) return;
-
-            try {
-                const res = await fetch(`/api/restaurants/${restaurantId}/images`);
-                if (res.ok) {
-                    const images = await res.json();
-                    if (images && images.length > 0) {
-                        currentLightboxImages = images.map(im => ({
-                            image_url: im.image_url,
-                            caption: im.caption || (restaurantName + " (Hình ảnh quán)")
-                        }));
-
-                        let html = '';
-                        images.forEach((img, idx) => {
-                            html += `
-                                <img src="${img.image_url}" 
-                                     class="gallery-thumb-img ${idx === 0 ? 'active' : ''}"
-                                     alt="${img.caption || 'Ảnh nhà hàng'}" 
-                                     title="${img.caption || 'Xem ảnh ' + (idx + 1) + ' (Bấm để xem, nhấp tiếp để phóng to)'}"
-                                     onclick="selectModalGalleryImage('${img.image_url}', ${idx})"
-                                     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80';">
-                            `;
-                        });
-                        galleryRow.innerHTML = html;
-                        galleryRow.style.display = 'flex';
-                        return;
-                    }
-                }
-            } catch (_) {}
-
-            // Fallback nếu chỉ có ảnh bìa
-            currentLightboxImages = [{ image_url: coverUrl, caption: restaurantName }];
-            galleryRow.style.display = 'none';
-        }
-
-        /**
-         * TSK-51 / FR-10: Quản lý Đánh giá (1-5 sao), Nhận xét & Tự động tính lại avg_rating
-         */
-        let currentSelectedStar = 5;
-        let currentEditingReviewId = null;
-        let currentModalRestaurantId = null;
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        function selectStarRating(stars) {
-            currentSelectedStar = stars;
-            const starBtns = document.querySelectorAll('#star-rating-selector .star-btn');
-            starBtns.forEach(btn => {
-                const val = parseInt(btn.getAttribute('data-val') || '1', 10);
-                if (val <= stars) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        function cancelEditReview() {
-            currentEditingReviewId = null;
-            selectStarRating(5);
-            const commentInput = document.getElementById('review-comment-input');
-            if (commentInput) commentInput.value = '';
-            const btnSubmit = document.getElementById('btn-submit-review');
-            if (btnSubmit) btnSubmit.innerText = 'Gửi đánh giá';
-            const btnCancel = document.getElementById('btn-cancel-edit-review');
-            if (btnCancel) btnCancel.style.display = 'none';
-            const titleEl = document.getElementById('review-form-title');
-            if (titleEl) titleEl.innerText = 'Chấm điểm & Viết nhận xét';
-        }
-
-        async function loadRestaurantReviewsInModal(restaurantId) {
-            currentModalRestaurantId = restaurantId;
-            cancelEditReview();
-            const listEl = document.getElementById('modal-reviews-list');
-            const statsBadge = document.getElementById('modal-review-stats-badge');
-            if (!listEl) return;
-
-            let authUser = null;
-            try {
-                const rawAuth = localStorage.getItem('smart_dining_user');
-                if (rawAuth) authUser = JSON.parse(rawAuth);
-            } catch (_) {}
-
-            // 1. Kiểm tra xem người dùng hiện tại đã từng đánh giá quán này chưa (BR-06)
-            if (authUser && authUser.id) {
-                try {
-                    const myRes = await fetch(`/api/reviews/restaurant/${restaurantId}/my-review?user_id=${authUser.id}`);
-                    if (myRes.ok) {
-                        const myRev = await myRes.json();
-                        if (myRev && myRev.id) {
-                            currentEditingReviewId = myRev.id;
-                            selectStarRating(myRev.rating || 5);
-                            const commentInput = document.getElementById('review-comment-input');
-                            if (commentInput) commentInput.value = myRev.comment || '';
-                            const btnSubmit = document.getElementById('btn-submit-review');
-                            if (btnSubmit) btnSubmit.innerText = 'Cập nhật đánh giá';
-                            const btnCancel = document.getElementById('btn-cancel-edit-review');
-                            if (btnCancel) btnCancel.style.display = 'inline-block';
-                            const titleEl = document.getElementById('review-form-title');
-                            if (titleEl) titleEl.innerText = 'Đánh giá của bạn (Chỉnh sửa theo BR-06)';
-                        }
-                    }
-                } catch (_) {}
-            }
-
-            // 2. Tải danh sách đánh giá của nhà hàng
-            try {
-                const res = await fetch(`/api/reviews/restaurant/${restaurantId}?limit=20`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (statsBadge) {
-                        statsBadge.innerText = `★ ${Number(data.avg_rating).toFixed(1)} (${data.total_reviews} đánh giá)`;
-                    }
-
-                    if (!data.items || data.items.length === 0) {
-                        listEl.innerHTML = `
-                            <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.83rem;">
-                                <span>Chưa có nhận xét nào. Hãy là người đầu tiên trải nghiệm và chấm điểm quán!</span>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    listEl.innerHTML = data.items.map(r => {
-                        const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-                        const userName = (r.user && r.user.full_name) || 'Người dùng';
-                        const userAvatar = (r.user && r.user.avatar_url) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
-                        const timeAgo = formatTimeAgo(r.created_at);
-                        const isMyReview = authUser && authUser.id === r.user_id;
-
-                        return `
-                            <div class="review-card-item">
-                                <div class="review-card-header">
-                                    <div class="review-card-user">
-                                        <img src="${userAvatar}" alt="${escapeHtml(userName)}">
-                                        <span>${escapeHtml(userName)} ${isMyReview ? '<span style="font-size:0.72rem;color:var(--brand-primary);font-weight:700;">(Bạn)</span>' : ''}</span>
-                                    </div>
-                                    <div style="display:flex;align-items:center;gap:8px;">
-                                        <span class="review-stars">${starsStr}</span>
-                                        <span class="review-card-time">${timeAgo}</span>
-                                    </div>
-                                </div>
-                                ${r.comment ? `<div class="review-card-comment">${escapeHtml(r.comment)}</div>` : ''}
-                            </div>
-                        `;
-                    }).join('');
-                    return;
-                }
-            } catch (err) {
-                console.warn('[Review API] Lỗi tải đánh giá:', err);
-            }
-
-            listEl.innerHTML = `
-                <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.83rem;">
-                    <span>Chưa có nhận xét nào cho quán này.</span>
-                </div>
-            `;
-        }
-
-        async function submitRestaurantReview(restaurantId) {
-            let authUser = null;
-            try {
-                const rawAuth = localStorage.getItem('smart_dining_user');
-                if (rawAuth) authUser = JSON.parse(rawAuth);
-            } catch (_) {}
-
-            if (!authUser || !authUser.id) {
-                alert('Vui lòng đăng nhập tài khoản để gửi đánh giá và nhận xét (Quy tắc BR-01).');
-                if (typeof openAuthModal === 'function') openAuthModal();
-                return;
-            }
-
-            const commentInput = document.getElementById('review-comment-input');
-            const comment = commentInput ? commentInput.value.trim() : '';
-            const btnSubmit = document.getElementById('btn-submit-review');
-
-            if (btnSubmit) {
-                btnSubmit.disabled = true;
-                btnSubmit.innerText = 'Đang lưu...';
-            }
-
-            try {
-                let res;
-                if (currentEditingReviewId) {
-                    // Cập nhật đánh giá cũ theo BR-06
-                    res = await fetch(`/api/reviews/${currentEditingReviewId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            user_id: authUser.id,
-                            rating: currentSelectedStar,
-                            comment: comment
-                        })
-                    });
-                } else {
-                    // Tạo đánh giá mới
-                    res = await fetch('/api/reviews', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            restaurant_id: restaurantId,
-                            user_id: authUser.id,
-                            rating: currentSelectedStar,
-                            comment: comment
-                        })
-                    });
-                }
-
-                if (res.ok) {
-                    alert(currentEditingReviewId ? 'Cập nhật đánh giá thành công!' : 'Đã gửi đánh giá thành công! Cảm ơn bạn đã đóng góp cho cộng đồng.');
-                    await loadRestaurantReviewsInModal(restaurantId);
-                    // Cập nhật điểm và số đánh giá ngoài thẻ quán
-                    const targetVenue = venues.find(v => v.id === restaurantId);
-                    if (targetVenue) {
-                        try {
-                            const vRes = await fetch(`/api/restaurants/${restaurantId}`);
-                            if (vRes.ok) {
-                                const vData = await vRes.json();
-                                targetVenue.rating = vData.avg_rating;
-                                targetVenue.reviews = vData.total_reviews;
-                                renderVenues();
-                            }
-                        } catch (_) {}
-                    }
-                } else {
-                    const errData = await res.json().catch(() => ({}));
-                    alert(errData.detail || 'Không thể lưu đánh giá. Vui lòng kiểm tra lại.');
-                }
-            } catch (err) {
-                console.warn('Lỗi gửi đánh giá:', err);
-                alert('Có lỗi kết nối khi gửi đánh giá.');
-            } finally {
-                if (btnSubmit) {
-                    btnSubmit.disabled = false;
-                    btnSubmit.innerText = currentEditingReviewId ? 'Cập nhật đánh giá' : 'Gửi đánh giá';
-                }
-            }
-        }
-
-        function selectModalGalleryImage(url, index) {
-            const coverEl = document.getElementById('modal-main-cover');
-            if (coverEl) coverEl.src = url;
-            currentLightboxIndex = index;
-            document.querySelectorAll('.gallery-thumb-img').forEach((el, idx) => {
-                el.classList.toggle('active', idx === index);
-            });
         }
 
         function closeVenueModal() {
             document.getElementById('venue-modal').classList.remove('open');
-            closeLightbox();
         }
 
         function handleWriteReview(venueId) {
@@ -3901,158 +2413,7 @@
         };
 
         function toggleAccountDropdown() {
-            const accDrop = document.getElementById('account-dropdown');
-            if (accDrop) accDrop.classList.toggle('open');
-            const notifDrop = document.getElementById('notification-dropdown');
-            if (notifDrop) notifDrop.classList.remove('open');
-        }
-
-        /**
-         * TSK-48 / PBI-17: Quản lý Hệ thống Thông báo người dùng (Notifications Service)
-         */
-        function escapeNotificationText(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
-
-        function toggleNotificationDropdown() {
-            const dropdown = document.getElementById('notification-dropdown');
-            if (!dropdown) return;
-            const isOpen = dropdown.classList.toggle('open');
-            if (isOpen) {
-                // Đóng dropdown tài khoản nếu đang mở
-                const accDrop = document.getElementById('account-dropdown');
-                if (accDrop) accDrop.classList.remove('open');
-                loadUserNotifications();
-            }
-        }
-
-        async function loadUserNotifications() {
-            let authUser = null;
-            try {
-                const rawAuth = localStorage.getItem('smart_dining_user');
-                if (rawAuth) authUser = JSON.parse(rawAuth);
-            } catch (_) {}
-
-            const listEl = document.getElementById('notification-items-list');
-            const badgeEl = document.getElementById('notification-unread-badge');
-            const countTag = document.getElementById('notification-count-tag');
-
-            // Người dùng chưa đăng nhập (Guest Mode theo BR-01)
-            if (!authUser || !authUser.id) {
-                if (badgeEl) badgeEl.style.display = 'none';
-                if (countTag) countTag.innerText = '0 mới';
-                if (listEl) {
-                    listEl.innerHTML = `
-                        <div class="notification-empty">
-                            <span style="font-size:1.6rem;">🔔</span>
-                            <span style="font-weight:600;color:var(--text-primary);">Chế độ Khách (Guest)</span>
-                            <span>Đăng nhập để nhận thông báo phản hồi đánh giá và cập nhật hệ thống.</span>
-                            <button type="button" class="btn-action btn-primary" onclick="openAuthModal()" style="margin-top:6px;padding:6px 14px;border-radius:8px;font-size:0.78rem;">
-                                Đăng nhập ngay
-                            </button>
-                        </div>
-                    `;
-                }
-                return;
-            }
-
-            try {
-                const res = await fetch(`/api/notifications?user_id=${authUser.id}&limit=20`);
-                if (res.ok) {
-                    const data = await res.json();
-                    const unread = data.unread_count || 0;
-                    if (badgeEl) {
-                        if (unread > 0) {
-                            badgeEl.innerText = unread > 99 ? '99+' : unread;
-                            badgeEl.style.display = 'flex';
-                        } else {
-                            badgeEl.style.display = 'none';
-                        }
-                    }
-                    if (countTag) {
-                        countTag.innerText = `${unread} mới`;
-                    }
-
-                    if (!listEl) return;
-                    if (!data.items || data.items.length === 0) {
-                        listEl.innerHTML = `
-                            <div class="notification-empty">
-                                <span style="font-size:1.6rem;">📭</span>
-                                <span>Bạn không có thông báo nào.</span>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    listEl.innerHTML = data.items.map(item => {
-                        const icon = item.type === 'review_reply' ? '💬' :
-                                     item.type === 'account_status' ? '🛡️' : '📢';
-                        const timeAgo = formatTimeAgo(item.created_at);
-                        const unreadClass = item.is_read ? '' : 'unread';
-                        return `
-                            <div class="notification-item ${unreadClass}" onclick="markNotificationRead(${item.id}, event)" title="${item.is_read ? 'Đã đọc' : 'Chưa đọc - Nhấn để đánh dấu đã đọc'}">
-                                <div class="notification-icon-box">${icon}</div>
-                                <div class="notification-item-body">
-                                    <div class="notification-item-title">
-                                        <span>${escapeNotificationText(item.title)}</span>
-                                        <span class="notification-item-time">${timeAgo}</span>
-                                    </div>
-                                    <div class="notification-item-content">${escapeNotificationText(item.content)}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            } catch (err) {
-                console.warn('[Notification API] Lỗi khi tải thông báo:', err);
-            }
-        }
-
-        async function markNotificationRead(notificationId, event) {
-            if (event) event.stopPropagation();
-            let authUser = null;
-            try {
-                const rawAuth = localStorage.getItem('smart_dining_user');
-                if (rawAuth) authUser = JSON.parse(rawAuth);
-            } catch (_) {}
-            if (!authUser || !authUser.id) return;
-
-            try {
-                const res = await fetch(`/api/notifications/${notificationId}/read?user_id=${authUser.id}`, {
-                    method: 'PATCH'
-                });
-                if (res.ok) {
-                    await loadUserNotifications();
-                }
-            } catch (err) {
-                console.warn('Lỗi đánh dấu thông báo đã đọc:', err);
-            }
-        }
-
-        async function markAllNotificationsAsRead() {
-            let authUser = null;
-            try {
-                const rawAuth = localStorage.getItem('smart_dining_user');
-                if (rawAuth) authUser = JSON.parse(rawAuth);
-            } catch (_) {}
-            if (!authUser || !authUser.id) return;
-
-            try {
-                const res = await fetch(`/api/notifications/read-all?user_id=${authUser.id}`, {
-                    method: 'PUT'
-                });
-                if (res.ok) {
-                    await loadUserNotifications();
-                }
-            } catch (err) {
-                console.warn('Lỗi đánh dấu tất cả đã đọc:', err);
-            }
+            document.getElementById('account-dropdown').classList.toggle('open');
         }
 
         async function initChatSessionIfNeeded() {
@@ -4074,19 +2435,9 @@
 
         async function toggleAIDrawer() {
             const drawer = document.getElementById('ai-drawer');
-            const floatingTrigger = document.getElementById('floating-chat-trigger');
             drawer.classList.toggle('open');
-            const isOpen = drawer.classList.contains('open');
-
-            if (floatingTrigger) {
-                floatingTrigger.classList.toggle('hidden', isOpen);
-            }
-
-            if (isOpen) {
-                renderSamplePromptChips(SAMPLE_PROMPTS_INITIAL);
+            if (drawer.classList.contains('open')) {
                 await initChatSessionIfNeeded();
-                const input = document.getElementById('drawer-input');
-                if (input && !isChatSessionClosed) input.focus();
             }
         }
 
@@ -4176,10 +2527,7 @@
                 document.getElementById('search-suggestions').classList.remove('open');
             }
             if (!e.target.closest('.topbar-right')) {
-                const accDrop = document.getElementById('account-dropdown');
-                if (accDrop) accDrop.classList.remove('open');
-                const notifDrop = document.getElementById('notification-dropdown');
-                if (notifDrop) notifDrop.classList.remove('open');
+                document.getElementById('account-dropdown').classList.remove('open');
             }
         });
 
