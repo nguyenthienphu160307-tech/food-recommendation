@@ -40,6 +40,7 @@ from app.schemas.search import (
 )
 
 router = APIRouter(prefix="/api/chat", tags=["Trợ lý Chat AI & Geocoding (Module 2 & 3)"])
+search_history_router = APIRouter(prefix="/api/search", tags=["Tìm kiếm & Lịch sử (Search History - TSK-46)"])
 
 
 @router.post(
