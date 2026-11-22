@@ -173,24 +173,541 @@
         .dropdown-link:hover { background: var(--bg-subtle); }
         .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-        /* Filter Ribbon */
+        /* TASK TE9C661: HIGH-SPEED FILTER BAR & FILTER DRAWER UI */
         .filter-ribbon {
-            background: var(--bg-surface); border-bottom: 1px solid var(--border);
-            padding: 12px 28px; display: flex; align-items: center;
-            justify-content: space-between; gap: 16px; overflow-x: auto;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow-x: auto;
+            scrollbar-width: thin;
+            position: sticky;
+            top: 72px;
+            z-index: 950;
+            box-shadow: var(--shadow-sm);
         }
-        .category-pills, .amenity-filters { display: flex; align-items: center; gap: 8px; }
+        .filter-ribbon::-webkit-scrollbar { height: 4px; }
+        .filter-ribbon::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .filter-drawer-trigger-btn {
+            height: 38px;
+            padding: 0 16px;
+            border-radius: 999px;
+            background: var(--brand-red);
+            color: #ffffff;
+            border: none;
+            font-size: 0.84rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+        }
+        .filter-drawer-trigger-btn:hover {
+            background: var(--brand-red-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+        }
+        .active-filter-badge {
+            background: #ffffff;
+            color: var(--brand-red);
+            font-size: 0.72rem;
+            font-weight: 800;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            margin-left: 2px;
+        }
+
+        .filter-divider-v {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .category-pills, .radius-filters, .amenity-filters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .filter-section-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+
         .filter-pill {
-            height: 36px; padding: 0 14px; border-radius: 999px;
-            border: 1px solid var(--border); background: var(--bg-surface);
-            color: var(--text-secondary); font-size: 0.83rem; font-weight: 500;
-            cursor: pointer; display: inline-flex; align-items: center;
-            gap: 6px; white-space: nowrap; transition: all 0.15s;
+            height: 36px;
+            padding: 0 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+            user-select: none;
         }
-        .filter-pill:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        .filter-pill:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            background: var(--bg-subtle);
+        }
         .filter-pill.active {
-            background: var(--text-primary); color: var(--bg-surface);
-            border-color: var(--text-primary); font-weight: 600;
+            background: var(--text-primary);
+            color: var(--bg-surface);
+            border-color: var(--text-primary);
+            font-weight: 700;
+        }
+        .filter-pill.amenity-pill.active {
+            background: #0f172a;
+            color: #ffffff;
+            border-color: #0f172a;
+        }
+        :root[data-theme="dark"] .filter-pill.amenity-pill.active {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #f8fafc;
+        }
+        .filter-pill.reset-pill {
+            background: rgba(225, 29, 72, 0.08);
+            border-color: rgba(225, 29, 72, 0.3);
+            color: var(--brand-red);
+        }
+        .filter-pill.reset-pill:hover {
+            background: rgba(225, 29, 72, 0.15);
+            border-color: var(--brand-red);
+        }
+
+        /* FILTER DRAWER SLIDE-IN OVERLAY */
+        .filter-drawer-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 2100;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+        }
+        .filter-drawer-backdrop.open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .filter-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 460px;
+            max-width: 100vw;
+            height: 100vh;
+            background: var(--bg-surface);
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
+            z-index: 2200;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: transform;
+        }
+        .filter-drawer.open {
+            transform: translateX(0);
+        }
+
+        .filter-drawer-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-surface);
+            flex-shrink: 0;
+        }
+        .filter-drawer-header h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+            letter-spacing: -0.01em;
+        }
+        .filter-drawer-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .filter-drawer-close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .filter-drawer-close-btn:hover {
+            background: var(--border);
+            transform: rotate(90deg);
+        }
+
+        .filter-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 22px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .filter-drawer-body::-webkit-scrollbar { width: 6px; }
+        .filter-drawer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .drawer-section {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .drawer-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .drawer-section-header h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-primary);
+        }
+        .drawer-badge {
+            font-size: 0.74rem;
+            font-weight: 700;
+            background: rgba(225, 29, 72, 0.1);
+            color: var(--brand-red);
+            padding: 3px 8px;
+            border-radius: 999px;
+        }
+        .drawer-val-display {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--brand-red);
+        }
+
+        .drawer-chips-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .drawer-chip {
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .drawer-chip:hover {
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+        }
+        .drawer-chip.active {
+            background: var(--brand-red);
+            color: #ffffff;
+            border-color: var(--brand-red);
+            box-shadow: 0 2px 6px rgba(225, 29, 72, 0.3);
+        }
+
+        .drawer-slider-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .drawer-range-input {
+            width: 100%;
+            height: 6px;
+            border-radius: 6px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+            accent-color: var(--brand-red);
+            cursor: pointer;
+        }
+        .drawer-range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--brand-red);
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .drawer-range-input::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .budget-preset-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .budget-pill {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .budget-pill:hover { border-color: var(--text-primary); }
+        .budget-pill.active {
+            background: var(--text-primary);
+            color: var(--bg-surface);
+            border-color: var(--text-primary);
+        }
+
+        .drawer-radius-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .drawer-radius-card {
+            border: 1.5px solid var(--border);
+            background: var(--bg-surface);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+        .drawer-radius-card:hover {
+            border-color: var(--text-primary);
+        }
+        .drawer-radius-card.active {
+            border-color: var(--brand-red);
+            background: rgba(225, 29, 72, 0.05);
+        }
+        .radius-dist {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .drawer-radius-card.active .radius-dist {
+            color: var(--brand-red);
+        }
+        .radius-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .drawer-amenities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .amenity-switch-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-surface);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+        .amenity-switch-card:hover {
+            border-color: #cbd5e1;
+        }
+        .amenity-switch-card.active {
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.03);
+        }
+        .amenity-card-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: calc(100% - 55px);
+        }
+        .amenity-card-icon {
+            font-size: 1.25rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--bg-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .amenity-card-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .amenity-card-subtitle {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+
+        .amenity-switch-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-toggle-slider {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            background-color: #cbd5e1;
+            border-radius: 999px;
+            transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            flex-shrink: 0;
+        }
+        .switch-toggle-slider:before {
+            content: "";
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+        }
+        .amenity-switch-card input:checked + .switch-toggle-slider {
+            background-color: var(--brand-red);
+        }
+        .amenity-switch-card input:checked + .switch-toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .drawer-rating-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .drawer-rating-btn {
+            padding: 8px 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+        .drawer-rating-btn:hover { border-color: var(--text-primary); }
+        .drawer-rating-btn.active {
+            background: #fbbf24;
+            color: #78350f;
+            border-color: #f59e0b;
+        }
+
+        .filter-drawer-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-surface);
+            flex-shrink: 0;
+        }
+        .drawer-btn-reset {
+            height: 44px;
+            padding: 0 18px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+        .drawer-btn-reset:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+            border-color: var(--text-primary);
+        }
+        .drawer-btn-apply {
+            flex: 1;
+            height: 44px;
+            border-radius: 10px;
+            border: none;
+            background: var(--brand-red);
+            color: #ffffff;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 3px 10px rgba(225, 29, 72, 0.3);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .drawer-btn-apply:hover {
+            background: var(--brand-red-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(225, 29, 72, 0.4);
         }
 
         /* Split Discovery View (Listings + Map) */
@@ -282,8 +799,8 @@
         }
 
         .map-column {
-            position: sticky; top: 72px;
-            height: calc(100vh - 72px); border-left: 1px solid var(--border);
+            position: sticky; top: 130px;
+            height: calc(100vh - 130px); border-left: 1px solid var(--border);
         }
         #main-map { width: 100%; height: 100%; }
 
@@ -448,29 +965,65 @@
         </div>
     </header>
 
-    <div class="filter-ribbon">
-        <div class="category-pills">
-            <button class="filter-pill active" onclick="setCategory('all', this)">Tất cả</button>
-            <button class="filter-pill" onclick="setCategory('bbq', this)">Nướng BBQ</button>
-            <button class="filter-pill" onclick="setCategory('hotpot', this)">Lẩu</button>
-            <button class="filter-pill" onclick="setCategory('seafood', this)">Hải sản</button>
-            <button class="filter-pill" onclick="setCategory('vegan', this)">Đồ chay</button>
-            <button class="filter-pill" onclick="setCategory('japanese', this)">Nhật Bản</button>
+    <div class="filter-ribbon" id="filter-ribbon">
+        <!-- Nút mở Filter Drawer nổi bật với badge đếm số lượng bộ lọc đang active -->
+        <button type="button" class="filter-drawer-trigger-btn" id="btn-open-filter-drawer" onclick="openFilterDrawer()" title="Mở bộ lọc tìm kiếm nâng cao">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span>Tất cả bộ lọc</span>
+            <span class="active-filter-badge" id="active-filter-count" style="display:none;">0</span>
+        </button>
+
+        <div class="filter-divider-v"></div>
+
+        <!-- Category Pills -->
+        <div class="category-pills" id="category-pills">
+            <button type="button" class="filter-pill active" data-category="all" onclick="setCategory('all', this)">Tất cả</button>
+            <button type="button" class="filter-pill" data-category="Món Việt" onclick="setCategory('Món Việt', this)">🇻🇳 Món Việt</button>
+            <button type="button" class="filter-pill" data-category="Cơm tấm" onclick="setCategory('Cơm tấm', this)">🍚 Cơm tấm</button>
+            <button type="button" class="filter-pill" data-category="Món Chay" onclick="setCategory('Món Chay', this)">🌱 Đồ chay</button>
+            <button type="button" class="filter-pill" data-category="BBQ Hàn Quốc" onclick="setCategory('BBQ Hàn Quốc', this)">🥩 Lẩu & BBQ</button>
+            <button type="button" class="filter-pill" data-category="Cà phê" onclick="setCategory('Cà phê', this)">☕ Cà phê / Trà</button>
+            <button type="button" class="filter-pill" data-category="Món Âu" onclick="setCategory('Món Âu', this)">🍕 Món Âu</button>
         </div>
 
-        <div class="radius-filters" style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:0.78rem;font-weight:600;color:var(--text-muted);white-space:nowrap;">🎯 Bán kính:</span>
+        <div class="filter-divider-v"></div>
+
+        <!-- Bán kính tìm kiếm (Radius 1km, 3km, 5km, 10km) -->
+        <div class="radius-filters" id="radius-filters" style="display:flex;align-items:center;gap:6px;">
+            <span class="filter-section-label">🎯 Bán kính:</span>
             <button type="button" class="filter-pill radius-ribbon-btn" data-radius="1" onclick="setSearchRadius(1)">1 km</button>
             <button type="button" class="filter-pill radius-ribbon-btn" data-radius="3" onclick="setSearchRadius(3)">3 km</button>
             <button type="button" class="filter-pill radius-ribbon-btn active" data-radius="5" onclick="setSearchRadius(5)">5 km</button>
             <button type="button" class="filter-pill radius-ribbon-btn" data-radius="10" onclick="setSearchRadius(10)">10 km</button>
         </div>
 
-        <div class="amenity-filters">
-            <button class="filter-pill" id="btn-parking" onclick="toggleAmenity('parking')">Có bãi đỗ ô tô</button>
-            <button class="filter-pill" id="btn-room" onclick="toggleAmenity('private_room')">Phòng riêng</button>
-            <button class="filter-pill" id="btn-vegan" onclick="toggleAmenity('vegetarian')">Hỗ trợ món chay</button>
+        <div class="filter-divider-v"></div>
+
+        <!-- 5 nút tiện ích chuẩn trong RestaurantAmenities -->
+        <div class="amenity-filters" id="amenity-filters">
+            <button type="button" class="filter-pill amenity-pill" id="btn-parking" onclick="toggleAmenity('parking')" title="Có chỗ đậu ô tô">
+                🚗 Đỗ ô tô
+            </button>
+            <button type="button" class="filter-pill amenity-pill" id="btn-room" onclick="toggleAmenity('private_room')" title="Có phòng riêng">
+                🚪 Phòng riêng
+            </button>
+            <button type="button" class="filter-pill amenity-pill" id="btn-outdoor" onclick="toggleAmenity('outdoor')" title="Không gian ngoài trời">
+                🌿 Ngoài trời
+            </button>
+            <button type="button" class="filter-pill amenity-pill" id="btn-pet" onclick="toggleAmenity('pet_friendly')" title="Thân thiện với thú cưng">
+                🐾 Thú cưng
+            </button>
+            <button type="button" class="filter-pill amenity-pill" id="btn-vegan" onclick="toggleAmenity('vegetarian')" title="Hỗ trợ món chay">
+                🌱 Món chay
+            </button>
         </div>
+
+        <!-- Nút Reset Nhanh -->
+        <button type="button" class="filter-pill reset-pill" id="btn-reset-filters" onclick="resetAllFilters()" style="display:none;" title="Xóa toàn bộ bộ lọc và đặt lại mặc định">
+            ✕ Xóa bộ lọc
+        </button>
     </div>
 
     <main class="discovery-layout view-list">
@@ -526,8 +1079,196 @@
         <div id="guest-chat-limit-badge"
             style="display:none;padding:6px 14px;background:#fff1f2;color:#9f1239;font-size:0.76rem;border-bottom:1px solid #fecdd3;justify-content:center;">
         </div>
+        <div class="ai-chat-feed" id="ai-chat-feed">
+            <div class="bubble bubble-ai">
+                Xin chào! Bạn muốn tìm quán ăn như thế nào hôm nay? (VD: <em>"Quán nướng có chỗ đậu ô tô dưới 300k gần đây"</em>)
+            </div>
+        </div>
+        <div class="ai-drawer-input">
+            <input type="text" id="drawer-input" placeholder="Nhập yêu cầu ẩm thực của bạn..." onkeypress="if(event.key==='Enter') sendDrawerMessage()">
+            <button type="button" class="btn-ai-ask" onclick="sendDrawerMessage()">Gửi</button>
+        </div>
     </div>
 
+    <!-- FILTER DRAWER ĐA ĐIỀU KIỆN TỐC ĐỘ CAO (TASK TE9C661) -->
+    <div class="filter-drawer-backdrop" id="filter-drawer-backdrop" onclick="closeFilterDrawer()"></div>
+    <aside class="filter-drawer" id="filter-drawer" role="dialog" aria-labelledby="filter-drawer-title" aria-modal="true">
+        <div class="filter-drawer-header">
+            <div>
+                <h3 id="filter-drawer-title">Bộ lọc nhà hàng đa điều kiện</h3>
+                <p class="filter-drawer-sub">Tùy biến tìm kiếm chi tiết theo nhu cầu ẩm thực của bạn</p>
+            </div>
+            <button type="button" class="filter-drawer-close-btn" onclick="closeFilterDrawer()" aria-label="Đóng bộ lọc">✕</button>
+        </div>
+
+        <div class="filter-drawer-body">
+            <!-- 1. CHỌN LOẠI MÓN -->
+            <section class="drawer-section">
+                <div class="drawer-section-header">
+                    <h4>Loại món & Ẩm thực</h4>
+                    <span class="drawer-badge" id="drawer-cuisine-badge">Tất cả</span>
+                </div>
+                <div class="drawer-chips-grid" id="drawer-cuisine-chips">
+                    <button type="button" class="drawer-chip active" data-cuisine="all" onclick="selectDrawerCuisine('all')">Tất cả</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Món Việt" onclick="selectDrawerCuisine('Món Việt')">🇻🇳 Món Việt</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Cơm tấm" onclick="selectDrawerCuisine('Cơm tấm')">🍚 Cơm tấm</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Món Chay" onclick="selectDrawerCuisine('Món Chay')">🌱 Đồ chay</button>
+                    <button type="button" class="drawer-chip" data-cuisine="BBQ Hàn Quốc" onclick="selectDrawerCuisine('BBQ Hàn Quốc')">🥩 Nướng & BBQ</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Lẩu" onclick="selectDrawerCuisine('Lẩu')">🍲 Lẩu Hotpot</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Cà phê" onclick="selectDrawerCuisine('Cà phê')">☕ Cà phê / Trà</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Món Âu" onclick="selectDrawerCuisine('Món Âu')">🍕 Món Âu</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Món Á" onclick="selectDrawerCuisine('Món Á')">🍣 Món Nhật/Á</button>
+                    <button type="button" class="drawer-chip" data-cuisine="Hải sản" onclick="selectDrawerCuisine('Hải sản')">🦐 Hải sản tươi</button>
+                </div>
+            </section>
+
+            <!-- 2. THANH TRƯỢT NGÂN SÁCH -->
+            <section class="drawer-section">
+                <div class="drawer-section-header">
+                    <h4>Ngân sách (Khoảng giá / người)</h4>
+                    <span class="drawer-val-display" id="drawer-budget-display">0đ - 1.000.000đ+</span>
+                </div>
+                <div class="drawer-slider-wrap">
+                    <div class="slider-labels">
+                        <span>0đ</span>
+                        <span id="slider-current-budget-label">Tối đa: Không giới hạn</span>
+                    </div>
+                    <input type="range" class="drawer-range-input" id="drawer-budget-slider"
+                           min="50000" max="1000000" step="25000" value="1000000"
+                           oninput="onDrawerBudgetSliderChange(this.value)">
+                </div>
+                <div class="budget-preset-pills" id="budget-preset-pills">
+                    <button type="button" class="budget-pill active" data-max="1000000" onclick="setDrawerBudget(1000000)">Tất cả mức giá</button>
+                    <button type="button" class="budget-pill" data-max="70000" onclick="setDrawerBudget(70000)">Dưới 70k (Bình dân)</button>
+                    <button type="button" class="budget-pill" data-max="150000" onclick="setDrawerBudget(150000)">Dưới 150k (Tiết kiệm)</button>
+                    <button type="button" class="budget-pill" data-max="300000" onclick="setDrawerBudget(300000)">Dưới 300k (Vừa phải)</button>
+                    <button type="button" class="budget-pill" data-max="600000" onclick="setDrawerBudget(600000)">Dưới 600k (Cao cấp)</button>
+                </div>
+            </section>
+
+            <!-- 3. BÁN KÍNH KHOẢNG CÁCH -->
+            <section class="drawer-section">
+                <div class="drawer-section-header">
+                    <h4>Bán kính tìm kiếm quanh bạn</h4>
+                    <span class="drawer-val-display" id="drawer-radius-display">5 km</span>
+                </div>
+                <div class="drawer-radius-grid" id="drawer-radius-grid">
+                    <button type="button" class="drawer-radius-card" data-radius="1" onclick="selectDrawerRadius(1)">
+                        <span class="radius-dist">1 km</span>
+                        <span class="radius-desc">Đi bộ (~10 phút)</span>
+                    </button>
+                    <button type="button" class="drawer-radius-card" data-radius="3" onclick="selectDrawerRadius(3)">
+                        <span class="radius-dist">3 km</span>
+                        <span class="radius-desc">Gần nhà (~5-8 ph xe máy)</span>
+                    </button>
+                    <button type="button" class="drawer-radius-card active" data-radius="5" onclick="selectDrawerRadius(5)">
+                        <span class="radius-dist">5 km</span>
+                        <span class="radius-desc">Khu vực trung tâm (Khuyên dùng)</span>
+                    </button>
+                    <button type="button" class="drawer-radius-card" data-radius="10" onclick="selectDrawerRadius(10)">
+                        <span class="radius-dist">10 km</span>
+                        <span class="radius-desc">Toàn thành phố</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 4. 5 TIỆN ÍCH TRONG RestaurantAmenities -->
+            <section class="drawer-section">
+                <div class="drawer-section-header">
+                    <h4>Tiện ích & Dịch vụ nhà hàng (5 tiêu chuẩn)</h4>
+                    <span class="drawer-badge" id="drawer-amenity-count-badge">0 đã chọn</span>
+                </div>
+                <div class="drawer-amenities-list" id="drawer-amenities-list">
+                    <label class="amenity-switch-card" id="card-switch-parking" for="switch-parking">
+                        <div class="amenity-card-info">
+                            <div class="amenity-card-icon">🚗</div>
+                            <div>
+                                <div class="amenity-card-title">Chỗ đậu ô tô</div>
+                                <div class="amenity-card-subtitle">Có bãi đậu xe ô tô rộng rãi, có bảo vệ trông xe an toàn</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="switch-parking" onchange="onDrawerAmenityChange('parking', this.checked)">
+                        <span class="switch-toggle-slider"></span>
+                    </label>
+
+                    <label class="amenity-switch-card" id="card-switch-room" for="switch-room">
+                        <div class="amenity-card-info">
+                            <div class="amenity-card-icon">🚪</div>
+                            <div>
+                                <div class="amenity-card-title">Phòng riêng (VIP)</div>
+                                <div class="amenity-card-subtitle">Không gian riêng tư, cách âm, thích hợp họp mặt / tiếp khách</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="switch-room" onchange="onDrawerAmenityChange('private_room', this.checked)">
+                        <span class="switch-toggle-slider"></span>
+                    </label>
+
+                    <label class="amenity-switch-card" id="card-switch-outdoor" for="switch-outdoor">
+                        <div class="amenity-card-info">
+                            <div class="amenity-card-icon">🌿</div>
+                            <div>
+                                <div class="amenity-card-title">Không gian Ngoài trời</div>
+                                <div class="amenity-card-subtitle">Sân vườn, rooftop thoáng mát, view đẹp ngoài trời</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="switch-outdoor" onchange="onDrawerAmenityChange('outdoor', this.checked)">
+                        <span class="switch-toggle-slider"></span>
+                    </label>
+
+                    <label class="amenity-switch-card" id="card-switch-pet" for="switch-pet">
+                        <div class="amenity-card-info">
+                            <div class="amenity-card-icon">🐾</div>
+                            <div>
+                                <div class="amenity-card-title">Thân thiện Thú cưng</div>
+                                <div class="amenity-card-subtitle">Cho phép mang chó mèo, có khu vực riêng cho thú cưng</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="switch-pet" onchange="onDrawerAmenityChange('pet_friendly', this.checked)">
+                        <span class="switch-toggle-slider"></span>
+                    </label>
+
+                    <label class="amenity-switch-card" id="card-switch-vegan" for="switch-vegan">
+                        <div class="amenity-card-info">
+                            <div class="amenity-card-icon">🌱</div>
+                            <div>
+                                <div class="amenity-card-title">Hỗ trợ Món chay</div>
+                                <div class="amenity-card-subtitle">Có thực đơn chay riêng biệt hoặc món ăn thuần chay thanh đạm</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" id="switch-vegan" onchange="onDrawerAmenityChange('vegetarian', this.checked)">
+                        <span class="switch-toggle-slider"></span>
+                    </label>
+                </div>
+            </section>
+
+            <!-- 5. ĐÁNH GIÁ TỐI THIỂU -->
+            <section class="drawer-section">
+                <div class="drawer-section-header">
+                    <h4>Điểm đánh giá tối thiểu</h4>
+                    <span class="drawer-val-display" id="drawer-rating-display">Tất cả sao</span>
+                </div>
+                <div class="drawer-rating-row" id="drawer-rating-row">
+                    <button type="button" class="drawer-rating-btn active" data-rating="0" onclick="selectDrawerRating(0)">Tất cả</button>
+                    <button type="button" class="drawer-rating-btn" data-rating="3.5" onclick="selectDrawerRating(3.5)">★ 3.5+</button>
+                    <button type="button" class="drawer-rating-btn" data-rating="4.0" onclick="selectDrawerRating(4.0)">★ 4.0+</button>
+                    <button type="button" class="drawer-rating-btn" data-rating="4.5" onclick="selectDrawerRating(4.5)">★ 4.5+</button>
+                </div>
+            </section>
+        </div>
+
+        <div class="filter-drawer-footer">
+            <button type="button" class="drawer-btn-reset" onclick="resetDrawerFilters()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                    <path d="M3 3v5h5"/>
+                </svg>
+                Đặt lại
+            </button>
+            <button type="button" class="drawer-btn-apply" id="drawer-btn-apply" onclick="applyDrawerFilters()">
+                Áp dụng bộ lọc (<span id="drawer-match-count">0</span> quán)
+            </button>
+        </div>
+    </aside>
 
     <div class="modal-backdrop" id="venue-modal" onclick="if(event.target===this) closeVenueModal()">
         <div class="modal-card" id="venue-modal-content"></div>
@@ -554,12 +1295,11 @@
         </div>
     </footer>
 
-    <!-- NẠP CÁC THƯ VIỆN & MODULE JS TRƯỚC KHI CHẠY LOGIC TRANG -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/venues-data.js"></script>
-<script src="js/location-manager.js"></script>
-<script src="js/map-component.js"></script>
-<script src="js/api.js"></script>
+    <script src="js/venues-data.js"></script>
+    <script src="js/location-manager.js"></script>
+    <script src="js/map-component.js"></script>
+    <script src="js/api.js"></script>
 
     <script>
         const STORAGE_KEY = 'foodai_demo_profile_state';
@@ -574,7 +1314,11 @@
                 cuisineLabel: "Nướng Hàn Quốc",
                 priceMin: 199000, priceMax: 380000,
                 rating: 4.7, reviews: 342,
-                parking: true, private_room: true, vegetarian: false,
+                parking: true, has_parking: true,
+                private_room: true, has_private_room: true,
+                outdoor: false, has_outdoor: false,
+                pet_friendly: false, has_pet_friendly: false,
+                vegetarian: false, vegetarian_support: false,
                 openHours: "10:00 - 22:00",
                 image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
                 menu: [
@@ -591,16 +1335,104 @@
                 cuisineLabel: "Lẩu nấm thiên nhiên",
                 priceMin: 250000, priceMax: 450000,
                 rating: 4.8, reviews: 215,
-                parking: true, private_room: true, vegetarian: true,
+                parking: true, has_parking: true,
+                private_room: true, has_private_room: true,
+                outdoor: true, has_outdoor: true,
+                pet_friendly: false, has_pet_friendly: false,
+                vegetarian: true, vegetarian_support: true,
                 openHours: "10:30 - 22:00",
                 image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80",
                 menu: [
-                    { name: "Set lẩu nấm quý thiên nhiên", price: 340000 }
+                    { name: "Set lẩu nấm quý thiên nhiên", price: 340000 },
+                    { name: "Nấm tùng nhung tươi", price: 145000 }
+                ]
+            },
+            {
+                id: 3,
+                name: "Quán Nướng Khói Sài Gòn",
+                address: "122 Nguyễn Gia Trí (D2), Phường 25, Quận Bình Thạnh, TP.HCM",
+                lat: 10.8028, lng: 106.7125,
+                category: "bbq",
+                cuisineLabel: "BBQ & Quán nướng",
+                priceMin: 140000, priceMax: 250000,
+                rating: 4.6, reviews: 418,
+                parking: true, has_parking: true,
+                private_room: false, has_private_room: false,
+                outdoor: true, has_outdoor: true,
+                pet_friendly: true, has_pet_friendly: true,
+                vegetarian: false, vegetarian_support: false,
+                openHours: "16:00 - 23:30",
+                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Bò tơ nướng tảng sốt trứng muối", price: 189000 },
+                    { name: "Hàu sữa Pháp nướng phô mai", price: 129000 }
+                ]
+            },
+            {
+                id: 4,
+                name: "Hum Garden & Vegetarian",
+                address: "32 Võ Văn Tần, Phường 6, Quận 3, TP.HCM",
+                lat: 10.7785, lng: 106.6912,
+                category: "vegan",
+                cuisineLabel: "Ẩm thực Chay cao cấp",
+                priceMin: 180000, priceMax: 390000,
+                rating: 4.9, reviews: 690,
+                parking: true, has_parking: true,
+                private_room: true, has_private_room: true,
+                outdoor: true, has_outdoor: true,
+                pet_friendly: true, has_pet_friendly: true,
+                vegetarian: true, vegetarian_support: true,
+                openHours: "10:00 - 22:00",
+                image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Gỏi hoa chuối hạt điều", price: 125000 },
+                    { name: "Cơm chiên trái thơm hạt sen", price: 155000 }
+                ]
+            },
+            {
+                id: 5,
+                name: "Hải Sản Biển Đông — Lê Văn Thọ",
+                address: "412 Lê Văn Thọ, Phường 11, Quận Gò Vấp, TP.HCM",
+                lat: 10.8415, lng: 106.6598,
+                category: "seafood",
+                cuisineLabel: "Hải sản tươi sống",
+                priceMin: 220000, priceMax: 500000,
+                rating: 4.5, reviews: 187,
+                parking: true, has_parking: true,
+                private_room: true, has_private_room: true,
+                outdoor: true, has_outdoor: true,
+                pet_friendly: false, has_pet_friendly: false,
+                vegetarian: false, vegetarian_support: false,
+                openHours: "10:00 - 23:00",
+                image: "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Tôm càng xanh nướng mọi", price: 320000 },
+                    { name: "Cua thịt Cà Mau rang me", price: 390000 }
+                ]
+            },
+            {
+                id: 6,
+                name: "Sushi Hokkaido Sachi",
+                address: "172 Nguyễn Đình Chiểu, Quận 3, TP.HCM",
+                lat: 10.7801, lng: 106.6904,
+                category: "japanese",
+                cuisineLabel: "Sushi & Sashimi Nhật Bản",
+                priceMin: 300000, priceMax: 650000,
+                rating: 4.8, reviews: 512,
+                parking: true, has_parking: true,
+                private_room: true, has_private_room: true,
+                outdoor: false, has_outdoor: false,
+                pet_friendly: false, has_pet_friendly: false,
+                vegetarian: true, vegetarian_support: true,
+                openHours: "10:30 - 22:30",
+                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80",
+                menu: [
+                    { name: "Set Sashimi Cá hồi & Bụng cá ngừ", price: 380000 },
+                    { name: "Mì Udon bò Wagyu", price: 210000 }
                 ]
             }
         ];
 
-        // Ưu tiên nạp danh sách mẫu từ SEED_VENUES (js/venues-data.js) nếu có
         let venues = (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES) && SEED_VENUES.length > 0)
             ? SEED_VENUES.map(v => ({
                 ...v,
@@ -608,7 +1440,6 @@
             }))
             : fallbackVenues;
 
-        // Tọa độ mặc định TP.HCM (Quận 1)
         let currentPos = { lat: 10.776889, lng: 106.700806 };
         let searchRadiusKm = 5;
         let scrollSyncEnabled = true;
@@ -617,10 +1448,31 @@
         let isProgrammaticScroll = false;
 
         let activeCategory = 'all';
-        let activeAmenities = { parking: false, private_room: false, vegetarian: false };
+        let activeAmenities = {
+            parking: false,
+            private_room: false,
+            outdoor: false,
+            pet_friendly: false,
+            vegetarian: false
+        };
         let maxBudgetFilter = null;
+        let minRatingFilter = 0;
         let mapComponent = null;
         let currentChatSessionId = null;
+
+        let tempDrawerState = {
+            cuisine: 'all',
+            radiusKm: 5,
+            maxBudget: null,
+            minRating: 0,
+            amenities: {
+                parking: false,
+                private_room: false,
+                outdoor: false,
+                pet_friendly: false,
+                vegetarian: false
+            }
+        };
 
         let savedIds = (function () {
             try {
@@ -634,10 +1486,6 @@
             return `${km.toFixed(2)} km`;
         }
 
-
-        /**
-         * Tính khoảng cách đường chim bay (km) giữa 2 tọa độ GPS (Haversine)
-         */
         function calcDistanceKm(lat1, lon1, lat2, lon2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -648,9 +1496,6 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
-        /**
-         * Đồng bộ trạng thái đăng nhập lên thanh Header
-         */
         function renderAuthState() {
             const user = window.FoodAPI ? FoodAPI.auth.getUser() : null;
             const show = (id, visible) => {
@@ -697,9 +1542,6 @@
             window.location.reload();
         }
 
-        /**
-         * Nạp danh sách nhà hàng từ Backend GET /api/restaurants
-         */
         async function loadVenuesFromApi() {
             try {
                 if (window.FoodAPI) {
@@ -720,16 +1562,22 @@
             });
         }
 
+        function updateMapRadiusSafe(km) {
+            if (!mapComponent) return;
+            if (typeof mapComponent.setRadiusKm === 'function') {
+                mapComponent.setRadiusKm(km);
+            } else if (typeof mapComponent.setSearchRadius === 'function') {
+                mapComponent.setSearchRadius(km, true, false);
+            }
+        }
+
         function setSearchRadius(km) {
-                    searchRadiusKm = km;
-                    syncRadiusRibbonUI(km);
-                    if (mapComponent) {
-                        if (typeof mapComponent.setRadiusKm === 'function') {
-                            mapComponent.setRadiusKm(km);
-                        }
-                    }
-                    renderVenues();
-                }
+            searchRadiusKm = km;
+            syncRadiusRibbonUI(km);
+            updateMapRadiusSafe(km);
+            updateActiveFilterBadge();
+            renderVenues();
+        }
 
         function toggleScrollSync() {
             scrollSyncEnabled = !scrollSyncEnabled;
@@ -740,9 +1588,6 @@
             }
         }
 
-        /**
-         * Khởi tạo Bản đồ số & Bộ quản lý vị trí GPS / Thủ công (Task TE9C65E / TSK-21 & TSK-22)
-         */
         function initMainMap() {
             mapComponent = new FoodAIMapComponent({
                 containerId: 'main-map',
@@ -794,15 +1639,9 @@
             }
         }
 
-        /**
-         * Lọc, chấm điểm và hiển thị thẻ nhà hàng + đồng bộ Marker trên Bản đồ
-         * Lọc theo bán kính (1km, 3km, 5km, 10km), tính khoảng cách chính xác,
-         * chấm điểm độ phù hợp và đồng bộ marker + popup lên Bản đồ.
-         */
         function renderVenues(customList = null) {
             let list = customList ? [...customList] : [...venues];
 
-            // Tính chính xác khoảng cách Haversine cho từng quán dựa trên tọa độ tâm hiện tại
             list = list.map(v => {
                 const lat = parseFloat(v.lat !== undefined ? v.lat : v.latitude);
                 const lng = parseFloat(v.lng !== undefined ? v.lng : v.longitude);
@@ -827,43 +1666,53 @@
             });
 
             if (!customList) {
-                // 1. Lọc theo vòng tròn bán kính tìm kiếm
                 if (searchRadiusKm > 0) {
                     list = list.filter(v => v.distanceKm <= searchRadiusKm);
                 }
 
-                // 2. Lọc theo danh mục ẩm thực (tương thích cả tiếng Việt lẫn mã category)
                 if (activeCategory !== 'all') {
                     const catTarget = activeCategory.toLowerCase();
                     list = list.filter(v => {
                         const c1 = (v.category || '').toLowerCase();
                         const c2 = (v.cuisineLabel || '').toLowerCase();
                         const n = (v.name || '').toLowerCase();
-                        if (catTarget === 'món chay' || catTarget === 'vegan') {
-                            return v.vegetarian || c1.includes('chay') || c1.includes('vegan') || c2.includes('chay');
+                        if (catTarget === 'món chay' || catTarget === 'vegan' || catTarget === 'đồ chay') {
+                            return v.vegetarian || v.vegetarian_support || c1.includes('chay') || c1.includes('vegan') || c2.includes('chay');
                         }
-                        if (catTarget === 'bbq hàn quốc' || catTarget === 'bbq') {
-                            return c1 === 'bbq' || c1.includes('nướng') || c2.includes('nướng') || c2.includes('bbq');
+                        if (catTarget === 'bbq hàn quốc' || catTarget === 'bbq' || catTarget === 'lẩu & bbq' || catTarget === 'nướng') {
+                            return c1 === 'bbq' || c1.includes('nướng') || c2.includes('nướng') || c2.includes('bbq') || c1.includes('hotpot') || c2.includes('lẩu');
+                        }
+                        if (catTarget === 'cơm tấm') return c1.includes('cơm tấm') || c2.includes('cơm tấm') || n.includes('cơm tấm');
+                        if (catTarget === 'cà phê' || catTarget === 'cafe') return c1.includes('cafe') || c2.includes('cà phê') || c2.includes('trà') || n.includes('cà phê');
+                        if (catTarget === 'món âu' || catTarget === 'western') return c1 === 'western' || c2.includes('âu') || c2.includes('pizza') || c2.includes('pasta');
+                        if (catTarget === 'món á' || catTarget === 'japanese' || catTarget === 'korean' || catTarget === 'chinese') {
+                            return c1 === 'japanese' || c1 === 'korean' || c1 === 'chinese' || c2.includes('nhật') || c2.includes('hàn') || c2.includes('á');
                         }
                         return c1 === catTarget || c2.includes(catTarget) || n.includes(catTarget);
                     });
                 }
 
-                // 3. Lọc theo tiện ích & ngân sách
-                if (activeAmenities.parking) list = list.filter(v => v.parking);
-                if (activeAmenities.private_room) list = list.filter(v => v.private_room);
-                if (activeAmenities.vegetarian) list = list.filter(v => v.vegetarian);
-                if (maxBudgetFilter) list = list.filter(v => (v.priceMin || 0) <= maxBudgetFilter);
+                if (activeAmenities.parking) list = list.filter(v => (v.parking || v.has_parking));
+                if (activeAmenities.private_room) list = list.filter(v => (v.private_room || v.has_private_room));
+                if (activeAmenities.outdoor) list = list.filter(v => (v.outdoor || v.has_outdoor));
+                if (activeAmenities.pet_friendly) list = list.filter(v => (v.pet_friendly || v.has_pet_friendly));
+                if (activeAmenities.vegetarian) list = list.filter(v => (v.vegetarian || v.vegetarian_support));
+
+                if (maxBudgetFilter) {
+                    list = list.filter(v => (v.priceMin || 0) <= maxBudgetFilter);
+                }
+
+                if (minRatingFilter > 0) {
+                    list = list.filter(v => (v.rating || 0) >= minRatingFilter);
+                }
             }
 
-            // 4. Sắp xếp
             const sortMode = document.getElementById('sort-mode').value;
             if (sortMode === 'distance') list.sort((a, b) => a.distanceKm - b.distanceKm);
             else if (sortMode === 'rating') list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
             else if (sortMode === 'price_asc') list.sort((a, b) => (a.priceMin || 0) - (b.priceMin || 0));
             else list.sort((a, b) => b.matchScore - a.matchScore);
 
-            // 5. Cập nhật tiêu đề thống kê số quán trong bán kính
             const heading = document.getElementById('results-heading');
             const subheading = document.getElementById('results-subheading');
             if (heading) {
@@ -873,7 +1722,6 @@
                 subheading.innerText = `Định tâm: ${currentPos.lat.toFixed(4)}, ${currentPos.lng.toFixed(4)} • Ghim bản đồ tự động đồng bộ khi cuộn`;
             }
 
-            // 6. Đồng bộ Marker & Popup lên Bản đồ số
             if (mapComponent) {
                 mapComponent.setVenueMarkers(list);
             }
@@ -941,9 +1789,11 @@
                             📍 ${v.address}
                         </div>
                         <div class="venue-tags">
-                            ${v.parking ? '<span class="venue-tag">Đỗ ô tô</span>' : ''}
-                            ${v.private_room ? '<span class="venue-tag">Phòng riêng</span>' : ''}
-                            ${v.vegetarian ? '<span class="venue-tag">Món chay</span>' : ''}
+                            ${(v.parking || v.has_parking) ? '<span class="venue-tag">🚗 Đỗ ô tô</span>' : ''}
+                            ${(v.private_room || v.has_private_room) ? '<span class="venue-tag">🚪 Phòng riêng</span>' : ''}
+                            ${(v.outdoor || v.has_outdoor) ? '<span class="venue-tag">🌿 Ngoài trời</span>' : ''}
+                            ${(v.pet_friendly || v.has_pet_friendly) ? '<span class="venue-tag">🐾 Thú cưng</span>' : ''}
+                            ${(v.vegetarian || v.vegetarian_support) ? '<span class="venue-tag">🌱 Món chay</span>' : ''}
                         </div>
                     </div>
                 `;
@@ -973,9 +1823,6 @@
             }
         }
 
-        /**
-         * Đồng bộ ghim trên bản đồ khi người dùng cuộn danh sách nhà hàng
-         */
         let scrollListenerBound = false;
         function setupScrollSyncObserver() {
             if (scrollListenerBound) return;
@@ -989,7 +1836,6 @@
                     const cards = document.querySelectorAll('#venues-grid .venue-card[data-venue-id]');
                     if (!cards.length) return;
 
-                    // Chọn thẻ nằm gần dải trọng tâm (top + 180px) nhất trong khung nhìn
                     const targetY = Math.min(window.innerHeight * 0.35, 240);
                     let bestCard = null;
                     let minDistanceToTarget = Infinity;
@@ -1019,19 +1865,417 @@
             window.addEventListener('scroll', onScrollHandler, { passive: true });
         }
 
+        // TASK TE9C661: HIGH-SPEED FILTER BAR & DRAWER CONTROLLER
+        function openFilterDrawer() {
+            tempDrawerState = {
+                cuisine: activeCategory,
+                radiusKm: searchRadiusKm,
+                maxBudget: maxBudgetFilter,
+                minRating: minRatingFilter,
+                amenities: { ...activeAmenities }
+            };
+            syncDrawerUIWithState(tempDrawerState);
+            updateDrawerMatchCountPreview();
+
+            document.getElementById('filter-drawer-backdrop').classList.add('open');
+            document.getElementById('filter-drawer').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFilterDrawer() {
+            document.getElementById('filter-drawer-backdrop').classList.remove('open');
+            document.getElementById('filter-drawer').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function selectDrawerCuisine(cat) {
+            tempDrawerState.cuisine = cat;
+            document.querySelectorAll('#drawer-cuisine-chips .drawer-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cuisine === cat);
+            });
+            const badge = document.getElementById('drawer-cuisine-badge');
+            if (badge) badge.innerText = cat === 'all' ? 'Tất cả' : cat;
+            updateDrawerMatchCountPreview();
+        }
+
+        function onDrawerBudgetSliderChange(val) {
+            const num = Number(val);
+            const displayEl = document.getElementById('drawer-budget-display');
+            const labelEl = document.getElementById('slider-current-budget-label');
+
+            if (num >= 1000000) {
+                tempDrawerState.maxBudget = null;
+                if (displayEl) displayEl.innerText = '0đ - 1.000.000đ+';
+                if (labelEl) labelEl.innerText = 'Tối đa: Không giới hạn';
+            } else {
+                tempDrawerState.maxBudget = num;
+                const formatted = num.toLocaleString('vi-VN') + 'đ';
+                if (displayEl) displayEl.innerText = 'Dưới ' + formatted;
+                if (labelEl) labelEl.innerText = 'Tối đa: ' + formatted;
+            }
+
+            document.querySelectorAll('#budget-preset-pills .budget-pill').forEach(btn => {
+                const maxVal = Number(btn.dataset.max);
+                btn.classList.toggle('active', (num >= 1000000 && maxVal === 1000000) || maxVal === num);
+            });
+
+            updateDrawerMatchCountPreview();
+        }
+
+        function setDrawerBudget(maxVal) {
+            const slider = document.getElementById('drawer-budget-slider');
+            if (slider) slider.value = maxVal;
+            onDrawerBudgetSliderChange(maxVal);
+        }
+
+        function selectDrawerRadius(km) {
+            tempDrawerState.radiusKm = km;
+            document.querySelectorAll('#drawer-radius-grid .drawer-radius-card').forEach(card => {
+                card.classList.toggle('active', parseFloat(card.dataset.radius) === km);
+            });
+            const rDisplay = document.getElementById('drawer-radius-display');
+            if (rDisplay) rDisplay.innerText = `${km} km`;
+            updateDrawerMatchCountPreview();
+        }
+
+        function onDrawerAmenityChange(key, isChecked) {
+            tempDrawerState.amenities[key] = isChecked;
+            const cardId = 'card-switch-' + (key === 'private_room' ? 'room' : key === 'outdoor' ? 'outdoor' : key === 'pet_friendly' ? 'pet' : key === 'vegetarian' ? 'vegan' : 'parking');
+            const card = document.getElementById(cardId);
+            if (card) card.classList.toggle('active', isChecked);
+            updateDrawerMatchCountPreview();
+        }
+
+        function selectDrawerRating(minStars) {
+            tempDrawerState.minRating = minStars;
+            document.querySelectorAll('#drawer-rating-row .drawer-rating-btn').forEach(btn => {
+                btn.classList.toggle('active', parseFloat(btn.dataset.rating) === minStars);
+            });
+            const displayEl = document.getElementById('drawer-rating-display');
+            if (displayEl) displayEl.innerText = minStars > 0 ? `★ ${minStars}+` : 'Tất cả sao';
+            updateDrawerMatchCountPreview();
+        }
+
+        function resetDrawerFilters() {
+            tempDrawerState = {
+                cuisine: 'all',
+                radiusKm: 5,
+                maxBudget: null,
+                minRating: 0,
+                amenities: {
+                    parking: false,
+                    private_room: false,
+                    outdoor: false,
+                    pet_friendly: false,
+                    vegetarian: false
+                }
+            };
+            syncDrawerUIWithState(tempDrawerState);
+            updateDrawerMatchCountPreview();
+        }
+
+        function applyDrawerFilters() {
+            activeCategory = tempDrawerState.cuisine;
+            searchRadiusKm = tempDrawerState.radiusKm;
+            maxBudgetFilter = tempDrawerState.maxBudget;
+            minRatingFilter = tempDrawerState.minRating;
+            activeAmenities = { ...tempDrawerState.amenities };
+
+            document.querySelectorAll('#category-pills .filter-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === activeCategory);
+            });
+            syncRadiusRibbonUI(searchRadiusKm);
+            updateMapRadiusSafe(searchRadiusKm);
+            updateFilterBarAmenityButtons();
+            updateActiveFilterBadge();
+
+            closeFilterDrawer();
+
+            renderVenues();
+            fetchFilteredRestaurantsFromAPI();
+        }
+
+        function syncDrawerUIWithState(state) {
+            document.querySelectorAll('#drawer-cuisine-chips .drawer-chip').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.cuisine === state.cuisine);
+            });
+            const cBadge = document.getElementById('drawer-cuisine-badge');
+            if (cBadge) cBadge.innerText = state.cuisine === 'all' ? 'Tất cả' : state.cuisine;
+
+            const slider = document.getElementById('drawer-budget-slider');
+            const displayEl = document.getElementById('drawer-budget-display');
+            const labelEl = document.getElementById('slider-current-budget-label');
+            const budgetVal = state.maxBudget || 1000000;
+            if (slider) slider.value = budgetVal;
+            if (budgetVal >= 1000000) {
+                if (displayEl) displayEl.innerText = '0đ - 1.000.000đ+';
+                if (labelEl) labelEl.innerText = 'Tối đa: Không giới hạn';
+            } else {
+                const formatted = budgetVal.toLocaleString('vi-VN') + 'đ';
+                if (displayEl) displayEl.innerText = 'Dưới ' + formatted;
+                if (labelEl) labelEl.innerText = 'Tối đa: ' + formatted;
+            }
+            document.querySelectorAll('#budget-preset-pills .budget-pill').forEach(btn => {
+                const maxVal = Number(btn.dataset.max);
+                btn.classList.toggle('active', (budgetVal >= 1000000 && maxVal === 1000000) || maxVal === budgetVal);
+            });
+
+            document.querySelectorAll('#drawer-radius-grid .drawer-radius-card').forEach(card => {
+                card.classList.toggle('active', parseFloat(card.dataset.radius) === state.radiusKm);
+            });
+            const rDisplay = document.getElementById('drawer-radius-display');
+            if (rDisplay) rDisplay.innerText = `${state.radiusKm} km`;
+
+            const swP = document.getElementById('switch-parking');
+            const swR = document.getElementById('switch-room');
+            const swO = document.getElementById('switch-outdoor');
+            const swPet = document.getElementById('switch-pet');
+            const swV = document.getElementById('switch-vegan');
+
+            if (swP) swP.checked = !!state.amenities.parking;
+            if (swR) swR.checked = !!state.amenities.private_room;
+            if (swO) swO.checked = !!state.amenities.outdoor;
+            if (swPet) swPet.checked = !!state.amenities.pet_friendly;
+            if (swV) swV.checked = !!state.amenities.vegetarian;
+
+            const cP = document.getElementById('card-switch-parking');
+            const cR = document.getElementById('card-switch-room');
+            const cO = document.getElementById('card-switch-outdoor');
+            const cPet = document.getElementById('card-switch-pet');
+            const cV = document.getElementById('card-switch-vegan');
+
+            if (cP) cP.classList.toggle('active', !!state.amenities.parking);
+            if (cR) cR.classList.toggle('active', !!state.amenities.private_room);
+            if (cO) cO.classList.toggle('active', !!state.amenities.outdoor);
+            if (cPet) cPet.classList.toggle('active', !!state.amenities.pet_friendly);
+            if (cV) cV.classList.toggle('active', !!state.amenities.vegetarian);
+
+            document.querySelectorAll('#drawer-rating-row .drawer-rating-btn').forEach(btn => {
+                btn.classList.toggle('active', parseFloat(btn.dataset.rating) === state.minRating);
+            });
+            const rateDisplay = document.getElementById('drawer-rating-display');
+            if (rateDisplay) rateDisplay.innerText = state.minRating > 0 ? `★ ${state.minRating}+` : 'Tất cả sao';
+        }
+
+        function calcMatchCount(state) {
+            let list = [...venues];
+            const centerLat = currentPos.lat;
+            const centerLng = currentPos.lng;
+            const rad = state.radiusKm || searchRadiusKm;
+
+            list = list.filter(v => {
+                const lat = parseFloat(v.lat !== undefined ? v.lat : v.latitude);
+                const lng = parseFloat(v.lng !== undefined ? v.lng : v.longitude);
+                if (isNaN(lat) || isNaN(lng)) return false;
+                const d = calcDistanceKm(centerLat, centerLng, lat, lng);
+                return d <= rad;
+            });
+
+            if (state.cuisine && state.cuisine !== 'all') {
+                const catTarget = state.cuisine.toLowerCase();
+                list = list.filter(v => {
+                    const c1 = (v.category || '').toLowerCase();
+                    const c2 = (v.cuisineLabel || '').toLowerCase();
+                    const n = (v.name || '').toLowerCase();
+                    if (catTarget === 'món chay' || catTarget === 'vegan' || catTarget === 'đồ chay') {
+                        return v.vegetarian || v.vegetarian_support || c1.includes('chay') || c1.includes('vegan') || c2.includes('chay');
+                    }
+                    if (catTarget === 'bbq hàn quốc' || catTarget === 'bbq' || catTarget === 'lẩu & bbq' || catTarget === 'nướng') {
+                        return c1 === 'bbq' || c1.includes('nướng') || c2.includes('nướng') || c2.includes('bbq') || c1.includes('hotpot') || c2.includes('lẩu');
+                    }
+                    if (catTarget === 'cơm tấm') return c1.includes('cơm tấm') || c2.includes('cơm tấm') || n.includes('cơm tấm');
+                    if (catTarget === 'cà phê' || catTarget === 'cafe') return c1.includes('cafe') || c2.includes('cà phê') || c2.includes('trà') || n.includes('cà phê');
+                    if (catTarget === 'món âu' || catTarget === 'western') return c1 === 'western' || c2.includes('âu') || c2.includes('pizza') || c2.includes('pasta');
+                    if (catTarget === 'món á' || catTarget === 'japanese' || catTarget === 'korean' || catTarget === 'chinese') {
+                        return c1 === 'japanese' || c1 === 'korean' || c1 === 'chinese' || c2.includes('nhật') || c2.includes('hàn') || c2.includes('á');
+                    }
+                    return c1 === catTarget || c2.includes(catTarget) || n.includes(catTarget);
+                });
+            }
+
+            if (state.amenities.parking) list = list.filter(v => (v.parking || v.has_parking));
+            if (state.amenities.private_room) list = list.filter(v => (v.private_room || v.has_private_room));
+            if (state.amenities.outdoor) list = list.filter(v => (v.outdoor || v.has_outdoor));
+            if (state.amenities.pet_friendly) list = list.filter(v => (v.pet_friendly || v.has_pet_friendly));
+            if (state.amenities.vegetarian) list = list.filter(v => (v.vegetarian || v.vegetarian_support));
+
+            if (state.maxBudget) {
+                list = list.filter(v => (v.priceMin || 0) <= state.maxBudget);
+            }
+
+            if (state.minRating > 0) {
+                list = list.filter(v => (v.rating || 0) >= state.minRating);
+            }
+
+            return list.length;
+        }
+
+        function updateDrawerMatchCountPreview() {
+            const count = calcMatchCount(tempDrawerState);
+            const countEl = document.getElementById('drawer-match-count');
+            if (countEl) countEl.innerText = count;
+
+            const applyBtn = document.getElementById('drawer-btn-apply');
+            if (applyBtn) {
+                applyBtn.innerHTML = `Áp dụng bộ lọc (<span id="drawer-match-count">${count}</span> quán)`;
+            }
+
+            let amCount = 0;
+            Object.values(tempDrawerState.amenities).forEach(v => { if (v) amCount++; });
+            const amBadge = document.getElementById('drawer-amenity-count-badge');
+            if (amBadge) amBadge.innerText = `${amCount} đã chọn`;
+        }
+
+        function updateActiveFilterBadge() {
+            let count = 0;
+            if (activeCategory !== 'all') count++;
+            if (maxBudgetFilter !== null && maxBudgetFilter < 1000000) count++;
+            if (searchRadiusKm !== 5) count++;
+            if (minRatingFilter > 0) count++;
+            if (activeAmenities.parking) count++;
+            if (activeAmenities.private_room) count++;
+            if (activeAmenities.outdoor) count++;
+            if (activeAmenities.pet_friendly) count++;
+            if (activeAmenities.vegetarian) count++;
+
+            const badge = document.getElementById('active-filter-count');
+            const resetBtn = document.getElementById('btn-reset-filters');
+            if (badge) {
+                badge.innerText = count;
+                badge.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+            if (resetBtn) {
+                resetBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+        }
+
+        function updateFilterBarAmenityButtons() {
+            const btnP = document.getElementById('btn-parking');
+            const btnR = document.getElementById('btn-room');
+            const btnO = document.getElementById('btn-outdoor');
+            const btnPet = document.getElementById('btn-pet');
+            const btnV = document.getElementById('btn-vegan');
+
+            if (btnP) btnP.classList.toggle('active', !!activeAmenities.parking);
+            if (btnR) btnR.classList.toggle('active', !!activeAmenities.private_room);
+            if (btnO) btnO.classList.toggle('active', !!activeAmenities.outdoor);
+            if (btnPet) btnPet.classList.toggle('active', !!activeAmenities.pet_friendly);
+            if (btnV) btnV.classList.toggle('active', !!activeAmenities.vegetarian);
+        }
+
         function setCategory(cat, btn) {
             activeCategory = cat;
-            document.querySelectorAll('.category-pills .filter-pill').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
+            document.querySelectorAll('#category-pills .filter-pill').forEach(el => el.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            updateActiveFilterBadge();
             renderVenues();
+            fetchFilteredRestaurantsFromAPI();
         }
 
         function toggleAmenity(key) {
             activeAmenities[key] = !activeAmenities[key];
-            document.getElementById('btn-parking').classList.toggle('active', activeAmenities.parking);
-            document.getElementById('btn-room').classList.toggle('active', activeAmenities.private_room);
-            document.getElementById('btn-vegan').classList.toggle('active', activeAmenities.vegetarian);
+            updateFilterBarAmenityButtons();
+            updateActiveFilterBadge();
             renderVenues();
+            fetchFilteredRestaurantsFromAPI();
+        }
+
+        function resetAllFilters() {
+            activeCategory = 'all';
+            searchRadiusKm = 5;
+            maxBudgetFilter = null;
+            minRatingFilter = 0;
+            activeAmenities = {
+                parking: false,
+                private_room: false,
+                outdoor: false,
+                pet_friendly: false,
+                vegetarian: false
+            };
+
+            const searchInput = document.getElementById('main-search-input');
+            if (searchInput) searchInput.value = '';
+            const banner = document.getElementById('ai-banner');
+            if (banner) banner.classList.remove('visible');
+
+            document.querySelectorAll('#category-pills .filter-pill').forEach(el => {
+                el.classList.toggle('active', el.dataset.category === 'all');
+            });
+            syncRadiusRibbonUI(5);
+            updateMapRadiusSafe(5);
+            updateFilterBarAmenityButtons();
+            updateActiveFilterBadge();
+
+            renderVenues();
+            fetchFilteredRestaurantsFromAPI();
+        }
+
+        async function fetchFilteredRestaurantsFromAPI() {
+            try {
+                const params = new URLSearchParams();
+                if (activeCategory !== 'all') params.append('cuisine_type', activeCategory);
+                if (maxBudgetFilter) params.append('price_max', maxBudgetFilter);
+                if (currentPos && currentPos.lat && currentPos.lng) {
+                    params.append('lat', currentPos.lat);
+                    params.append('lng', currentPos.lng);
+                }
+                if (searchRadiusKm) params.append('radius_km', searchRadiusKm);
+                if (minRatingFilter > 0) params.append('min_rating', minRatingFilter);
+
+                if (activeAmenities.parking) params.append('has_parking', 'true');
+                if (activeAmenities.private_room) params.append('has_private_room', 'true');
+                if (activeAmenities.outdoor) params.append('has_outdoor', 'true');
+                if (activeAmenities.pet_friendly) params.append('pet_friendly', 'true');
+                if (activeAmenities.vegetarian) params.append('vegetarian_support', 'true');
+
+                const sortMode = document.getElementById('sort-mode') ? document.getElementById('sort-mode').value : 'score';
+                if (sortMode === 'distance') params.append('sort_by', 'distance');
+                else if (sortMode === 'rating') params.append('sort_by', 'rating');
+                else if (sortMode === 'price_asc') params.append('sort_by', 'price_asc');
+
+                params.append('limit', '50');
+
+                const res = await fetch(`/api/restaurants/filter?${params.toString()}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json && json.data) {
+                        const apiVenues = json.data.map(item => {
+                            const am = item.amenities || {};
+                            return {
+                                id: item.id,
+                                name: item.name,
+                                address: item.address,
+                                lat: parseFloat(item.latitude) || 10.8231,
+                                lng: parseFloat(item.longitude) || 106.6900,
+                                category: item.cuisine_type || 'other',
+                                cuisineLabel: item.cuisine_type || 'Ẩm thực',
+                                priceMin: item.min_price || 50000,
+                                priceMax: item.max_price || 300000,
+                                rating: item.avg_rating || 4.5,
+                                reviews: item.total_reviews || 0,
+                                parking: !!am.has_parking,
+                                has_parking: !!am.has_parking,
+                                private_room: !!am.has_private_room,
+                                has_private_room: !!am.has_private_room,
+                                outdoor: !!am.has_outdoor,
+                                has_outdoor: !!am.has_outdoor,
+                                pet_friendly: !!am.pet_friendly,
+                                has_pet_friendly: !!am.pet_friendly,
+                                vegetarian: !!am.vegetarian_support,
+                                vegetarian_support: !!am.vegetarian_support,
+                                distance_km: item.distance_km,
+                                distanceKm: item.distance_km,
+                                image: item.cover_image_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80",
+                                image_url: item.cover_image_url || null
+                            };
+                        });
+                        venues = apiVenues;
+                        renderVenues(venues);
+                    }
+                }
+            } catch (err) {
+                console.warn('[BE Filter API] Backend offline hoặc lỗi, fallback sang bộ lọc client-side tức thì:', err);
+            }
         }
 
         function executeAISearch(customPrompt = null) {
@@ -1067,15 +2311,7 @@
             document.getElementById('ai-banner-reason').innerText =
                 `Đã phân tích yêu cầu "${q}": Ưu tiên các địa điểm ${activeCategory !== 'all' ? 'nhóm ' + activeCategory.toUpperCase() : ''} ${activeAmenities.parking ? 'có bãi đỗ ô tô, ' : ''}${activeAmenities.private_room ? 'có phòng riêng, ' : ''}xếp hạng theo khoảng cách gần vị trí của bạn nhất.`;
 
-            renderVenues();
-        }
-
-        function resetAllFilters() {
-            activeCategory = 'all';
-            activeAmenities = { parking: false, private_room: false, vegetarian: false };
-            maxBudgetFilter = null;
-            document.getElementById('main-search-input').value = '';
-            document.getElementById('ai-banner').classList.remove('visible');
+            updateActiveFilterBadge();
             renderVenues();
         }
 
@@ -1109,7 +2345,7 @@
             const imageUrl = v.image || v.cover_image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
 
             box.innerHTML = `
-                <img src="${v.image}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
+                <img src="${imageUrl}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
                 <h3 style="font-size:1.3rem;margin-bottom:4px;">${v.name}</h3>
                 <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:12px;">${v.address} • Giờ mở cửa: ${v.openHours || '08:00 - 22:00'}</p>
                 <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
@@ -1136,18 +2372,11 @@
         function closeVenueModal() {
             document.getElementById('venue-modal').classList.remove('open');
         }
+
         function handleWriteReview(venueId) {
             if (window.GuestModeGuard && !window.GuestModeGuard.requireAuth('review')) return;
             alert('Mở form đánh giá cho nhà hàng #' + venueId + '!');
         }
-
-        window.onMapPopupSelectVenue = function (venueId) {
-            const v = venues.find(item => item.id === venueId);
-            if (v) {
-                const dist = calcDistanceKm(currentPos.lat, currentPos.lng, v.lat || v.latitude, v.lng || v.longitude);
-                openVenueModal({ ...v, distanceKm: dist });
-            }
-        };
 
         function toggleSaveVenue(e, id) {
             e.stopPropagation();
@@ -1165,9 +2394,6 @@
             renderVenues(list);
         }
 
-        /**
-         * Mở Modal chọn vị trí thủ công hoặc định vị GPS (Task TE9C65E / UC-03)
-         */
         function locateUserGPS() {
             if (window.smartDiningLocationManager) {
                 window.smartDiningLocationManager.openManualModal();
@@ -1215,7 +2441,7 @@
             }
         }
 
-        let isSendingChat = false; // Khóa chống spam gửi nhiều lần cùng lúc
+        let isSendingChat = false;
 
         async function sendDrawerMessage() {
             if (isSendingChat) return;
@@ -1226,12 +2452,10 @@
             const text = (input?.value || '').trim();
             if (!text || !feed) return;
 
-            // 1. Task TE9C675 (BR-02): Kiểm tra lượt chat miễn phí của Guest trước khi gửi
             if (window.GuestModeGuard && !window.GuestModeGuard.consumeGuestChatTurn()) {
                 return;
             }
 
-            // 2. Khóa form & hiển thị tin nhắn người dùng an toàn (dùng textContent chống XSS, không re-render cả feed)
             isSendingChat = true;
             input.value = '';
             input.disabled = true;
@@ -1242,7 +2466,6 @@
             userBubble.textContent = text;
             feed.appendChild(userBubble);
 
-            // Hiển thị bong bóng trạng thái đang xử lý (Typing indicator)
             const loadingBubble = document.createElement('div');
             loadingBubble.className = 'bubble bubble-ai';
             loadingBubble.innerHTML = '<em style="color:var(--text-muted);">🤖 Trợ lý AI đang phân tích & tìm quán phù hợp...</em>';
@@ -1250,11 +2473,8 @@
             feed.scrollTop = feed.scrollHeight;
 
             try {
-                // Đảm bảo đã có phiên chat (không chặn luồng nếu backend tạm thời chưa kết nối)
                 await initChatSessionIfNeeded().catch(() => {});
 
-                // 3. Task TE9C674 + TE9C670: Gọi thẳng /api/search/ai-recommend
-                // (Backend đã tự lưu tin nhắn user & ai vào SearchMessages khi có session_id -> tránh gọi API lưu trùng)
                 window.mapComponent = mapComponent;
                 const result = await AIChatMapSync.fetchTopRecommendations(
                     text,
@@ -1267,10 +2487,8 @@
 
                 loadingBubble.remove();
 
-                // Nếu bị Backend chặn do vượt giới hạn Guest (403)
                 if (!result || result.blocked) return;
 
-                // 4. Đồng bộ tọa độ tâm & nhãn địa chỉ nếu AI bóc tách được khu vực mới (VD: "Quận 3")
                 const loc = result.resolvedLocation;
                 if (loc && Number.isFinite(loc.latitude) && Number.isFinite(loc.longitude)) {
                     currentPos = { lat: loc.latitude, lng: loc.longitude };
@@ -1283,7 +2501,6 @@
                     }
                 }
 
-                // 5. Render Top N vào khung chat + tự động flyToBounds & highlight ghim #1..#N trên bản đồ
                 AIChatMapSync.syncResultsToChatAndMap(feed, mapComponent, result, (topList) => {
                     renderVenues(topList);
                 });
@@ -1291,7 +2508,6 @@
                 console.error('[AI Chat Error]:', err);
                 loadingBubble.innerHTML = 'Xin lỗi, hệ thống AI đang gặp sự cố kết nối. Bạn thử lại sau vài giây nhé!';
             } finally {
-                // 6. Mở khóa form và focus lại ô nhập để người dùng chat tiếp mượt mà
                 isSendingChat = false;
                 input.disabled = false;
                 if (sendBtn) sendBtn.disabled = false;
@@ -1322,7 +2538,6 @@
             loadVenuesFromApi();
             refreshProfileFromServer();
 
-            // Task TE9C65E (UC-03): Yêu cầu định vị GPS ngay khi vào trang, tự bật Modal Quận/Huyện nếu bị từ chối
             if (window.smartDiningLocationManager) {
                 window.smartDiningLocationManager.requestBrowserGPS(true);
             }
