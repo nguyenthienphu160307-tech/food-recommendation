@@ -143,7 +143,7 @@ class AppliedFilterCriteria(BaseModel):
 
 
 class RestaurantFilterResponse(BaseModel):
-    """Phản hồi API lọc nhà hàng đa điều kiện kết hợp (TE9C660)"""
+    """Phản hồi API lọc nhà hàng đa điều kiện kết hợp (TE9C660, TE9C66F)"""
     status: str = "success"
     data: List[RestaurantFilterItemResponse]
     applied_filters: AppliedFilterCriteria

@@ -318,15 +318,17 @@ def filter_restaurants(
     vegetarian_support: Optional[bool] = Query(None, description="Tiện ích 5: Có hỗ trợ món chay"),
     sort_by: str = Query("default", description="Sắp xếp: default, distance, rating, price_asc, price_desc"),
     status_filter: str = Query("active", description="Trạng thái nhà hàng ('active', 'all')"),
+    auto_relax: bool = Query(False, description="Tự động nới lỏng bán kính (+3km) hoặc ngân sách (±25%) khi 0 kết quả (TE9C66F)"),
     page: int = Query(1, ge=1, description="Số thứ tự trang"),
     limit: int = Query(20, ge=1, le=100, description="Số lượng kết quả mỗi trang"),
     db: Session = Depends(get_db),
 ):
     """
-    API Lọc nhà hàng đa điều kiện kết hợp (FR-07 / UC-04 / Task TE9C660):
+    API Lọc nhà hàng đa điều kiện kết hợp (FR-07 / UC-04 / Task TE9C660 & TE9C66F):
     - Kết hợp đồng thời `cuisine_type`, khoảng giá (`price_min`/`price_max`), bán kính khoảng cách (`lat`/`lng`/`radius_km`),
       điểm đánh giá tối thiểu (`min_rating`) và 5 tiện ích trong `RestaurantAmenities`.
-    - Trả về danh sách nhà hàng khớp điều kiện kèm `distance_km`, `applied_filters` và `pagination`.
+    - Hỗ trợ cờ `auto_relax=True`: Khi kết quả ban đầu = 0, tự động mở rộng bán kính (+3km) hoặc nới ngân sách (±25%) (UC-02 Ngoại lệ).
+    - Trả về danh sách nhà hàng khớp điều kiện kèm `distance_km`, `applied_filters`, `pagination` và `relaxation`.
     """
     items, pagination = _query_filtered_restaurants(
         db=db,
@@ -349,6 +351,35 @@ def filter_restaurants(
         limit=limit,
     )
 
+    relaxation_data = None
+    if auto_relax and len(items) == 0:
+        from app.services.query_relaxation_service import QueryRelaxationService
+        rel_results, rel_meta = QueryRelaxationService.relax_and_search(
+            db=db,
+            lat=lat,
+            lng=lng,
+            radius_km=radius_km,
+            cuisine=cuisine_type,
+            price_min=price_min,
+            price_max=price_max,
+            min_rating=min_rating,
+            has_parking=has_parking,
+            has_private_room=has_private_room,
+            has_outdoor=has_outdoor,
+            pet_friendly=pet_friendly,
+            vegetarian_support=vegetarian_support,
+            limit=limit,
+        )
+        if rel_results:
+            items = [_serialize_restaurant(r, dist) for r, dist in rel_results]
+            pagination = PaginationMetadata(
+                page=1,
+                limit=limit,
+                total_items=len(items),
+                total_pages=1,
+            )
+            relaxation_data = rel_meta
+
     return RestaurantFilterResponse(
         status="success",
         data=items,
@@ -370,6 +401,7 @@ def filter_restaurants(
             status_filter=status_filter,
         ),
         pagination=pagination,
+        relaxation=relaxation_data,
     )
 
 

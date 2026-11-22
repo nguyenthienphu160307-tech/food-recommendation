@@ -66,6 +66,9 @@ from .ai_search import (
     MultiTurnChatResponse,
     MultiTurnRestaurantItem,
     SessionStateResponse,
+    QueryRelaxationInfo,
+    QueryRelaxationRequest,
+    QueryRelaxationResponse,
 )
 
 __all__ = [
