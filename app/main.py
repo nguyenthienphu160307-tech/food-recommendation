@@ -15,8 +15,14 @@ from app.routers import (
     geo_router,
     ai_search_router,
     search_router,
+    search_history_router,
     admin_router,
     preferences_router,
+    notification_router,
+    review_router,
+    image_router,
+    menu_router,
+    favorite_router,
 )
 
 # Tự động tạo bảng CSDL
@@ -45,8 +51,14 @@ app.include_router(restaurant_router)
 app.include_router(geo_router)
 app.include_router(ai_search_router)
 app.include_router(search_router)
+app.include_router(search_history_router)
 app.include_router(admin_router)
 app.include_router(preferences_router)
+app.include_router(notification_router)
+app.include_router(review_router)
+app.include_router(image_router)
+app.include_router(menu_router)
+app.include_router(favorite_router)
 
 # Mount thư mục frontend để chạy trực tiếp HTML trên cổng 8000
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")

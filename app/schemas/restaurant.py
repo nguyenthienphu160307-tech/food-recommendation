@@ -1,5 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, ConfigDict, Field
+from app.schemas.menu import RestaurantMenuResponse
 
 
 class AmenityResponse(BaseModel):

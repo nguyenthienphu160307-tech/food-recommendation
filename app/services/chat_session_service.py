@@ -1,7 +1,8 @@
 import os
+import math
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi import HTTPException, status
 
 from app.models.user import User, UserProfile

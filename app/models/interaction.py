@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
@@ -37,34 +38,22 @@ class GeoRestaurant(Base):
 
 
 # =====================================================================
-# 4. BẢNG RESTAURANT REVIEWS (Đánh giá & nhận xét nhà hàng)
+# 4. BẢNG RESTAURANT REVIEWS & 6. NOTIFICATIONS (Re-exported from modules)
 # =====================================================================
-class RestaurantReview(Base):
-    """Bảng lưu đánh giá nhà hàng của người dùng (RestaurantReviews)."""
-    __tablename__ = "restaurant_reviews"
-    __table_args__ = (
-        UniqueConstraint("user_id", "restaurant_id", name="uq_review_user_restaurant"),
-        CheckConstraint("rating >= 1 AND rating <= 5", name="ck_review_rating_range"),
-    )
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    restaurant_id = Column(Integer, ForeignKey("restaurants.id", ondelete="CASCADE"), nullable=False, index=True)
-    rating = Column(Integer, nullable=False)  # Điểm từ 1 đến 5 sao
-    comment = Column(Text, nullable=True)
-    image_url = Column(String(500), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+from app.models.review import RestaurantReview
+from app.models.notification import Notification
 
 
 # =====================================================================
-# 5. BẢNG USER FAVORITES (Danh sách nhà hàng yêu thích / Bookmark)
+# 5. BẢNG USER FAVORITES (Danh sách nhà hàng yêu thích / Bookmark - TE9C67D)
 # =====================================================================
 class UserFavorite(Base):
-    """Bảng lưu danh sách quán ăn yêu thích của người dùng (UserFavorites)."""
+    """Bảng lưu danh sách quán ăn yêu thích của người dùng (UserFavorites - FR-11, UC-08)."""
     __tablename__ = "user_favorites"
     __table_args__ = (
         UniqueConstraint("user_id", "restaurant_id", name="uq_favorite_user_restaurant"),
+        Index("idx_favorite_user", "user_id"),
+        Index("idx_favorite_restaurant", "restaurant_id"),
     )
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -73,18 +62,6 @@ class UserFavorite(Base):
     note = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    user = relationship("User", back_populates="favorites")
+    restaurant = relationship("Restaurant", back_populates="favorites")
 
-# =====================================================================
-# 6. BẢNG NOTIFICATIONS (Thông báo hệ thống cho người dùng)
-# =====================================================================
-class Notification(Base):
-    """Bảng lưu thông báo gửi tới người dùng (Notifications)."""
-    __tablename__ = "notifications"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    title = Column(String(255), nullable=False)
-    message = Column(Text, nullable=False)
-    notification_type = Column(String(50), default="system", nullable=False)  # 'system', 'review', 'promo'
-    is_read = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

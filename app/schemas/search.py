@@ -236,3 +236,56 @@ class RemoveCriterionResponse(BaseModel):
     updated_criteria: Optional[Dict[str, Any]] = None
     results: List[Dict[str, Any]] = Field(default_factory=list)
     total_found: int = 0
+
+
+# =====================================================================
+# SCHEMAS LỊCH SỬ TÌM KIẾM & KẾT QUẢ GỢI Ý (TASK TSK-46 / FR-12, UC-10)
+# =====================================================================
+
+class SuggestedRestaurantHistoryItem(BaseModel):
+    """Schema thông tin nhà hàng gợi ý liên quan đến phiên tìm kiếm cũ"""
+    id: int
+    name: str
+    address: str
+    cuisine_type: Optional[str] = None
+    avg_rating: float = 4.5
+    min_price: float = 0.0
+    max_price: float = 0.0
+    cover_image_url: Optional[str] = None
+    is_open: bool = False
+    match_score: int = 85
+    distance_km: Optional[float] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SearchHistorySessionItem(BaseModel):
+    """Schema chi tiết một phiên tìm kiếm trong lịch sử kèm tiêu chí và gợi ý"""
+    session_id: int
+    user_id: int
+    status: str
+    started_at: datetime
+    title_preview: Optional[str] = None
+    total_messages: int = 0
+    criteria: Optional[SearchCriteriaResponse] = None
+    suggested_restaurants: List[SuggestedRestaurantHistoryItem] = Field(
+        default_factory=list,
+        description="Danh sách các nhà hàng phù hợp với tiêu chí của phiên tìm kiếm này"
+    )
+
+    class Config:
+        from_attributes = True
+
+
+class SearchHistoryResponse(BaseModel):
+    """Schema phản hồi danh sách lịch sử tìm kiếm kèm phân trang chuẩn RESTful"""
+    total_sessions: int = Field(..., description="Tổng số phiên tìm kiếm của người dùng")
+    page: int = Field(..., description="Trang hiện tại (1-based)")
+    limit: int = Field(..., description="Số lượng phiên trên mỗi trang")
+    total_pages: int = Field(..., description="Tổng số trang")
+    data: List[SearchHistorySessionItem] = Field(
+        default_factory=list,
+        description="Danh sách các phiên tìm kiếm kèm tiêu chí và kết quả gợi ý"
+    )
+
