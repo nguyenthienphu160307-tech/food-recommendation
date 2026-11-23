@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -85,6 +85,7 @@ def seed_demo_accounts():
     except Exception as e:
         print(f"[Seed] Khong the seed tai khoan demo: {e}")
 
+_seed_demo_accounts = seed_demo_accounts
 seed_demo_accounts()
 
 app = FastAPI(
@@ -269,3 +270,31 @@ def test_db_connection(db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"status": "error", "error": str(e)},
         )
+        
+@app.get("/", include_in_schema=False)
+def serve_home_page():
+    return RedirectResponse(url="/frontend/index.html")
+
+@app.get("/login", include_in_schema=False)
+def serve_login():
+    return RedirectResponse(url="/frontend/login.html")
+
+@app.get("/register", include_in_schema=False)
+def serve_register():
+    return RedirectResponse(url="/frontend/register.html")
+
+@app.get("/profile", include_in_schema=False)
+def serve_profile():
+    return RedirectResponse(url="/frontend/profile.html")
+
+@app.get("/admin", include_in_schema=False)
+def serve_admin():
+    return RedirectResponse(url="/frontend/admin.html")
+
+@app.get("/admin/menu", include_in_schema=False)
+def serve_admin_menu():
+    return RedirectResponse(url="/frontend/admin-menu.html")
+
+@app.get("/admin/images", include_in_schema=False)
+def serve_admin_images():
+    return RedirectResponse(url="/frontend/admin-images.html")
