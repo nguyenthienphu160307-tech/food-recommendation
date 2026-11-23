@@ -105,6 +105,43 @@ let usersData = [];
 let venuesData = [];
 let reportsData = [];
 
+// ==============================================================================
+// BIẾN & DỮ LIỆU THỐNG KÊ BIỂU ĐỒ CHART.JS (TASK TSK-59 & UC-06e)
+// ==============================================================================
+let currentStatsPeriod = 'week'; // 'week' | 'month'
+let searchTrendChart = null;
+let topVenuesChart = null;
+let cuisineDoughnutChart = null;
+let districtBarChart = null;
+
+// Dữ liệu mô phỏng tương tác thống kê theo Tuần & Tháng
+const STATS_DATA_PERIODS = {
+    week: {
+        label: '7 Ngày qua',
+        categories: ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'],
+        searches: [142, 185, 210, 195, 260, 345, 312],
+        newUsers: [8, 12, 10, 14, 16, 15, 12],
+        totalSearches: '1,649',
+        trendSearches: '↑ +18.4% so với tuần trước',
+        newUsersCount: '87',
+        trendUsers: '↑ +12.5% tăng trưởng tuần',
+        totalFavorites: '426',
+        trendFavorites: '❤️ +28 lượt yêu thích mới'
+    },
+    month: {
+        label: '30 Ngày qua',
+        categories: ['Tuần 1 (01-07)', 'Tuần 2 (08-14)', 'Tuần 3 (15-21)', 'Tuần 4 (22-28)', 'Tuần 5 (29-31)'],
+        searches: [1120, 1280, 1450, 1649, 651],
+        newUsers: [65, 78, 82, 87, 33],
+        totalSearches: '6,150',
+        trendSearches: '↑ +24.8% so với tháng trước',
+        newUsersCount: '345',
+        trendUsers: '↑ +31.2% tăng trưởng tháng',
+        totalFavorites: '1,420',
+        trendFavorites: '❤️ +124 lượt yêu thích mới'
+    }
+};
+
 /**
  * ==============================================================================
  * 1. FRONTEND ROUTE GUARD (BẢO VỆ ROUTE ADMIN)
@@ -274,6 +311,468 @@ function loadAllAdminData() {
 }
 
 /**
+ * ==============================================================================
+ * BỘ ĐIỀU KHIỂN & KHỞI TẠO BIỂU ĐỒ BÁO CÁO (UC-06e & TSK-59)
+ * ==============================================================================
+ */
+
+/**
+ * Chuyển đổi bộ lọc thời gian: Theo Tuần ('week') hoặc Theo Tháng ('month')
+ */
+function setTimePeriodFilter(period) {
+    if (period !== 'week' && period !== 'month') return;
+    currentStatsPeriod = period;
+
+    // Cập nhật trạng thái nút bấm
+    const btnWeek = document.getElementById('btn-filter-week');
+    const btnMonth = document.getElementById('btn-filter-month');
+    if (btnWeek && btnMonth) {
+        if (period === 'week') {
+            btnWeek.classList.add('active');
+            btnMonth.classList.remove('active');
+        } else {
+            btnMonth.classList.add('active');
+            btnWeek.classList.remove('active');
+        }
+    }
+
+    // Cập nhật nhãn chu kỳ trên biểu đồ
+    const badge = document.getElementById('chart-period-badge');
+    if (badge) {
+        badge.innerText = STATS_DATA_PERIODS[period].label;
+    }
+
+    // Cập nhật các thẻ KPI
+    const pData = STATS_DATA_PERIODS[period];
+    const statSearches = document.getElementById('stat-total-searches');
+    const trendSearches = document.getElementById('stat-trend-searches');
+    const statUsers = document.getElementById('stat-new-users');
+    const trendUsers = document.getElementById('stat-trend-users');
+    const statFavs = document.getElementById('stat-total-favorites');
+    const trendFavs = document.getElementById('stat-trend-favorites');
+
+    if (statSearches) statSearches.innerText = pData.totalSearches;
+    if (trendSearches) trendSearches.innerText = pData.trendSearches;
+    if (statUsers) statUsers.innerText = pData.newUsersCount;
+    if (trendUsers) trendUsers.innerText = pData.trendUsers;
+    if (statFavs) statFavs.innerText = pData.totalFavorites;
+    if (trendFavs) trendFavs.innerText = pData.trendFavorites;
+
+    // Cập nhật lại Biểu đồ xu hướng
+    updateSearchTrendChart(period);
+    showToast(`Đã chuyển chế độ xem: ${STATS_DATA_PERIODS[period].label}`, 'success');
+}
+
+/**
+ * Làm mới và đồng bộ toàn bộ dữ liệu thống kê
+ */
+function refreshOverviewStats() {
+    const btn = document.querySelector('.btn-refresh-stats');
+    if (btn) btn.classList.add('spinning');
+
+    // Nạp lại dữ liệu từ API nếu có token
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        fetch('/api/admin/stats', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.ok ? res.json() : null)
+        .then(apiData => {
+            if (apiData && apiData.data) {
+                const u = apiData.data.users || {};
+                const r = apiData.data.restaurants || {};
+                if (u.total) {
+                    const el = document.getElementById('stat-total-users');
+                    if (el) el.innerText = u.total;
+                }
+                if (r.avg_rating) {
+                    const el = document.getElementById('stat-avg-rating');
+                    if (el) el.innerText = `${r.avg_rating} ★`;
+                }
+            }
+        })
+        .catch(err => console.warn('Không thể nạp stats từ API:', err));
+    }
+
+    renderStatsOverview();
+    setTimeout(() => {
+        if (btn) btn.classList.remove('spinning');
+        showToast('Đã làm mới và đồng bộ số liệu thống kê thành công!', 'success');
+    }, 500);
+}
+
+/**
+ * Biểu đồ 1: Line / Area Chart - Xu hướng Tìm kiếm & Người dùng mới
+ */
+function renderSearchTrendChart(period = currentStatsPeriod) {
+    const canvas = document.getElementById('chart-search-trends');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    const ctx = canvas.getContext('2d');
+    const pData = STATS_DATA_PERIODS[period];
+
+    if (searchTrendChart) {
+        searchTrendChart.destroy();
+    }
+
+    // Gradient background cho Lượt tìm kiếm
+    const gradBlue = ctx.createLinearGradient(0, 0, 0, 300);
+    gradBlue.addColorStop(0, 'rgba(59, 130, 246, 0.28)');
+    gradBlue.addColorStop(1, 'rgba(59, 130, 246, 0.01)');
+
+    // Gradient background cho Người dùng mới
+    const gradGreen = ctx.createLinearGradient(0, 0, 0, 300);
+    gradGreen.addColorStop(0, 'rgba(16, 185, 129, 0.28)');
+    gradGreen.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+
+    searchTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: pData.categories,
+            datasets: [
+                {
+                    label: 'Lượt Tìm Kiếm AI (Lượt)',
+                    data: pData.searches,
+                    borderColor: '#3b82f6',
+                    backgroundColor: gradBlue,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.38,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#3b82f6',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Người Dùng Mới (Tài khoản)',
+                    data: pData.newUsers,
+                    borderColor: '#10b981',
+                    backgroundColor: gradGreen,
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.38,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        font: { size: 12, family: 'Inter', weight: '600' },
+                        color: '#475569'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFont: { size: 13, family: 'Inter', weight: '700' },
+                    bodyFont: { size: 12, family: 'Inter' },
+                    padding: 12,
+                    cornerRadius: 8,
+                    boxPadding: 4
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                    ticks: { font: { size: 11, family: 'Inter' }, color: '#64748b' }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: { display: true, text: 'Lượt tìm kiếm', font: { size: 11, weight: '600' }, color: '#3b82f6' },
+                    grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                    ticks: { font: { size: 11, family: 'Inter' }, color: '#64748b' }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: { display: true, text: 'Người dùng mới', font: { size: 11, weight: '600' }, color: '#10b981' },
+                    grid: { drawOnChartArea: false },
+                    ticks: { font: { size: 11, family: 'Inter' }, color: '#64748b' }
+                }
+            }
+        }
+    });
+}
+
+function updateSearchTrendChart(period) {
+    if (!searchTrendChart) {
+        renderSearchTrendChart(period);
+        return;
+    }
+    const pData = STATS_DATA_PERIODS[period];
+    searchTrendChart.data.labels = pData.categories;
+    searchTrendChart.data.datasets[0].data = pData.searches;
+    searchTrendChart.data.datasets[1].data = pData.newUsers;
+    searchTrendChart.update();
+}
+
+/**
+ * Biểu đồ 2: Horizontal Bar Chart - Top 5 Nhà Hàng Nổi Bật Được Gợi Ý Nhiều Nhất
+ */
+function renderTopVenuesChart() {
+    const canvas = document.getElementById('chart-top-venues');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (topVenuesChart) {
+        topVenuesChart.destroy();
+    }
+
+    let topVenues = [];
+    if (venuesData && venuesData.length > 0) {
+        topVenues = [...venuesData]
+            .sort((a, b) => ((b.rating || 0) * (b.reviews || 1)) - ((a.rating || 0) * (a.reviews || 1)))
+            .slice(0, 5);
+    }
+
+    const labels = topVenues.length > 0 
+        ? topVenues.map(v => v.name.length > 22 ? v.name.substring(0, 20) + '...' : v.name)
+        : ["Pizza 4P's Bến Thành", "Sushi Hokkaido Sachi", "Dim Tu Tac Saigon Centre", "Warning Zone Quang Trung", "Bếp Gạo - Cơm Niêu"];
+
+    const mockAiSuggestions = [485, 432, 398, 340, 315];
+    const dataValues = topVenues.length > 0 
+        ? topVenues.map((v, i) => Math.round((v.reviews || 200) * 0.6) || mockAiSuggestions[i])
+        : mockAiSuggestions;
+
+    const ctx = canvas.getContext('2d');
+    const gradRed = ctx.createLinearGradient(0, 0, 400, 0);
+    gradRed.addColorStop(0, '#e11d48');
+    gradRed.addColorStop(1, '#fb7185');
+
+    topVenuesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Lượt Gợi Ý & Tìm Kiếm',
+                data: dataValues,
+                backgroundColor: gradRed,
+                borderRadius: 6,
+                barThickness: 16
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFont: { size: 12, family: 'Inter', weight: '700' },
+                    bodyFont: { size: 12, family: 'Inter' },
+                    padding: 10,
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.raw} lượt AI đề xuất`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                    ticks: { font: { size: 11, family: 'Inter' }, color: '#64748b' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11, family: 'Inter', weight: '600' }, color: '#334155' }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Biểu đồ 3: Doughnut Chart - Cơ Cấu Phân Bố Thể Loại Ẩm Thực
+ */
+function renderCuisineDoughnutChart() {
+    const canvas = document.getElementById('chart-cuisine-dist');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (cuisineDoughnutChart) {
+        cuisineDoughnutChart.destroy();
+    }
+
+    const cuisineCounts = {};
+    if (venuesData && venuesData.length > 0) {
+        venuesData.forEach(v => {
+            const c = v.cuisineLabel || 'Khác';
+            cuisineCounts[c] = (cuisineCounts[c] || 0) + 1;
+        });
+    }
+
+    let labels = Object.keys(cuisineCounts);
+    let dataValues = Object.values(cuisineCounts);
+
+    if (labels.length === 0) {
+        labels = ['Món Việt', 'Lẩu & Nướng', 'Món Nhật - Hàn', 'Món Âu', 'Món Chay', 'Khác'];
+        dataValues = [16, 12, 9, 7, 4, 2];
+    }
+
+    const colors = [
+        '#e11d48', // đỏ
+        '#3b82f6', // xanh dương
+        '#10b981', // xanh lá
+        '#f59e0b', // cam
+        '#8b5cf6', // tím
+        '#06b6d4', // xanh lơ
+        '#ec4899', // hồng
+        '#64748b'  // xám
+    ];
+
+    const ctx = canvas.getContext('2d');
+    cuisineDoughnutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '66%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        font: { size: 11, family: 'Inter', weight: '500' },
+                        color: '#475569',
+                        padding: 12
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFont: { size: 12, family: 'Inter', weight: '700' },
+                    bodyFont: { size: 12, family: 'Inter' },
+                    padding: 10,
+                    callbacks: {
+                        label: (ctx) => {
+                            const total = ctx.dataset.data.reduce((acc, v) => acc + v, 0);
+                            const pct = Math.round((ctx.raw / total) * 100);
+                            return ` ${ctx.label}: ${ctx.raw} quán (${pct}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Biểu đồ 4: Vertical Bar Chart - Mật Độ Nhà Hàng Theo Địa Bàn Quận
+ */
+function renderDistrictBarChart() {
+    const canvas = document.getElementById('chart-district-dist');
+    if (!canvas || typeof Chart === 'undefined') return;
+
+    if (districtBarChart) {
+        districtBarChart.destroy();
+    }
+
+    const districtCounts = {};
+    if (venuesData && venuesData.length > 0) {
+        venuesData.forEach(v => {
+            const d = v.district || (v.address.includes('Quận 1') ? 'Quận 1' : v.address.includes('Quận 3') ? 'Quận 3' : v.address.includes('Bình Thạnh') ? 'Bình Thạnh' : 'Thủ Đức');
+            districtCounts[d] = (districtCounts[d] || 0) + 1;
+        });
+    }
+
+    let labels = Object.keys(districtCounts);
+    let dataValues = Object.values(districtCounts);
+
+    if (labels.length === 0) {
+        labels = ['Quận 1', 'Quận 3', 'Bình Thạnh', 'TP. Thủ Đức'];
+        dataValues = [18, 12, 11, 9];
+    }
+
+    const ctx = canvas.getContext('2d');
+    const gradIndigo = ctx.createLinearGradient(0, 0, 0, 300);
+    gradIndigo.addColorStop(0, '#6366f1');
+    gradIndigo.addColorStop(1, '#818cf8');
+
+    districtBarChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Số lượng quán ăn',
+                data: dataValues,
+                backgroundColor: gradIndigo,
+                borderRadius: 8,
+                barThickness: 28
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFont: { size: 12, family: 'Inter', weight: '700' },
+                    bodyFont: { size: 12, family: 'Inter' },
+                    padding: 10,
+                    callbacks: {
+                        label: (ctx) => ` ${ctx.raw} địa điểm tại ${ctx.label}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11, family: 'Inter', weight: '600' }, color: '#334155' }
+                },
+                y: {
+                    grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                    ticks: { stepSize: 2, font: { size: 11, family: 'Inter' }, color: '#64748b' }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Khởi tạo đồng bộ toàn bộ biểu đồ
+ */
+function initAdminCharts() {
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js chưa sẵn sàng hoặc chưa nạp CDN.');
+        return;
+    }
+    renderSearchTrendChart(currentStatsPeriod);
+    renderTopVenuesChart();
+    renderCuisineDoughnutChart();
+    renderDistrictBarChart();
+}
+
+/**
  * Render Tab 1: Tổng quan Dashboard & Biểu đồ phân bố
  */
 function renderStatsOverview() {
@@ -285,14 +784,39 @@ function renderStatsOverview() {
     const totalVenues = venuesData.length;
     const pendingReports = reportsData.filter(r => r.status === 'pending').length;
 
-    document.getElementById('stat-total-users').innerText = totalUsers;
-    document.getElementById('badge-users-count').innerText = totalUsers;
-    document.getElementById('stat-total-venues').innerText = totalVenues;
-    document.getElementById('badge-venues-count').innerText = totalVenues;
-    document.getElementById('stat-pending-reports').innerText = pendingReports;
-    document.getElementById('badge-reports-count').innerText = pendingReports;
+    const statUsersEl = document.getElementById('stat-total-users');
+    if (statUsersEl) statUsersEl.innerText = totalUsers;
+    const badgeUsersEl = document.getElementById('badge-users-count');
+    if (badgeUsersEl) badgeUsersEl.innerText = totalUsers;
 
-    // Phân bố nhà hàng theo Quận
+    const statVenuesEl = document.getElementById('stat-total-venues');
+    if (statVenuesEl) statVenuesEl.innerText = totalVenues;
+    const badgeVenuesEl = document.getElementById('badge-venues-count');
+    if (badgeVenuesEl) badgeVenuesEl.innerText = totalVenues;
+
+    const statReportsEl = document.getElementById('stat-pending-reports');
+    if (statReportsEl) statReportsEl.innerText = pendingReports;
+    const badgeReportsEl = document.getElementById('badge-reports-count');
+    if (badgeReportsEl) badgeReportsEl.innerText = pendingReports;
+
+    // Cập nhật các thẻ KPI TSK-59
+    const pData = STATS_DATA_PERIODS[currentStatsPeriod];
+    const statSearches = document.getElementById('stat-total-searches');
+    if (statSearches) statSearches.innerText = pData.totalSearches;
+    const trendSearches = document.getElementById('stat-trend-searches');
+    if (trendSearches) trendSearches.innerText = pData.trendSearches;
+
+    const statNewUsers = document.getElementById('stat-new-users');
+    if (statNewUsers) statNewUsers.innerText = pData.newUsersCount;
+    const trendNewUsers = document.getElementById('stat-trend-users');
+    if (trendNewUsers) trendNewUsers.innerText = pData.trendUsers;
+
+    const statFavs = document.getElementById('stat-total-favorites');
+    if (statFavs) statFavs.innerText = pData.totalFavorites;
+    const trendFavs = document.getElementById('stat-trend-favorites');
+    if (trendFavs) trendFavs.innerText = pData.trendFavorites;
+
+    // Phân bố nhà hàng theo Quận dạng thanh tiến độ
     const districtCounts = {};
     venuesData.forEach(v => {
         const d = v.district || (v.address.includes('Quận 1') ? 'Quận 1' : v.address.includes('Quận 3') ? 'Quận 3' : v.address.includes('Bình Thạnh') ? 'Bình Thạnh' : 'Thủ Đức');
@@ -300,47 +824,27 @@ function renderStatsOverview() {
     });
 
     const distListContainer = document.getElementById('district-distribution-list');
-    distListContainer.innerHTML = '';
-    Object.entries(districtCounts).forEach(([district, count]) => {
-        const pct = Math.round((count / totalVenues) * 100);
-        const item = document.createElement('div');
-        item.className = 'dist-bar-item';
-        item.innerHTML = `
-            <div class="dist-bar-header">
-                <span>📍 ${district}</span>
-                <span>${count} quán (${pct}%)</span>
-            </div>
-            <div class="dist-bar-track">
-                <div class="dist-bar-fill" style="width: ${pct}%;"></div>
-            </div>
-        `;
-        distListContainer.appendChild(item);
-    });
+    if (distListContainer) {
+        distListContainer.innerHTML = '';
+        Object.entries(districtCounts).forEach(([district, count]) => {
+            const pct = Math.round((count / (totalVenues || 1)) * 100);
+            const item = document.createElement('div');
+            item.className = 'dist-bar-item';
+            item.innerHTML = `
+                <div class="dist-bar-header">
+                    <span>📍 ${district}</span>
+                    <span>${count} quán (${pct}%)</span>
+                </div>
+                <div class="dist-bar-track">
+                    <div class="dist-bar-fill" style="width: ${pct}%;"></div>
+                </div>
+            `;
+            distListContainer.appendChild(item);
+        });
+    }
 
-    // Tỷ lệ thể loại ẩm thực
-    const cuisineCounts = {};
-    venuesData.forEach(v => {
-        const c = v.cuisineLabel || 'Khác';
-        cuisineCounts[c] = (cuisineCounts[c] || 0) + 1;
-    });
-
-    const cuisineListContainer = document.getElementById('cuisine-distribution-list');
-    cuisineListContainer.innerHTML = '';
-    Object.entries(cuisineCounts).slice(0, 5).forEach(([cuisine, count]) => {
-        const pct = Math.round((count / totalVenues) * 100);
-        const item = document.createElement('div');
-        item.className = 'dist-bar-item';
-        item.innerHTML = `
-            <div class="dist-bar-header">
-                <span>🍽️ ${cuisine}</span>
-                <span>${count} quán (${pct}%)</span>
-            </div>
-            <div class="dist-bar-track">
-                <div class="dist-bar-fill" style="width: ${pct}%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
-            </div>
-        `;
-        cuisineListContainer.appendChild(item);
-    });
+    // Khởi tạo các biểu đồ Chart.js
+    initAdminCharts();
 }
 
 /**
@@ -899,6 +1403,16 @@ function switchAdminTab(tabId, navElement) {
         'tab-settings': 'Cài đặt Hệ thống'
     };
     document.getElementById('page-title').innerText = titles[tabId] || 'Quản trị viên';
+
+    // Nếu quay về tab-overview, resize các canvas biểu đồ để hiển thị sắc nét
+    if (tabId === 'tab-overview') {
+        setTimeout(() => {
+            if (searchTrendChart) searchTrendChart.resize();
+            if (topVenuesChart) topVenuesChart.resize();
+            if (cuisineDoughnutChart) cuisineDoughnutChart.resize();
+            if (districtBarChart) districtBarChart.resize();
+        }, 50);
+    }
 
     // Đóng sidebar nếu đang mở trên mobile
     if (window.innerWidth <= 900) {

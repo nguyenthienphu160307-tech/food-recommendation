@@ -6,6 +6,8 @@
     <title>FoodAI — Bảng Điều Khiển Quản Trị Hệ Thống (Admin Portal)</title>
     <link rel="stylesheet" href="css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN for UC-06e & TSK-59 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -134,53 +136,160 @@
         <main class="admin-content">
 
             <!-- =================================================================
-                 TAB 1: TỔNG QUAN DASHBOARD (KPI STATS & CHARTS)
+                 TAB 1: TỔNG QUAN DASHBOARD (KPI STATS & CHARTS - UC-06e & TSK-59)
                  ================================================================= -->
             <section class="tab-pane active" id="tab-overview">
-                <!-- KPI Cards -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-info">
-                            <p>Tổng số Người dùng</p>
-                            <h3 id="stat-total-users">2</h3>
-                            <span class="stat-trend">↑ 100% Hoạt động (BR-07)</span>
+                <!-- Thanh công cụ lọc thời gian (Time Filter Bar) -->
+                <div class="overview-toolbar">
+                    <div class="overview-heading">
+                        <h2 class="overview-section-title">Báo Cáo & Thống Kê Hoạt Động Hệ Thống</h2>
+                        <p class="overview-section-sub">Trực quan hóa số liệu người dùng, nhà hàng, phiên tìm kiếm AI và xu hướng ẩm thực (UC-06e)</p>
+                    </div>
+                    <div class="time-filter-group">
+                        <span class="time-filter-label">Kỳ báo cáo:</span>
+                        <div class="filter-pills-wrap">
+                            <button type="button" class="btn-time-filter active" id="btn-filter-week" onclick="setTimePeriodFilter('week')">
+                                <span>📅</span> Theo Tuần (7 Ngày)
+                            </button>
+                            <button type="button" class="btn-time-filter" id="btn-filter-month" onclick="setTimePeriodFilter('month')">
+                                <span>🗓️</span> Theo Tháng (30 Ngày)
+                            </button>
                         </div>
-                        <div class="stat-icon icon-blue">👥</div>
+                        <button type="button" class="btn-refresh-stats" onclick="refreshOverviewStats()" title="Làm mới toàn bộ số liệu thống kê">
+                            <span id="refresh-icon">🔄</span> Cập nhật số liệu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 5 Thẻ KPI Mở Rộng (Stats Grid) -->
+                <div class="stats-grid stats-grid-5">
+                    <!-- Thẻ 1: Lượt tìm kiếm AI -->
+                    <div class="stat-card stat-card-highlight">
+                        <div class="stat-info">
+                            <p>Lượt Tìm Kiếm AI</p>
+                            <h3 id="stat-total-searches">1,649</h3>
+                            <span class="stat-trend trend-up" id="stat-trend-searches">↑ +18.4% so với tuần trước</span>
+                        </div>
+                        <div class="stat-icon icon-blue">🔍</div>
                     </div>
 
+                    <!-- Thẻ 2: Người dùng mới -->
                     <div class="stat-card">
                         <div class="stat-info">
-                            <p>Tổng số Nhà hàng</p>
+                            <p>Người Dùng Mới</p>
+                            <h3 id="stat-new-users">87</h3>
+                            <span class="stat-trend trend-up" id="stat-trend-users">↑ +12.5% tăng trưởng</span>
+                        </div>
+                        <div class="stat-icon icon-green">👥</div>
+                    </div>
+
+                    <!-- Thẻ 3: Nhà hàng đang hoạt động -->
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <p>Nhà Hàng Đang Hoạt Động</p>
                             <h3 id="stat-total-venues">50</h3>
-                            <span class="stat-trend">✓ 4 Quận trọng điểm TP.HCM</span>
+                            <span class="stat-trend" style="color:var(--brand-blue);">✓ 100% Sẵn sàng gợi ý</span>
                         </div>
                         <div class="stat-icon icon-red">🍽️</div>
                     </div>
 
+                    <!-- Thẻ 4: Lượt lưu yêu thích & Đánh giá -->
                     <div class="stat-card">
                         <div class="stat-info">
-                            <p>Báo cáo Chờ xử lý</p>
-                            <h3 id="stat-pending-reports">3</h3>
-                            <span class="stat-trend" style="color:var(--brand-amber);">⚠ Cần kiểm duyệt</span>
+                            <p>Tương Tác & Yêu Thích</p>
+                            <h3 id="stat-total-favorites">426</h3>
+                            <span class="stat-trend trend-up" id="stat-trend-favorites">❤️ +28 lượt yêu thích mới</span>
                         </div>
-                        <div class="stat-icon icon-amber">🚩</div>
+                        <div class="stat-icon icon-pink">❤️</div>
                     </div>
 
+                    <!-- Thẻ 5: Điểm đánh giá trung bình -->
                     <div class="stat-card">
                         <div class="stat-info">
-                            <p>Điểm Đánh giá Trung bình</p>
-                            <h3 id="stat-avg-rating">4.7</h3>
-                            <span class="stat-trend">★ Điểm thực tế từ Seed</span>
+                            <p>Đánh Giá Trung Bình</p>
+                            <h3 id="stat-avg-rating">4.7 ★</h3>
+                            <span class="stat-trend">★ 850+ đánh giá thực tế</span>
                         </div>
                         <div class="stat-icon icon-purple">⭐</div>
                     </div>
                 </div>
 
-                <!-- Panels Row: Phân bố Nhà hàng theo Quận & Theo Ẩm thực -->
-                <div class="dashboard-row">
+                <!-- LƯỚI BIỂU ĐỒ 1: Xu hướng Tìm kiếm & Top Nhà hàng Nổi bật -->
+                <div class="charts-row charts-row-main">
+                    <!-- Biểu đồ 1: Line/Area Chart Xu hướng tìm kiếm & Người dùng mới -->
+                    <div class="panel-card chart-card">
+                        <div class="panel-header">
+                            <div>
+                                <h4>Xu hướng Lượt Tìm Kiếm AI & Người Dùng Mới</h4>
+                                <span class="chart-subtitle">So sánh số lượng tương tác qua công cụ AI và lượng người đăng ký</span>
+                            </div>
+                            <div class="panel-header-badge">
+                                <span class="badge-period" id="chart-period-badge">7 Ngày qua</span>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-container">
+                            <canvas id="chart-search-trends"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Biểu đồ 2: Horizontal Bar Chart Top 5 Nhà hàng nổi bật -->
+                    <div class="panel-card chart-card">
+                        <div class="panel-header">
+                            <div>
+                                <h4>Top Nhà Hàng Nổi Bật Được Gợi Ý</h4>
+                                <span class="chart-subtitle">Quán ăn nhận được nhiều lượt đề xuất và tương tác nhất</span>
+                            </div>
+                            <div class="panel-header-badge">
+                                <span class="badge-period badge-fire">🔥 Thịnh hành</span>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-container">
+                            <canvas id="chart-top-venues"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LƯỚI BIỂU ĐỒ 2: Cơ cấu Thể loại Ẩm thực & Phân bố theo Quận -->
+                <div class="charts-row charts-row-secondary">
+                    <!-- Biểu đồ 3: Doughnut Chart Cơ cấu Ẩm thực -->
+                    <div class="panel-card chart-card">
+                        <div class="panel-header">
+                            <div>
+                                <h4>Cơ Cấu Phân Bố Thể Loại Ẩm Thực</h4>
+                                <span class="chart-subtitle">Tỷ lệ các danh mục quán ăn trong hệ thống dữ liệu</span>
+                            </div>
+                            <div class="panel-header-badge">
+                                <span class="badge-period">Tỷ lệ %</span>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-container chart-doughnut-wrap">
+                            <canvas id="chart-cuisine-dist"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Biểu đồ 4: Vertical Bar Chart Phân bố Nhà hàng theo Quận -->
+                    <div class="panel-card chart-card">
+                        <div class="panel-header">
+                            <div>
+                                <h4>Mật Độ Nhà Hàng Theo Địa Bàn Quận</h4>
+                                <span class="chart-subtitle">Số lượng địa điểm ăn uống tại các quận trọng điểm TP.HCM</span>
+                            </div>
+                            <div class="panel-header-badge">
+                                <span class="badge-period">TP. Hồ Chí Minh</span>
+                            </div>
+                        </div>
+                        <div class="chart-canvas-container">
+                            <canvas id="chart-district-dist"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hàng Thông Tin Bổ Trợ: Phân bố chi tiết & Hoạt động Gần đây -->
+                <div class="dashboard-row" style="margin-top:24px;">
+                    <!-- Chi tiết tiến độ phân bố dạng danh sách -->
                     <div class="panel-card">
                         <div class="panel-header">
-                            <h4>Phân bố Nhà hàng theo Quận (TP. Hồ Chí Minh)</h4>
+                            <h4>Tóm Tắt Mật Độ & Chỉ Số Khai Thác Theo Quận</h4>
                             <span style="font-size:0.78rem;color:var(--text-muted);">50 địa điểm thực tế</span>
                         </div>
                         <div id="district-distribution-list">
@@ -188,34 +297,29 @@
                         </div>
                     </div>
 
+                    <!-- Nhật ký Hoạt động Hệ thống Gần đây -->
                     <div class="panel-card">
                         <div class="panel-header">
-                            <h4>Tỷ lệ Thể loại Ẩm thực</h4>
+                            <h4>Nhật Ký Hoạt Động & Kiểm Duyệt Gần Đây</h4>
+                            <span style="font-size:0.78rem;color:var(--brand-green);">● Hệ thống Trực tuyến</span>
                         </div>
-                        <div id="cuisine-distribution-list">
-                            <!-- Render bằng JS -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hoạt động gần đây -->
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <h4>Nhật ký Hoạt động Hệ thống Gần đây</h4>
-                        <span style="font-size:0.78rem;color:var(--brand-green);">● Hệ thống Trực tuyến</span>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;" id="recent-logs-list">
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
-                            <span>🔒 <strong>RBAC Guard:</strong> Đã bảo vệ các route nhạy cảm với Token JWT và phân quyền Admin/User.</span>
-                            <span style="color:var(--text-muted);font-size:0.75rem;">Vừa xong</span>
-                        </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
-                            <span>🗺️ <strong>Bản đồ số Leaflet:</strong> Tích hợp 50 quán ăn GPS và định vị vị trí tìm kiếm.</span>
-                            <span style="color:var(--text-muted);font-size:0.75rem;">10 phút trước</span>
-                        </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
-                            <span>👤 <strong>Quy tắc BR-07:</strong> Sẵn sàng cơ chế khóa tài khoản vi phạm và ngăn chặn đăng nhập.</span>
-                            <span style="color:var(--text-muted);font-size:0.75rem;">30 phút trước</span>
+                        <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;" id="recent-logs-list">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                                <span>📊 <strong>Biểu đồ Analytics:</strong> Đã kích hoạt hệ thống báo cáo Chart.js theo tuần/tháng (UC-06e).</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;">Vừa xong</span>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                                <span>🔒 <strong>RBAC Guard:</strong> Đã bảo vệ các route nhạy cảm với Token JWT và phân quyền Admin/User.</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;">15 phút trước</span>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                                <span>🗺️ <strong>Bản đồ số Leaflet:</strong> Tích hợp 50 quán ăn GPS và định vị vị trí tìm kiếm.</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;">30 phút trước</span>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                                <span>👤 <strong>Quy tắc BR-07:</strong> Sẵn sàng cơ chế khóa tài khoản vi phạm và ngăn chặn đăng nhập.</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;">1 giờ trước</span>
+                            </div>
                         </div>
                     </div>
                 </div>
