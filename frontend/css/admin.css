@@ -855,6 +855,65 @@ body {
     }
 }
 
+@media (max-width: 640px) {
+    .admin-topbar {
+        padding: 0 14px;
+        height: 60px;
+    }
+
+    .admin-name {
+        display: none;
+    }
+
+    .admin-content {
+        padding: 16px 12px;
+    }
+
+    .overview-toolbar {
+        padding: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .time-filter-group {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .filter-pills-wrap {
+        width: 100%;
+    }
+
+    .btn-time-filter {
+        flex: 1;
+        justify-content: center;
+        padding: 6px 8px;
+        font-size: 0.76rem;
+    }
+
+    .stats-grid-5 {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .chart-card {
+        min-height: 320px;
+        padding: 16px 12px;
+    }
+
+    .chart-canvas-container {
+        min-height: 240px;
+        max-height: 260px;
+    }
+
+    .admin-modal-card {
+        width: 96vw !important;
+        max-width: 96vw !important;
+        padding: 16px 14px !important;
+    }
+}
+
 /* ==============================================================================
    9. OVERVIEW TOOLBAR, KPI 5-GRID & CHART.JS VISUALIZATIONS (TSK-59 & UC-06e)
    ============================================================================== */

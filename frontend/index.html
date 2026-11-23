@@ -994,11 +994,70 @@
             grid-template-columns: 2fr 1fr 1fr; gap: 32px;
             font-size: 0.84rem; color: var(--text-secondary);
         }
-        @media (max-width: 768px) { .footer-grid { grid-template-columns: 1fr; } }
         .footer-col h4 { color: var(--text-primary); font-size: 0.92rem; margin-bottom: 12px; }
         .footer-col p { line-height: 1.6; margin-bottom: 6px; }
         .footer-col a { display: block; color: var(--text-secondary); text-decoration: none; margin-bottom: 8px; }
         .footer-col a:hover { color: var(--brand-red); }
+
+        /* ==============================================================================
+           RESPONSIVE DESIGN CHO THIẾT BỊ DI ĐỘNG & TABLET (NFR-06 - TASK TSK-60)
+           ============================================================================== */
+        @media (max-width: 768px) {
+            .topbar {
+                height: auto;
+                padding: 10px 14px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .topbar-left {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .location-pill {
+                max-width: 160px;
+                padding: 6px 10px;
+                font-size: 0.78rem;
+            }
+            .search-wrapper {
+                width: 100%;
+                max-width: 100%;
+                order: 3;
+            }
+            .search-bar {
+                height: 42px;
+            }
+            .topbar-right {
+                order: 2;
+                margin-left: auto;
+            }
+            .account-trigger span {
+                display: none;
+            }
+            .filter-ribbon {
+                top: 116px;
+                padding: 8px 14px;
+                gap: 8px;
+            }
+            .discovery-layout {
+                grid-template-columns: 1fr;
+            }
+            .listings-column {
+                padding: 16px 14px;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .modal-card {
+                width: 95vw !important;
+                padding: 18px 14px !important;
+                border-radius: 14px !important;
+            }
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
     </style>
 </head>
 <body>
