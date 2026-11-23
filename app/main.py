@@ -65,6 +65,32 @@ FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 if os.path.isdir(FRONTEND_DIR):
     app.mount("/frontend", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+    js_dir = os.path.join(FRONTEND_DIR, "js")
+    if os.path.isdir(js_dir):
+        app.mount("/js", StaticFiles(directory=js_dir), name="js")
+    css_dir = os.path.join(FRONTEND_DIR, "css")
+    if os.path.isdir(css_dir):
+        app.mount("/css", StaticFiles(directory=css_dir), name="css")
+
+
+@app.get("/venues-data.js", include_in_schema=False)
+def serve_venues_data_js():
+    file_path = os.path.join(FRONTEND_DIR, "js", "venues-data.js")
+    if not os.path.exists(file_path):
+        file_path = os.path.join(FRONTEND_DIR, "venues-data.js")
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="application/javascript")
+    raise HTTPException(status_code=404)
+
+
+@app.get("/map-component.js", include_in_schema=False)
+def serve_map_component_js():
+    file_path = os.path.join(FRONTEND_DIR, "js", "map-component.js")
+    if not os.path.exists(file_path):
+        file_path = os.path.join(FRONTEND_DIR, "map-component.js")
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="application/javascript")
+    raise HTTPException(status_code=404)
 
 
 # Các route phục vụ Giao diện Người dùng (Frontend UI - TSK-12)

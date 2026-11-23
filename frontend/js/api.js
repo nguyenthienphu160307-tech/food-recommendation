@@ -214,10 +214,17 @@ window.FoodAPI = {
             rating: r.avg_rating || 4.5,
             reviews: r.total_reviews || 0,
             parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
+            has_parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
             private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
+            has_private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
+            outdoor: Boolean(r.amenities?.has_outdoor ?? r.has_outdoor),
+            has_outdoor: Boolean(r.amenities?.has_outdoor ?? r.has_outdoor),
+            pet_friendly: Boolean(r.amenities?.pet_friendly ?? r.pet_friendly),
+            has_pet_friendly: Boolean(r.amenities?.pet_friendly ?? r.pet_friendly),
             vegetarian: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support),
+            vegetarian_support: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support),
             openHours: r.open_hours || "08:00 - 22:00",
-            image: r.cover_image || r.image_url || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+            image: r.cover_image_url || r.cover_image || r.image_url || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
             menu: r.menu || []
         })
     }
