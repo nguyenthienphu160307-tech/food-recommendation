@@ -361,6 +361,8 @@
 
                 // Lưu thông tin người dùng và token
                 setAuthSession(data.user, data.token);
+                localStorage.setItem('access_token', data.token);
+                localStorage.setItem('current_user', JSON.stringify(data.user));
                 localStorage.setItem('foodai_demo_profile_state', JSON.stringify({
                     full_name: data.user.full_name,
                     email: data.user.email,

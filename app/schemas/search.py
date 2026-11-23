@@ -159,7 +159,6 @@ class SearchCriteriaCreateRequest(BaseModel):
     budget: Optional[int] = Field(None, description="Ngân sách dự kiến (VND)")
     has_parking: Optional[bool] = Field(False, description="Yêu cầu bãi đỗ xe")
     other_conditions: Optional[str] = Field(None, description="Điều kiện mở rộng định dạng JSON text")
-    # TSK-20: ID người dùng để áp dụng cài đặt quyền riêng tư (tùy chọn)
     user_id: Optional[int] = Field(None, description="ID người dùng để áp dụng cơ chế bảo vệ quyền riêng tư GPS")
     is_obfuscated: Optional[bool] = Field(False, description="Đánh dấu tọa độ đã được làm mờ theo cơ chế BR-08")
 
@@ -175,7 +174,6 @@ class SearchCriteriaResponse(BaseModel):
     budget: Optional[int] = None
     has_parking: Optional[bool] = False
     other_conditions: Optional[str] = None
-    # TSK-20: Trả về trạng thái đã làm mờ tọa độ hay chưa
     is_obfuscated: Optional[bool] = False
     created_at: datetime
 
@@ -236,3 +234,43 @@ class RemoveCriterionResponse(BaseModel):
     updated_criteria: Optional[Dict[str, Any]] = None
     results: List[Dict[str, Any]] = Field(default_factory=list)
     total_found: int = 0
+
+
+# =====================================================================
+# SCHEMAS LỊCH SỬ TÌM KIẾM & GỢI Ý NHÀ HÀNG (TASK TSK-46 / TE9C677)
+# =====================================================================
+
+class SuggestedRestaurantHistoryItem(BaseModel):
+    """Thông tin nhà hàng được gợi ý lại trong một phiên tìm kiếm cũ"""
+    id: int
+    name: str
+    address: Optional[str] = None
+    cuisine_type: Optional[str] = None
+    avg_rating: float = 4.5
+    min_price: float = 0.0
+    max_price: float = 0.0
+    cover_image_url: Optional[str] = None
+    is_open: bool = True
+    match_score: int = 85
+    distance_km: Optional[float] = None
+
+
+class SearchHistorySessionItem(BaseModel):
+    """Chi tiết một phiên tìm kiếm cũ kèm tiêu chí và danh sách quán đã gợi ý"""
+    session_id: int
+    user_id: Optional[int] = None
+    status: str
+    started_at: datetime
+    title_preview: str
+    total_messages: int = 0
+    criteria: Optional[SearchCriteriaResponse] = None
+    suggested_restaurants: List[SuggestedRestaurantHistoryItem] = Field(default_factory=list)
+
+
+class SearchHistoryResponse(BaseModel):
+    """Phản hồi danh sách lịch sử tìm kiếm có phân trang"""
+    total_sessions: int
+    page: int
+    limit: int
+    total_pages: int
+    data: List[SearchHistorySessionItem]

@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -21,6 +21,36 @@ from app.routers import (
 
 # Tự động tạo bảng CSDL
 Base.metadata.create_all(bind=engine)
+
+def _seed_demo_accounts():
+    from app.core.database import SessionLocal
+    from app.core.security import hash_password
+    from app.models.user import User, UserProfile, Role, UserRole
+    db = SessionLocal()
+    try:
+        for r_name, desc in [("user", "Người dùng"), ("admin", "Quản trị viên")]:
+            if not db.query(Role).filter_by(name=r_name).first():
+                db.add(Role(name=r_name, description=desc))
+        db.commit()
+
+        demo_list = [
+            ("sinhvien@example.com", "123456", "Nguyễn Văn An", "user"),
+            ("admin@smartdining.vn", "123456", "Quản trị viên", "admin"),
+        ]
+        for email, pwd, full_name, r_name in demo_list:
+            if not db.query(User).filter_by(email=email).first():
+                u = User(email=email, hashed_password=hash_password(pwd), status="active")
+                db.add(u)
+                db.flush()
+                db.add(UserProfile(user_id=u.id, full_name=full_name))
+                role = db.query(Role).filter_by(name=r_name).first()
+                db.add(UserRole(user_id=u.id, role_id=role.id))
+        db.commit()
+    finally:
+        db.close()
+
+_seed_demo_accounts()
+
 
 app = FastAPI(
     title="Smart Dining - Hệ thống Gợi ý Địa điểm Ăn uống theo Vị trí",
@@ -93,3 +123,31 @@ def test_db_connection(db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"status": "error", "error": str(e)},
         )
+        
+app.get("/", include_in_schema=False)
+def serve_home_page():
+    return RedirectResponse(url="/frontend/index.html")
+
+@app.get("/login", include_in_schema=False)
+def serve_login():
+    return RedirectResponse(url="/frontend/login.html")
+
+@app.get("/register", include_in_schema=False)
+def serve_register():
+    return RedirectResponse(url="/frontend/register.html")
+
+@app.get("/profile", include_in_schema=False)
+def serve_profile():
+    return RedirectResponse(url="/frontend/profile.html")
+
+@app.get("/admin", include_in_schema=False)
+def serve_admin():
+    return RedirectResponse(url="/frontend/admin.html")
+
+@app.get("/admin/menu", include_in_schema=False)
+def serve_admin_menu():
+    return RedirectResponse(url="/frontend/admin-menu.html")
+
+@app.get("/admin/images", include_in_schema=False)
+def serve_admin_images():
+    return RedirectResponse(url="/frontend/admin-images.html")

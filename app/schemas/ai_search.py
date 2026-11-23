@@ -61,8 +61,13 @@ class ExtractCriteriaRequest(BaseModel):
     prompt: str = Field(
         ...,
         min_length=2,
+        max_length=500,
         description="Câu hỏi tự nhiên của người dùng",
         examples=["Nhóm 4 người muốn ăn đồ nướng ở Quận 1 có chỗ đậu ô tô dưới 300k/người, có phòng riêng"]
+    )
+    session_id: Optional[int] = Field(
+        default=None,
+        description="ID của phiên chat hiện tại để lưu lịch sử (TE9C66A)"
     )
     current_context: Optional[Dict[str, Any]] = Field(
         default=None,
@@ -80,6 +85,30 @@ class ExtractCriteriaResponse(BaseModel):
     extracted_criteria: DiningCriteriaSchema
     ai_explanation: str
     extraction_engine: str = Field(description="Nguồn xử lý: 'gemini_api', 'openai_api', hoặc 'rule_based_nlp'")
+
+
+class AISearchRecommendRequest(BaseModel):
+    """Yêu cầu tìm kiếm AI trọn gói (Module 2 -> Module 4 - TE9C670)."""
+    prompt: str = Field(..., min_length=2, max_length=500, description="Câu hỏi tự nhiên của người dùng")
+    user_lat: Optional[float] = Field(None, ge=-90.0, le=90.0, description="Vĩ độ GPS hiện tại của người dùng")
+    user_lng: Optional[float] = Field(None, ge=-180.0, le=180.0, description="Kinh độ GPS hiện tại của người dùng")
+    radius_km: float = Field(default=5.0, gt=0, le=50.0, description="Bán kính tìm kiếm (km)")
+    top_n: int = Field(default=5, ge=1, le=20, description="Số lượng nhà hàng Top N trả về")
+    session_id: Optional[int] = Field(None, description="ID phiên chat để lưu lịch sử")
+    current_context: Optional[Dict[str, Any]] = Field(None, description="Ngữ cảnh hội thoại lượt trước")
+
+
+class AISearchRecommendResponse(BaseModel):
+    """Kết quả trả về Top N nhà hàng đã qua Spatial Filter & RankingEngine."""
+    task_code: str = "TE9C670"
+    prompt: str
+    extracted_criteria: DiningCriteriaSchema
+    resolved_location: Dict[str, Any]
+    ai_explanation: str
+    extraction_engine: str
+    total_candidates: int
+    top_n: int
+    recommendations: List[Dict[str, Any]]
 
 
 class LLMParseAndSaveRequest(BaseModel):
@@ -215,43 +244,3 @@ class QueryRelaxationResponse(BaseModel):
     is_relaxed: bool
     relaxation_info: QueryRelaxationInfo
     results: List[MultiTurnRestaurantItem] = Field(default_factory=list)
-
-
-# =====================================================================
-# SCHEMAS LỊCH SỬ TÌM KIẾM & GỢI Ý NHÀ HÀNG (TASK TSK-46 / TE9C677)
-# =====================================================================
-
-class SuggestedRestaurantHistoryItem(BaseModel):
-    """Thông tin nhà hàng được gợi ý lại trong một phiên tìm kiếm cũ"""
-    id: int
-    name: str
-    address: Optional[str] = None
-    cuisine_type: Optional[str] = None
-    avg_rating: float = 4.5
-    min_price: float = 0.0
-    max_price: float = 0.0
-    cover_image_url: Optional[str] = None
-    is_open: bool = True
-    match_score: int = 85
-    distance_km: Optional[float] = None
-
-
-class SearchHistorySessionItem(BaseModel):
-    """Chi tiết một phiên tìm kiếm cũ kèm tiêu chí và danh sách quán đã gợi ý"""
-    session_id: int
-    user_id: Optional[int] = None
-    status: str
-    started_at: datetime
-    title_preview: str
-    total_messages: int = 0
-    criteria: Optional[SearchCriteriaResponse] = None
-    suggested_restaurants: List[SuggestedRestaurantHistoryItem] = Field(default_factory=list)
-
-
-class SearchHistoryResponse(BaseModel):
-    """Phản hồi danh sách lịch sử tìm kiếm có phân trang"""
-    total_sessions: int
-    page: int
-    limit: int
-    total_pages: int
-    data: List[SearchHistorySessionItem]
