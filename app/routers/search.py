@@ -575,6 +575,13 @@ def parse_and_save_session_message(
 
 
 @router.post(
+    "/llm-parse-and-save",
+    response_model=LLMParseAndSaveResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Phân tích câu chat bằng LLM và tự động tạo phiên mới nếu chưa có (TE9C668) - Alias",
+    include_in_schema=False
+)
+@router.post(
     "/parse-and-save",
     response_model=LLMParseAndSaveResponse,
     status_code=status.HTTP_201_CREATED,

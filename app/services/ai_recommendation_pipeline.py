@@ -59,11 +59,62 @@ class AIRecommendationPipeline:
             Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
         )
 
+        from sqlalchemy import or_
+
         if criteria.cuisine:
-            kw = f"%{criteria.cuisine.strip()}%"
-            query = query.filter(
-                (Restaurant.cuisine_type.ilike(kw)) | (Restaurant.name.ilike(kw))
-            )
+            c_raw = criteria.cuisine.strip()
+            c_lower = c_raw.lower()
+            conditions = [
+                Restaurant.cuisine_type.ilike(f"%{c_raw}%"),
+                Restaurant.name.ilike(f"%{c_raw}%")
+            ]
+            if "bbq" in c_lower or "nướng" in c_lower or "hàn quốc" in c_lower:
+                conditions.extend([
+                    Restaurant.cuisine_type.ilike("%lẩu nướng%"),
+                    Restaurant.cuisine_type.ilike("%bbq%"),
+                    Restaurant.cuisine_type.ilike("%món hàn%"),
+                    Restaurant.name.ilike("%bbq%"),
+                    Restaurant.name.ilike("%nướng%"),
+                ])
+            elif "lẩu" in c_lower:
+                conditions.extend([
+                    Restaurant.cuisine_type.ilike("%lẩu%"),
+                    Restaurant.name.ilike("%lẩu%"),
+                ])
+            elif "cơm tấm" in c_lower:
+                conditions.extend([
+                    Restaurant.name.ilike("%cơm tấm%"),
+                    Restaurant.cuisine_type.ilike("%cơm tấm%"),
+                ])
+            elif "âu" in c_lower or "pizza" in c_lower or "steak" in c_lower:
+                conditions.extend([
+                    Restaurant.cuisine_type.ilike("%món âu%"),
+                    Restaurant.name.ilike("%pizza%"),
+                    Restaurant.name.ilike("%steak%"),
+                ])
+            elif "nhật" in c_lower or "sushi" in c_lower:
+                conditions.extend([
+                    Restaurant.cuisine_type.ilike("%nhật%"),
+                    Restaurant.name.ilike("%sushi%"),
+                ])
+            elif "hoa" in c_lower or "dimsum" in c_lower:
+                conditions.extend([
+                    Restaurant.cuisine_type.ilike("%hoa%"),
+                    Restaurant.name.ilike("%dim tu tac%"),
+                    Restaurant.name.ilike("%san fu lou%"),
+                ])
+            elif "cà phê" in c_lower or "cafe" in c_lower:
+                conditions.extend([
+                    Restaurant.cuisine_type.ilike("%cà phê%"),
+                    Restaurant.name.ilike("%coffee%"),
+                ])
+            elif "hải sản" in c_lower:
+                conditions.extend([
+                    Restaurant.cuisine_type.ilike("%hải sản%"),
+                    Restaurant.name.ilike("%hải sản%"),
+                    Restaurant.name.ilike("%ốc%"),
+                ])
+            query = query.filter(or_(*conditions))
 
         if criteria.budget:
             query = query.filter(Restaurant.min_price <= criteria.budget)
@@ -104,6 +155,38 @@ class AIRecommendationPipeline:
                         "vegetarian_support": r.amenities.vegetarian_support if r.amenities else False,
                     },
                 })
+
+        # Nới lỏng bộ lọc nếu điều kiện tiện ích quá ngặt nghèo dẫn đến 0 kết quả
+        if not candidates and any(required_amenities.values()):
+            relaxed_q = db.query(Restaurant).filter(
+                Restaurant.status == "active",
+                Restaurant.latitude.between(bbox.min_lat, bbox.max_lat),
+                Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
+            )
+            if criteria.cuisine:
+                relaxed_q = relaxed_q.filter(or_(*conditions))
+            for r in relaxed_q.all():
+                dist_km = calculate_haversine_distance(center_lat, center_lng, r.latitude, r.longitude)
+                if dist_km <= radius_km:
+                    candidates.append({
+                        "id": r.id,
+                        "name": r.name,
+                        "address": r.address,
+                        "cuisine_type": r.cuisine_type,
+                        "min_price": r.min_price,
+                        "max_price": r.max_price,
+                        "rating": r.avg_rating or 0.0,
+                        "latitude": r.latitude,
+                        "longitude": r.longitude,
+                        "distance_km": round(dist_km, 2),
+                        "amenities": {
+                            "has_parking": r.amenities.has_parking if r.amenities else False,
+                            "has_private_room": r.amenities.has_private_room if r.amenities else False,
+                            "has_outdoor": r.amenities.has_outdoor if r.amenities else False,
+                            "pet_friendly": r.amenities.pet_friendly if r.amenities else False,
+                            "vegetarian_support": r.amenities.vegetarian_support if r.amenities else False,
+                        },
+                    })
 
         ranked = RankingEngine.rank_and_sort(
             restaurants=candidates,

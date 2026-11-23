@@ -99,6 +99,18 @@ def _rule_based_extract(user_prompt: str, current_context: Optional[Dict[str, An
     cuisine = ctx.get("cuisine")
     if any(k in text for k in ["nướng", "bbq", "hàn quốc"]):
         cuisine = "BBQ Hàn Quốc"
+    elif any(k in text for k in ["hải sản", "seafood", "tôm", "cua", "ốc", "mực"]):
+        cuisine = "Hải Sản"
+    elif any(k in text for k in ["cà phê", "cafe", "trà sữa", "nước uống", "trà"]):
+        cuisine = "Cà Phê & Bánh"
+    elif any(k in text for k in ["món âu", "pizza", "steak", "pasta", "spaghetti", "bít tết"]):
+        cuisine = "Món Âu"
+    elif any(k in text for k in ["món nhật", "sushi", "sashimi", "ramen", "nhật"]):
+        cuisine = "Món Nhật"
+    elif any(k in text for k in ["món hoa", "dimsum", "há cảo", "tiều", "trung hoa"]):
+        cuisine = "Món Hoa"
+    elif any(k in text for k in ["món thái", "tomyum", "pad thái", "thái"]):
+        cuisine = "Món Thái"
     elif any(k in text for k in ["chay", "thanh đạm", "vegan"]):
         cuisine = "Món Chay"
     elif "cơm tấm" in text or "sườn bì" in text:
