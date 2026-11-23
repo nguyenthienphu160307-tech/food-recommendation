@@ -159,7 +159,6 @@ class SearchCriteriaCreateRequest(BaseModel):
     budget: Optional[int] = Field(None, description="Ngân sách dự kiến (VND)")
     has_parking: Optional[bool] = Field(False, description="Yêu cầu bãi đỗ xe")
     other_conditions: Optional[str] = Field(None, description="Điều kiện mở rộng định dạng JSON text")
-    # TSK-20: ID người dùng để áp dụng cài đặt quyền riêng tư (tùy chọn)
     user_id: Optional[int] = Field(None, description="ID người dùng để áp dụng cơ chế bảo vệ quyền riêng tư GPS")
     is_obfuscated: Optional[bool] = Field(False, description="Đánh dấu tọa độ đã được làm mờ theo cơ chế BR-08")
 
@@ -175,7 +174,6 @@ class SearchCriteriaResponse(BaseModel):
     budget: Optional[int] = None
     has_parking: Optional[bool] = False
     other_conditions: Optional[str] = None
-    # TSK-20: Trả về trạng thái đã làm mờ tọa độ hay chưa
     is_obfuscated: Optional[bool] = False
     created_at: datetime
 
@@ -239,53 +237,40 @@ class RemoveCriterionResponse(BaseModel):
 
 
 # =====================================================================
-# SCHEMAS LỊCH SỬ TÌM KIẾM & KẾT QUẢ GỢI Ý (TASK TSK-46 / FR-12, UC-10)
+# SCHEMAS LỊCH SỬ TÌM KIẾM & GỢI Ý NHÀ HÀNG (TASK TSK-46 / TE9C677)
 # =====================================================================
 
 class SuggestedRestaurantHistoryItem(BaseModel):
-    """Schema thông tin nhà hàng gợi ý liên quan đến phiên tìm kiếm cũ"""
+    """Thông tin nhà hàng được gợi ý lại trong một phiên tìm kiếm cũ"""
     id: int
     name: str
-    address: str
+    address: Optional[str] = None
     cuisine_type: Optional[str] = None
     avg_rating: float = 4.5
     min_price: float = 0.0
     max_price: float = 0.0
     cover_image_url: Optional[str] = None
-    is_open: bool = False
+    is_open: bool = True
     match_score: int = 85
     distance_km: Optional[float] = None
 
-    class Config:
-        from_attributes = True
-
 
 class SearchHistorySessionItem(BaseModel):
-    """Schema chi tiết một phiên tìm kiếm trong lịch sử kèm tiêu chí và gợi ý"""
+    """Chi tiết một phiên tìm kiếm cũ kèm tiêu chí và danh sách quán đã gợi ý"""
     session_id: int
-    user_id: int
+    user_id: Optional[int] = None
     status: str
     started_at: datetime
-    title_preview: Optional[str] = None
+    title_preview: str
     total_messages: int = 0
     criteria: Optional[SearchCriteriaResponse] = None
-    suggested_restaurants: List[SuggestedRestaurantHistoryItem] = Field(
-        default_factory=list,
-        description="Danh sách các nhà hàng phù hợp với tiêu chí của phiên tìm kiếm này"
-    )
-
-    class Config:
-        from_attributes = True
+    suggested_restaurants: List[SuggestedRestaurantHistoryItem] = Field(default_factory=list)
 
 
 class SearchHistoryResponse(BaseModel):
-    """Schema phản hồi danh sách lịch sử tìm kiếm kèm phân trang chuẩn RESTful"""
-    total_sessions: int = Field(..., description="Tổng số phiên tìm kiếm của người dùng")
-    page: int = Field(..., description="Trang hiện tại (1-based)")
-    limit: int = Field(..., description="Số lượng phiên trên mỗi trang")
-    total_pages: int = Field(..., description="Tổng số trang")
-    data: List[SearchHistorySessionItem] = Field(
-        default_factory=list,
-        description="Danh sách các phiên tìm kiếm kèm tiêu chí và kết quả gợi ý"
-    )
-
+    """Phản hồi danh sách lịch sử tìm kiếm có phân trang"""
+    total_sessions: int
+    page: int
+    limit: int
+    total_pages: int
+    data: List[SearchHistorySessionItem]

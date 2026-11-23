@@ -1,5 +1,6 @@
-// Dữ liệu 50 nhà hàng TP.HCM khởi tạo từ CSDL seed\nconst SEED_VENUES = [
-  {
+// Dữ liệu 50 nhà hàng TP.HCM khởi tạo từ CSDL seed
+const SEED_VENUES = [
+{
     "id": 1,
     "name": "Pizza 4P's Bến Thành",
     "address": "8 Thủ Khoa Huân, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh",
@@ -3502,4 +3503,4 @@
     "description": "Tụ điểm buffet nướng lẩu sinh viên nhộn nhịp bậc nhất Thủ Đức trên phố ẩm thực Hoàng Diệu 2, thực đơn đa dạng hơn 50 món nướng tự chọn.",
     "phone_number": "0988771122"
   }
-];\n
+];

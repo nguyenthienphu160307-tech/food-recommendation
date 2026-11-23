@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
-
 from app.core.database import get_db
 from app.models.restaurant import Restaurant, RestaurantAmenity, RestaurantMenu
 from app.schemas.restaurant import (
@@ -23,7 +22,6 @@ from app.schemas.restaurant import (
     RestaurantImageResponse,
     RestaurantListItemResponse,
     RestaurantListResponse,
-    RestaurantMenuResponse,
     RestaurantOpenStatusResponse,
 )
 from app.services.geo_service import (
@@ -32,17 +30,8 @@ from app.services.geo_service import (
     format_distance_display,
 )
 from app.services.open_hours_service import (
-    check_restaurant_open_status,
     get_vietnam_now,
-    DEFAULT_OPEN_BONUS_WEIGHT,
-)
-from app.services.recommendation_service import (
-    calculate_distance_km,
-    calculate_match_score,
-    generate_match_reasons,
-    generate_recommendation_summary,
-    DEFAULT_USER_LAT,
-    DEFAULT_USER_LON,
+    check_restaurant_open_status,
 )
 
 router = APIRouter(prefix="/api/restaurants", tags=["Nhà hàng & Bộ lọc đa điều kiện (Restaurants)"])
@@ -242,13 +231,7 @@ def _query_filtered_restaurants(
     limit: int = 20,
 ) -> Tuple[List[RestaurantFilterItemResponse], PaginationMetadata]:
     """
-    Thực thi truy vấn lọc nhà hàng đa điều kiện kết hợp (FR-07 / UC-04 / TE9C660):
-    - Trạng thái, từ khóa, loại ẩm thực (hỗ trợ đa giá trị phân tách bởi dấu phẩy)
-    - Khoảng giá giao nhau (price_min / price_max) tận dụng idx_restaurant_price_range
-    - Điểm đánh giá tối thiểu (avg_rating >= min_rating)
-    - 5 cờ tiện ích trong RestaurantAmenities qua SQL JOIN
-    - Bounding Box SQL (idx_restaurant_coords) + tính chính xác khoảng cách Haversine trong radius_km
-    - Sắp xếp & phân trang nhất quán
+    Thực thi truy vấn lọc nhà hàng đa điều kiện kết hợp (FR-07 / UC-04 / TE9C660).
     """
     _validate_filter_params(price_min, price_max, lat, lng, radius_km, sort_by)
 
@@ -278,7 +261,6 @@ def _query_filtered_restaurants(
                 or_(*[Restaurant.cuisine_type.ilike(f"%{c}%") for c in cuisines])
             )
 
-    # Lọc khoảng giá theo nguyên tắc giao nhau (tối ưu với idx_restaurant_price_range)
     if price_min is not None:
         query = query.filter(Restaurant.max_price >= price_min)
     if price_max is not None:
@@ -287,7 +269,6 @@ def _query_filtered_restaurants(
     if min_rating is not None:
         query = query.filter(Restaurant.avg_rating >= min_rating)
 
-    # Lọc kết hợp đồng nhất theo 5 tiện ích trong RestaurantAmenities
     amenity_filters: Dict[str, Optional[bool]] = {
         "has_parking": has_parking,
         "has_private_room": has_private_room,
@@ -301,7 +282,6 @@ def _query_filtered_restaurants(
         for col_name, flag_value in active_amenity_pairs:
             query = query.filter(getattr(RestaurantAmenity, col_name) == flag_value)
 
-    # Sơ lọc Bounding Box trong SQL trước khi tính Haversine chính xác
     has_coords = lat is not None and lng is not None
     if has_coords and radius_km is not None:
         bbox = calculate_bounding_box(lat, lng, radius_km)
@@ -312,7 +292,6 @@ def _query_filtered_restaurants(
 
     candidates = query.all()
 
-    # Tính khoảng cách Haversine chính xác và lọc phần rìa góc Bounding Box
     matched: List[Tuple[Restaurant, Optional[float]]] = []
     for r in candidates:
         dist_km: Optional[float] = None
@@ -322,7 +301,6 @@ def _query_filtered_restaurants(
                 continue
         matched.append((r, dist_km))
 
-    # Sắp xếp kết quả
     if sort_by == "distance":
         matched.sort(key=lambda item: (item[1] if item[1] is not None else float("inf"), -(item[0].avg_rating or 0.0)))
     elif sort_by == "rating":
@@ -379,13 +357,6 @@ def filter_restaurants(
     limit: int = Query(20, ge=1, le=100, description="Số lượng kết quả mỗi trang"),
     db: Session = Depends(get_db),
 ):
-    """
-    API Lọc nhà hàng đa điều kiện kết hợp (FR-07 / UC-04 / Task TE9C660 & TE9C66F):
-    - Kết hợp đồng thời `cuisine_type`, khoảng giá (`price_min`/`price_max`), bán kính khoảng cách (`lat`/`lng`/`radius_km`),
-      điểm đánh giá tối thiểu (`min_rating`) và 5 tiện ích trong `RestaurantAmenities`.
-    - Hỗ trợ cờ `auto_relax=True`: Khi kết quả ban đầu = 0, tự động mở rộng bán kính (+3km) hoặc nới ngân sách (±25%) (UC-02 Ngoại lệ).
-    - Trả về danh sách nhà hàng khớp điều kiện kèm `distance_km`, `applied_filters`, `pagination` và `relaxation`.
-    """
     items, pagination = _query_filtered_restaurants(
         db=db,
         keyword=keyword,
@@ -407,10 +378,9 @@ def filter_restaurants(
         limit=limit,
     )
 
-    relaxation_data = None
     if auto_relax and len(items) == 0:
         from app.services.query_relaxation_service import QueryRelaxationService
-        rel_results, rel_meta = QueryRelaxationService.relax_and_search(
+        rel_results, _ = QueryRelaxationService.relax_and_search(
             db=db,
             lat=lat,
             lng=lng,
@@ -434,7 +404,6 @@ def filter_restaurants(
                 total_items=len(items),
                 total_pages=1,
             )
-            relaxation_data = rel_meta
 
     return RestaurantFilterResponse(
         status="success",
@@ -458,7 +427,6 @@ def filter_restaurants(
             status_filter=status_filter,
         ),
         pagination=pagination,
-        relaxation=relaxation_data,
     )
 
 
@@ -490,32 +458,6 @@ def get_restaurants(
     sort_by_open: Optional[bool] = Query(False, description="Ưu tiên xếp nhà hàng đang mở cửa lên trước"),
     db: Session = Depends(get_db),
 ):
-    """
-    API lấy danh sách nhà hàng hỗ trợ phân trang và lọc đa điều kiện (giữ tương thích ngược TSK-09).
-    """
-    def _unwrap(v):
-        return v.default if hasattr(v, "default") else v
-
-    keyword = _unwrap(keyword)
-    cuisine_type = _unwrap(cuisine_type)
-    price_min = _unwrap(price_min)
-    price_max = _unwrap(price_max)
-    lat = _unwrap(lat)
-    lng = _unwrap(lng)
-    radius_km = _unwrap(radius_km)
-    min_rating = _unwrap(min_rating)
-    has_parking = _unwrap(has_parking)
-    has_private_room = _unwrap(has_private_room)
-    has_outdoor = _unwrap(has_outdoor)
-    pet_friendly = _unwrap(pet_friendly)
-    vegetarian_support = _unwrap(vegetarian_support)
-    sort_by = _unwrap(sort_by) or "default"
-    status_filter = _unwrap(status_filter)
-    open_now = _unwrap(open_now)
-    sort_by_open = _unwrap(sort_by_open)
-    page = _unwrap(page) or 1
-    limit = _unwrap(limit) or 10
-
     items, pagination = _query_filtered_restaurants(
         db=db,
         keyword=keyword,
@@ -557,125 +499,6 @@ def get_restaurants(
 
 
 @router.get(
-    "/filter",
-    status_code=status.HTTP_200_OK,
-    summary="API Lọc nhà hàng đa điều kiện kết hợp (TSK-23 / FR-07 / UC-04)"
-)
-def filter_restaurants_multi_criteria(
-    keyword: Optional[str] = Query(None, description="Từ khóa tên quán, món ăn hoặc địa chỉ"),
-    cuisine_type: Optional[str] = Query(None, description="Loại ẩm thực (VD: Món Việt, Lẩu Nướng, Món Nhật)"),
-    price_min: Optional[float] = Query(None, ge=0, description="Ngân sách tối thiểu (VNĐ)"),
-    price_max: Optional[float] = Query(None, ge=0, description="Ngân sách tối đa (VNĐ)"),
-    min_rating: Optional[float] = Query(None, ge=0, le=5, description="Điểm đánh giá tối thiểu (1.0 - 5.0)"),
-    lat: Optional[float] = Query(None, ge=-90, le=90, description="Vĩ độ người dùng"),
-    lng: Optional[float] = Query(None, ge=-180, le=180, description="Kinh độ người dùng"),
-    radius_km: Optional[float] = Query(None, gt=0, le=50, description="Bán kính tìm kiếm (km)"),
-    has_parking: Optional[bool] = Query(None, description="Có bãi đỗ ô tô"),
-    has_private_room: Optional[bool] = Query(None, description="Có phòng riêng"),
-    has_outdoor: Optional[bool] = Query(None, description="Có không gian ngoài trời"),
-    pet_friendly: Optional[bool] = Query(None, description="Cho phép mang thú cưng"),
-    vegetarian_support: Optional[bool] = Query(None, description="Hỗ trợ thực đơn chay"),
-    sort_by: str = Query("distance", description="Tiêu chí sắp xếp: 'distance' | 'rating' | 'price_asc'"),
-    db: Session = Depends(get_db)
-):
-    """
-    Truy vấn lọc nhà hàng kết hợp đa điều kiện (Task TSK-23):
-    1. Lọc theo từ khóa, loại hình ẩm thực, mức giá, điểm đánh giá.
-    2. Lọc theo 5 cờ tiện ích trong bảng `RestaurantAmenities`.
-    3. Khoanh vùng Bounding Box SQL + tính khoảng cách Haversine chính xác theo bán kính `radius_km`.
-    """
-    query = (
-        db.query(Restaurant)
-        .outerjoin(RestaurantAmenity, Restaurant.id == RestaurantAmenity.restaurant_id)
-        .options(joinedload(Restaurant.amenities), joinedload(Restaurant.images))
-        .filter(Restaurant.status == "active")
-    )
-
-    if keyword and keyword.strip():
-        kw = f"%{keyword.strip()}%"
-        query = query.filter(
-            or_(
-                Restaurant.name.ilike(kw),
-                Restaurant.address.ilike(kw),
-                Restaurant.cuisine_type.ilike(kw),
-                Restaurant.description.ilike(kw),
-            )
-        )
-
-    if cuisine_type and cuisine_type.strip() and cuisine_type.lower() != "all":
-        query = query.filter(Restaurant.cuisine_type.ilike(f"%{cuisine_type.strip()}%"))
-
-    if price_min is not None:
-        query = query.filter(Restaurant.max_price >= price_min)
-    if price_max is not None:
-        query = query.filter(Restaurant.min_price <= price_max)
-    if min_rating is not None:
-        query = query.filter(Restaurant.avg_rating >= min_rating)
-
-    # Bộ lọc 5 tiện ích (RestaurantAmenities)
-    if has_parking is True:
-        query = query.filter(RestaurantAmenity.has_parking.is_(True))
-    if has_private_room is True:
-        query = query.filter(RestaurantAmenity.has_private_room.is_(True))
-    if has_outdoor is True:
-        query = query.filter(RestaurantAmenity.has_outdoor.is_(True))
-    if pet_friendly is True:
-        query = query.filter(RestaurantAmenity.pet_friendly.is_(True))
-    if vegetarian_support is True:
-        query = query.filter(RestaurantAmenity.vegetarian_support.is_(True))
-
-    # Lọc thô bằng Bounding Box trên CSDL nếu có tọa độ và bán kính
-    if lat is not None and lng is not None and radius_km is not None:
-        bbox = calculate_bounding_box(lat, lng, radius_km)
-        query = query.filter(
-            Restaurant.latitude.between(bbox.min_lat, bbox.max_lat),
-            Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
-        )
-
-    rows = query.all()
-    results = []
-
-    for r in rows:
-        item_dict = _build_list_item(r).model_dump()
-        if lat is not None and lng is not None:
-            dist_km = calculate_haversine_distance(lat, lng, r.latitude, r.longitude, unit="km")
-            if radius_km is not None and dist_km > radius_km:
-                continue
-            item_dict["distance_km"] = dist_km
-            item_dict["distance_text"] = format_distance_display(dist_km)
-        else:
-            item_dict["distance_km"] = None
-            item_dict["distance_text"] = None
-        results.append(item_dict)
-
-    # Sắp xếp kết quả
-    if sort_by == "distance" and lat is not None and lng is not None:
-        results.sort(key=lambda x: x["distance_km"] if x["distance_km"] is not None else 9999.0)
-    elif sort_by == "rating":
-        results.sort(key=lambda x: x["avg_rating"], reverse=True)
-    elif sort_by == "price_asc":
-        results.sort(key=lambda x: x["min_price"])
-
-    return {
-        "total": len(results),
-        "filters_applied": {
-            "keyword": keyword,
-            "cuisine_type": cuisine_type,
-            "price_min": price_min,
-            "price_max": price_max,
-            "min_rating": min_rating,
-            "radius_km": radius_km,
-            "has_parking": has_parking,
-            "has_private_room": has_private_room,
-            "has_outdoor": has_outdoor,
-            "pet_friendly": pet_friendly,
-            "vegetarian_support": vegetarian_support,
-        },
-        "data": results,
-    }
-
-
-@router.get(
     "/{restaurant_id}",
     response_model=RestaurantDetailResponse,
     status_code=status.HTTP_200_OK,
@@ -705,7 +528,7 @@ def get_restaurant_detail(restaurant_id: int, db: Session = Depends(get_db)):
                 id=m.id, name=m.name, description=m.description, display_order=m.display_order,
                 items=[
                     {"id": it.id, "name": it.name, "description": it.description, "price": it.price,
-                     "image_url": it.image_url, "is_available": it.is_available}
+                    "image_url": it.image_url, "is_available": it.is_available}
                     for it in sorted(m.items, key=lambda x: x.id)
                 ],
             )

@@ -1,39 +1,90 @@
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
 class OtherConditionsSchema(BaseModel):
-    """Lược đồ các tiêu chí phụ bổ sung."""
-    has_private_room: Optional[bool] = Field(None, description="Cần phòng riêng VIP / yên tĩnh")
-    pet_friendly: Optional[bool] = Field(None, description="Cho phép mang thú cưng (chó, mèo)")
-    vegetarian_support: Optional[bool] = Field(None, description="Có phục vụ hoặc hỗ trợ món chay")
-    has_outdoor: Optional[bool] = Field(None, description="Có không gian ngoài trời / sân vườn")
-    group_size: Optional[int] = Field(None, description="Số lượng người đi ăn")
+    """Nhóm tiêu chí tiện ích mở rộng (other_conditions) khớp với bảng RestaurantAmenities"""
+    has_private_room: Optional[bool] = Field(
+        default=None,
+        description="Yêu cầu phòng riêng, không gian yên tĩnh, tiếp khách (True/False/None)"
+    )
+    pet_friendly: Optional[bool] = Field(
+        default=None,
+        description="Cho phép mang theo thú cưng chó/mèo (True/False/None)"
+    )
+    vegetarian_support: Optional[bool] = Field(
+        default=None,
+        description="Có thực đơn chay hoặc hỗ trợ món chay (True/False/None)"
+    )
+    has_outdoor: Optional[bool] = Field(
+        default=None,
+        description="Có không gian ngoài trời, sân vườn, thoáng mát (True/False/None)"
+    )
+    group_size: Optional[int] = Field(
+        default=None,
+        ge=1,
+        description="Số lượng người ăn nếu được đề cập trong câu hỏi (VD: nhóm 4 người -> 4)"
+    )
 
 
 class DiningCriteriaSchema(BaseModel):
-    """Lược đồ JSON trích xuất từ câu hỏi tự nhiên của người dùng."""
-    location_text: Optional[str] = Field(None, description="Địa điểm / Khu vực (Ví dụ: 'Quận 1', 'Thủ Đức')")
-    cuisine: Optional[str] = Field(None, description="Loại hình ẩm thực (Ví dụ: 'Lẩu', 'Nướng', 'Hải Sản')")
-    budget: Optional[int] = Field(None, description="Ngân sách tối đa tính bằng VNĐ (Ví dụ: 300000)")
-    has_parking: Optional[bool] = Field(None, description="Yêu cầu có chỗ đỗ xe ô tô/xe máy")
-    other_conditions: OtherConditionsSchema = Field(default_factory=OtherConditionsSchema, description="Các yêu cầu phụ")
+    """
+    JSON Schema chuẩn cho LLM bóc tách tiêu chí ăn uống (Task TE9C65A)
+    Ánh xạ trực tiếp vào bảng SearchCriteria trong CSDL.
+    """
+    location_text: Optional[str] = Field(
+        default=None,
+        description="Tên đường, phường, quận hoặc khu vực địa lý được nhắc tới (VD: 'Quận 1', 'Gò Vấp', 'Đa Kao')"
+    )
+    cuisine: Optional[str] = Field(
+        default=None,
+        description="Loại hình ẩm thực chuẩn hóa (VD: 'BBQ Hàn Quốc', 'Món Việt', 'Món Chay', 'Cơm tấm', 'Lẩu')"
+    )
+    budget: Optional[int] = Field(
+        default=None,
+        ge=0,
+        description="Ngân sách tối đa tính theo VNĐ/người (VD: 'dưới 300k' -> 300000, '150 nghìn' -> 150000)"
+    )
+    has_parking: Optional[bool] = Field(
+        default=None,
+        description="Yêu cầu có bãi đỗ xe / chỗ đậu ô tô (True/False/None)"
+    )
+    other_conditions: OtherConditionsSchema = Field(
+        default_factory=OtherConditionsSchema,
+        description="Các điều kiện tiện ích phụ trợ: phòng riêng, thú cưng, ăn chay, sân vườn, số người"
+    )
 
 
 class ExtractCriteriaRequest(BaseModel):
-    """Yêu cầu từ Frontend gửi lên để xử lý ngôn ngữ tự nhiên."""
-    prompt: str = Field(..., min_length=2, max_length=500, description="Câu hỏi hoặc lệnh tìm kiếm từ người dùng")
-    session_id: Optional[int] = Field(None, description="ID của phiên chat hiện tại để lưu lịch sử (TE9C66A)")
-    current_context: Optional[Dict[str, Any]] = Field(None, description="Ngữ cảnh JSON chứa các tiêu chí đã bóc tách từ lượt chat trước")
-    provider: Optional[str] = Field("auto", description="Nhà cung cấp NLP: auto, rule_based, gemini")
+    """Payload đầu vào cho API kiểm thử trích xuất tiêu chí từ câu hỏi tự nhiên"""
+    prompt: str = Field(
+        ...,
+        min_length=2,
+        max_length=500,
+        description="Câu hỏi tự nhiên của người dùng",
+        examples=["Nhóm 4 người muốn ăn đồ nướng ở Quận 1 có chỗ đậu ô tô dưới 300k/người, có phòng riêng"]
+    )
+    session_id: Optional[int] = Field(
+        default=None,
+        description="ID của phiên chat hiện tại để lưu lịch sử (TE9C66A)"
+    )
+    current_context: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Ngữ cảnh tiêu chí của lượt hội thoại trước (hỗ trợ Multi-turn)"
+    )
+    provider: Optional[str] = Field(
+        default="auto",
+        description="Nhà cung cấp LLM: 'auto', 'gemini', 'openai', 'rule_based'"
+    )
 
 
 class ExtractCriteriaResponse(BaseModel):
-    """Phản hồi sau khi phân tích NLP (LLM / Rule-based)."""
-    prompt: str = Field(..., description="Câu hỏi gốc của người dùng")
-    extracted_criteria: DiningCriteriaSchema = Field(..., description="Dữ liệu đã chuẩn hóa cấu trúc")
-    ai_explanation: str = Field(..., description="Lời giải thích phản hồi tự nhiên (Explainable AI - TE9C66A)")
-    extraction_engine: str = Field(..., description="Chế độ phân tích đang dùng (vd: 'rule_based_nlp', 'llm_api')")
+    """Phản hồi trả về gồm JSON tiêu chí đã bóc tách, lời giải thích AI và JSON Schema chuẩn"""
+    prompt: str
+    extracted_criteria: DiningCriteriaSchema
+    ai_explanation: str
+    extraction_engine: str = Field(description="Nguồn xử lý: 'gemini_api', 'openai_api', hoặc 'rule_based_nlp'")
 
 
 class AISearchRecommendRequest(BaseModel):
@@ -84,7 +135,10 @@ class LLMParseAndSaveResponse(BaseModel):
     has_parking: Optional[bool] = Field(None, description="Yêu cầu chỗ đậu xe ô tô")
     other_conditions: Dict[str, Any] = Field(default_factory=dict, description="Các tiện ích mở rộng (phòng riêng, ngoài trời, thú cưng, món chay, số người)")
     is_obfuscated: bool = Field(False, description="Cờ đánh dấu tọa độ đã được làm mờ theo BR-08")
-    created_at: Any = Field(..., description="Thời gian tạo bản ghi")
+    created_at: datetime = Field(..., description="Thời gian tạo bản ghi")
+
+    class Config:
+        from_attributes = True
 
 
 # ==============================================================================
@@ -134,7 +188,7 @@ class SessionStateResponse(BaseModel):
     session_id: int
     current_state: str
     status: str
-    started_at: Any
+    started_at: datetime
     total_messages: int
     total_criteria_versions: int
     latest_criteria: Optional[Dict[str, Any]] = None
