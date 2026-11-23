@@ -95,6 +95,65 @@ def serve_restaurant_detail_page():
 
 
 
+@app.get("/login", tags=["Frontend UI"], summary="Trang Đăng nhập (TSK-12)")
+@app.get("/login.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_login_page():
+    login_file = os.path.join(FRONTEND_DIR, "login.html")
+    if os.path.exists(login_file):
+        return FileResponse(login_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang đăng nhập.")
+
+
+@app.get("/register", tags=["Frontend UI"], summary="Trang Đăng ký & Xác thực OTP (TSK-12)")
+@app.get("/register.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_register_page():
+    register_file = os.path.join(FRONTEND_DIR, "register.html")
+    if os.path.exists(register_file):
+        return FileResponse(register_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang đăng ký.")
+
+
+@app.get("/profile", tags=["Frontend UI"], summary="Trang Cài đặt Hồ sơ cá nhân")
+@app.get("/profile.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_profile_page():
+    profile_file = os.path.join(FRONTEND_DIR, "profile.html")
+    if os.path.exists(profile_file):
+        return FileResponse(profile_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang hồ sơ.")
+
+
+@app.get("/preferences", tags=["Frontend UI"], summary="Trang Sở thích cá nhân")
+@app.get("/preferences.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_preferences_page():
+    pref_file = os.path.join(FRONTEND_DIR, "preferences.html")
+    if os.path.exists(pref_file):
+        return FileResponse(pref_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang sở thích.")
+
+
+@app.get("/admin", tags=["Frontend UI"], summary="Trang Quản trị hệ thống")
+@app.get("/admin.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_admin_page():
+    admin_file = os.path.join(FRONTEND_DIR, "admin.html")
+    if os.path.exists(admin_file):
+        return FileResponse(admin_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang quản trị.")
+
+
+@app.get("/admin-restaurants", tags=["Frontend UI"], summary="Trang Quản trị nhà hàng")
+@app.get("/admin-restaurants.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_admin_restaurants_page():
+    admin_rest_file = os.path.join(FRONTEND_DIR, "admin-restaurants.html")
+    if os.path.exists(admin_rest_file):
+        return FileResponse(admin_rest_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang quản trị nhà hàng.")
+
+
+@app.get("/index.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_index_alias():
+    return serve_home_page()
+
+
 @app.get("/api/test-db", tags=["Hệ thống"])
 def test_db_connection(db: Session = Depends(get_db)):
     try:

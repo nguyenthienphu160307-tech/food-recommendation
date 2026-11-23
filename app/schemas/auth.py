@@ -63,6 +63,7 @@ class StandardResponse(BaseModel):
     """Phản hồi thông báo chung chuẩn tiếng Việt"""
     message: str
     detail: Optional[str] = None
+    otp_code: Optional[str] = None
 
 
 class TokensResponse(BaseModel):

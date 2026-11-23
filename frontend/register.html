@@ -247,6 +247,17 @@
                     name@example.com
                 </p>
 
+                <!-- OTP Demo Hint (Hiển thị mã xác thực ngay lập tức) -->
+                <div id="otp-demo-hint" style="display: none; background: #fff5f5; border: 1.5px dashed var(--brand-primary); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px; text-align: center;">
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px;">⚡ Mã OTP xác thực của bạn:</div>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span id="otp-demo-code" style="color: var(--brand-primary); font-weight: 800; font-size: 1.4rem; letter-spacing: 4px; font-family: monospace;"></span>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="autoFillDemoOTP()" style="padding: 4px 10px; font-size: 0.8rem;">
+                            Tự động điền
+                        </button>
+                    </div>
+                </div>
+
                 <!-- 6 Digit OTP Inputs -->
                 <div class="otp-container">
                     <div class="otp-inputs" id="otp-inputs-wrapper">
@@ -388,12 +399,37 @@
             }, 1000);
         }
 
-        function openOTPModal(email) {
+        let currentReceivedOTP = '';
+
+        function autoFillDemoOTP() {
+            if (!currentReceivedOTP) return;
+            const str = String(currentReceivedOTP).trim();
+            for (let i = 0; i < 6 && i < str.length; i++) {
+                if (otpDigits[i]) otpDigits[i].value = str[i];
+            }
+            if (otpDigits[5]) otpDigits[5].focus();
+            if (typeof showToast === 'function') {
+                showToast('success', 'Đã tự động điền mã OTP: ' + currentReceivedOTP);
+            }
+        }
+
+        function openOTPModal(email, otpCode = null) {
             document.getElementById('otp-target-email').textContent = email;
             document.getElementById('otp-modal').classList.add('is-open');
             document.getElementById('otp-error-msg').style.display = 'none';
             clearOTPInputs();
             startCountdown();
+
+            currentReceivedOTP = otpCode || '';
+            const hintBox = document.getElementById('otp-demo-hint');
+            const codeEl = document.getElementById('otp-demo-code');
+            if (otpCode) {
+                if (hintBox) hintBox.style.display = 'block';
+                if (codeEl) codeEl.textContent = otpCode;
+                autoFillDemoOTP();
+            } else if (hintBox) {
+                hintBox.style.display = 'none';
+            }
         }
 
         function closeOTPModal() {
@@ -473,8 +509,9 @@
                     return;
                 }
 
-                showToast('success', data.message || 'Mã OTP đã được gửi về Gmail của bạn.', 'Gửi mã thành công');
-                openOTPModal(email);
+                const rawOtp = data.otp_code || (data.detail && data.detail.match(/\b\d{6}\b/) ? data.detail.match(/\b\d{6}\b/)[0] : null);
+                showToast('success', data.message || 'Mã OTP đã được cấp thành công.', 'Gửi mã thành công');
+                openOTPModal(email, rawOtp);
             } catch (err) {
                 showToast('error', 'Lỗi kết nối tới máy chủ API: ' + err.message, 'Lỗi mạng');
             } finally {
@@ -504,7 +541,16 @@
                     return;
                 }
 
-                showToast('success', 'Mã xác thực mới đã được gửi tới ' + registrationData.email, 'Đã gửi lại');
+                const rawOtp = data.otp_code || (data.detail && data.detail.match(/\b\d{6}\b/) ? data.detail.match(/\b\d{6}\b/)[0] : null);
+                currentReceivedOTP = rawOtp || '';
+                const hintBox = document.getElementById('otp-demo-hint');
+                const codeEl = document.getElementById('otp-demo-code');
+                if (rawOtp) {
+                    if (hintBox) hintBox.style.display = 'block';
+                    if (codeEl) codeEl.textContent = rawOtp;
+                    autoFillDemoOTP();
+                }
+                showToast('success', 'Mã xác thực mới đã được cấp tới ' + registrationData.email, 'Đã gửi lại');
                 clearOTPInputs();
                 startCountdown();
             } catch (err) {
