@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yêu thích & Lịch sử tìm kiếm — Smart Dining</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #f7f7f8; --bg-surface: #ffffff; --bg-subtle: #f1f2f4;
+            --text-primary: #111827; --text-secondary: #4b5563; --text-muted: #6b7280;
+            --border: #e5e7eb; --brand-red: #e11d48; --brand-red-hover: #be123c;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-page); color: var(--text-primary); min-height: 100vh; }
+        .topbar {
+            background: var(--bg-surface); border-bottom: 1px solid var(--border);
+            height: 68px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-primary); font-weight: 700; font-size: 1.15rem; }
+        .logo-mark { width: 34px; height: 34px; background: var(--brand-red); color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .nav-links { display: flex; gap: 16px; }
+        .nav-links a { text-decoration: none; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; }
+        .nav-links a:hover, .nav-links a.active { color: var(--brand-red); }
+        .container { max-width: 1120px; margin: 28px auto; padding: 0 20px; }
+        .page-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; }
+        .page-sub { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 22px; }
+        .tabs { display: flex; gap: 10px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+        .tab-btn {
+            padding: 12px 20px; border: none; background: transparent; cursor: pointer;
+            font-size: 0.95rem; font-weight: 600; color: var(--text-muted);
+            border-bottom: 2.5px solid transparent; transition: all 0.15s;
+        }
+        .tab-btn.active { color: var(--brand-red); border-bottom-color: var(--brand-red); }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card {
+            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px;
+            overflow: hidden; display: flex; flex-direction: column; transition: transform 0.15s;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+        .card img { width: 100%; height: 170px; object-fit: cover; }
+        .card-body { padding: 16px; display: flex; flex-direction: column; flex: 1; gap: 8px; }
+        .card-title { font-size: 1rem; font-weight: 700; }
+        .card-meta { font-size: 0.82rem; color: var(--text-muted); }
+        .card-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+        .btn {
+            padding: 8px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; border: 1px solid var(--border); background: var(--bg-surface);
+            color: var(--text-primary); text-decoration: none; text-align: center;
+        }
+        .btn-primary { background: var(--brand-red); color: #fff; border-color: var(--brand-red); flex: 1; }
+        .btn-danger { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .history-list { display: flex; flex-direction: column; gap: 14px; }
+        .history-item {
+            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 18px 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+        }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--bg-subtle); color: var(--text-secondary); margin-right: 6px; margin-top: 6px; }
+        .badge-active { background: #ecfdf5; color: #059669; }
+        .badge-closed { background: #f1f5f9; color: #64748b; }
+        .empty-box { text-align: center; padding: 48px 20px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 14px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a href="index.html" class="logo">
+            <div class="logo-mark">🍽️</div>
+            <span>Smart Dining</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Khám phá</a>
+            <a href="favorites-history.html" class="active">Yêu thích & Lịch sử</a>
+            <a href="profile.html">Hồ sơ</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1 class="page-title">Quán ăn Yêu thích & Lịch sử Tìm kiếm</h1>
+        <p class="page-sub">Quản lý danh sách nhà hàng đã lưu (UC-08) và xem lại các phiên hội thoại tìm kiếm AI gần đây (UC-10).</p>
+
+        <div class="tabs">
+            <button type="button" class="tab-btn active" onclick="switchTab('favorites', this)">❤️ Quán ăn Yêu thích (<span id="fav-count">0</span>)</button>
+            <button type="button" class="tab-btn" onclick="switchTab('history', this)">🕒 Lịch sử Tìm kiếm AI (<span id="hist-count">0</span>)</button>
+        </div>
+
+        <section id="tab-favorites" class="tab-pane active">
+            <div id="favorites-grid" class="grid"></div>
+        </section>
+
+        <section id="tab-history" class="tab-pane">
+            <div id="history-list" class="history-list"></div>
+        </section>
+    </main>
+
+    <script src="js/venues-data.js"></script>
+    <script>
+        const SAVED_KEY = 'smart_dining_saved_venues';
+
+        function switchTab(name, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
+        }
+
+        function getSavedIds() {
+            try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[1, 2]'); }
+            catch (_) { return [1, 2]; }
+        }
+
+        function removeFavorite(id) {
+            const next = getSavedIds().filter(x => x !== id);
+            localStorage.setItem(SAVED_KEY, JSON.stringify(next));
+            renderFavorites();
+        }
+
+        function renderFavorites() {
+            const ids = getSavedIds();
+            const all = (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES)) ? SEED_VENUES : [];
+            const saved = all.filter(v => ids.includes(v.id));
+            document.getElementById('fav-count').textContent = saved.length;
+
+            const grid = document.getElementById('favorites-grid');
+            if (saved.length === 0) {
+                grid.innerHTML = `<div class="empty-box" style="grid-column:1/-1;">Bạn chưa lưu nhà hàng yêu thích nào. <a href="index.html" style="color:var(--brand-red);font-weight:600;">Khám phá ngay →</a></div>`;
+                return;
+            }
+            grid.innerHTML = saved.map(v => `
+                <article class="card">
+                    <img src="${v.image || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600'}" alt="${v.name}">
+                    <div class="card-body">
+                        <div class="card-title">${v.name}</div>
+                        <div class="card-meta">★ ${Number(v.rating || 4.5).toFixed(1)} • ${v.cuisineLabel || 'Ẩm thực'} • ${(v.priceMin || 50000).toLocaleString()}đ - ${(v.priceMax || 300000).toLocaleString()}đ</div>
+                        <div class="card-meta">📍 ${v.address}</div>
+                        <div class="card-actions">
+                            <a href="restaurant-detail.html?id=${v.id}" class="btn btn-primary">Xem chi tiết</a>
+                            <button type="button" class="btn btn-danger" onclick="removeFavorite(${v.id})">Bỏ lưu</button>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        async function loadSearchHistory() {
+            const listEl = document.getElementById('history-list');
+            let sessions = [];
+            try {
+                const res = await fetch('/api/chat/sessions?limit=20');
+                if (res.ok) sessions = await res.json();
+            } catch (_) {}
+
+            if (!sessions || sessions.length === 0) {
+                sessions = [
+                    { session_id: 101, status: 'closed', started_at: '2026-11-22T19:15:00', total_messages: 4, title_preview: 'Tìm quán nướng Quận 1 dưới 300k có chỗ đậu ô tô' },
+                    { session_id: 102, status: 'active', started_at: '2026-11-23T08:10:00', total_messages: 2, title_preview: 'Quán chay thanh đạm ở Quận 3 có phòng riêng' }
+                ];
+            }
+
+            document.getElementById('hist-count').textContent = sessions.length;
+            listEl.innerHTML = sessions.map(s => {
+                const isClosed = s.status === 'closed';
+                const timeStr = s.started_at ? new Date(s.started_at).toLocaleString('vi-VN') : '';
+                return `
+                    <div class="history-item">
+                        <div>
+                            <div style="font-weight:700;font-size:1rem;margin-bottom:4px;">💬 ${s.title_preview || ('Phiên tìm kiếm #' + s.session_id)}</div>
+                            <div style="font-size:0.82rem;color:var(--text-muted);">Thời gian: ${timeStr} • ${s.total_messages || 0} tin nhắn</div>
+                            <div>
+                                <span class="badge ${isClosed ? 'badge-closed' : 'badge-active'}">${isClosed ? 'Đã kết thúc' : 'Đang hoạt động'}</span>
+                                <span class="badge">Mã phiên #${s.session_id}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;">
+                            <a href="index.html" class="btn btn-primary">Tiếp tục tìm</a>
+                            <button type="button" class="btn btn-danger" onclick="deleteSession(${s.session_id}, this)">Xóa</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function deleteSession(id, btn) {
+            if (!confirm('Xóa phiên tìm kiếm #' + id + '?')) return;
+            try { await fetch(`/api/chat/sessions/${id}`, { method: 'DELETE' }); } catch (_) {}
+            btn.closest('.history-item').remove();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFavorites();
+            loadSearchHistory();
+        });
+    </script>
+</body>
+</html>
