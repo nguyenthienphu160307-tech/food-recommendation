@@ -1,0 +1,15 @@
+.git
+.gitignore
+.vscode
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+.env
+*.db
+*.sqlite3
+docs/*.docx
+docs/*.drawio
