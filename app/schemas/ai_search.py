@@ -25,6 +25,7 @@ class ExtractCriteriaRequest(BaseModel):
     prompt: str = Field(..., min_length=2, max_length=500, description="Câu hỏi hoặc lệnh tìm kiếm từ người dùng")
     session_id: Optional[int] = Field(None, description="ID của phiên chat hiện tại để lưu lịch sử (TE9C66A)")
     current_context: Optional[Dict[str, Any]] = Field(None, description="Ngữ cảnh JSON chứa các tiêu chí đã bóc tách từ lượt chat trước")
+    provider: Optional[str] = Field("auto", description="Nhà cung cấp NLP: auto, rule_based, gemini")
 
 
 class ExtractCriteriaResponse(BaseModel):

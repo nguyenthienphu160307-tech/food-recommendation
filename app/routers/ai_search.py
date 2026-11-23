@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Request
+from typing import Optional
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.orm import Session
 import logging
 from app.core.database import get_db
@@ -8,6 +9,8 @@ from app.schemas.ai_search import (
     ExtractCriteriaResponse,
     AISearchRecommendRequest,
     AISearchRecommendResponse,
+    LLMParseAndSaveRequest,
+    LLMParseAndSaveResponse,
 )
 from app.core.prompt_template import (
     SYSTEM_PROMPT_TEMPLATE,
@@ -62,7 +65,11 @@ async def extract_dining_criteria(
     prompt_key = payload.prompt.strip().lower()
 
     # 1. KIỂM TRA BỘ NHỚ ĐỆM (CACHE HIT)
-    if not payload.current_context and prompt_key in PROMPT_CACHE:
+    if getattr(payload, "provider", None) == "rule_based":
+        from app.core.prompt_template import _rule_based_extract
+        criteria = _rule_based_extract(payload.prompt, payload.current_context)
+        engine_used = "rule_based_nlp"
+    elif not payload.current_context and prompt_key in PROMPT_CACHE:
         criteria = PROMPT_CACHE[prompt_key]
         engine_used = "memory_cache"
     else:
@@ -71,6 +78,8 @@ async def extract_dining_criteria(
             user_prompt=payload.prompt,
             current_context=payload.current_context,
         )
+        if engine_used == "rule_based_nlp_fallback" and getattr(payload, "provider", None) == "rule_based":
+            engine_used = "rule_based_nlp"
 
         # Lưu vào Cache nếu đây là câu hỏi mới
         if not payload.current_context:
@@ -106,6 +115,32 @@ async def extract_dining_criteria(
         ai_explanation=explanation,
         extraction_engine=engine_used,
     )
+
+
+@router.post(
+    "/llm-parse-and-save",
+    response_model=LLMParseAndSaveResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Phân tích câu chat bằng LLM và tự động tạo phiên mới nếu chưa có (TE9C668) - AI Search prefix"
+)
+def parse_and_save_ai_search(
+    payload: LLMParseAndSaveRequest,
+    session_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    from app.services.llm_service import LLMService
+    if session_id is None:
+        new_sess = ChatSessionService.create_session(db, user_id=payload.user_id)
+        session_id = new_sess.session_id
+
+    result = LLMService.parse_and_save_to_criteria(
+        db=db,
+        session_id=session_id,
+        user_message=payload.message,
+        provider=payload.provider or "auto",
+        user_id=payload.user_id,
+    )
+    return LLMParseAndSaveResponse(**result)
 
 
 @router.post(

@@ -93,14 +93,37 @@ const AIChatMapSync = {
         // Fallback cục bộ từ danh sách venues đang có trên trang
         const lower = promptText.toLowerCase();
         const filtered = (localFallbackVenues || []).filter(v => {
+            const vName = (v.name || '').toLowerCase();
+            const vCuisine = (v.cuisineLabel || v.category || '').toLowerCase();
             if (lower.includes('nướng') || lower.includes('bbq')) {
-                return (v.category === 'bbq') || (v.cuisineLabel || '').toLowerCase().includes('nướng');
+                return (v.category === 'bbq') || vCuisine.includes('nướng') || vName.includes('bbq') || vName.includes('nướng');
             }
             if (lower.includes('lẩu')) {
-                return (v.category === 'hotpot') || (v.cuisineLabel || '').toLowerCase().includes('lẩu');
+                return (v.category === 'hotpot') || vCuisine.includes('lẩu') || vName.includes('lẩu');
             }
             if (lower.includes('chay')) {
-                return v.vegetarian || (v.category === 'vegan');
+                return v.vegetarian || (v.category === 'vegan') || vCuisine.includes('chay') || vName.includes('chay');
+            }
+            if (lower.includes('hải sản') || lower.includes('seafood') || lower.includes('ốc')) {
+                return (v.category === 'seafood') || vCuisine.includes('hải sản') || vName.includes('hải sản') || vName.includes('ốc');
+            }
+            if (lower.includes('cà phê') || lower.includes('cafe') || lower.includes('trà')) {
+                return (v.category === 'cafe') || vCuisine.includes('cà phê') || vName.includes('coffee') || vName.includes('tea');
+            }
+            if (lower.includes('pizza') || lower.includes('món âu') || lower.includes('steak') || lower.includes('pasta')) {
+                return (v.category === 'western') || vCuisine.includes('âu') || vName.includes('pizza') || vName.includes('steak');
+            }
+            if (lower.includes('sushi') || lower.includes('món nhật') || lower.includes('ramen')) {
+                return (v.category === 'japanese') || vCuisine.includes('nhật') || vName.includes('sushi') || vName.includes('tei');
+            }
+            if (lower.includes('dimsum') || lower.includes('món hoa')) {
+                return (v.category === 'chinese') || vCuisine.includes('hoa') || vName.includes('dim') || vName.includes('san fu lou');
+            }
+            if (lower.includes('cơm tấm') || lower.includes('sườn')) {
+                return vName.includes('cơm tấm') || vCuisine.includes('cơm tấm');
+            }
+            if (lower.includes('phở') || lower.includes('bún')) {
+                return vName.includes('phở') || vName.includes('bún') || vCuisine.includes('việt');
             }
             return true;
         });
