@@ -280,7 +280,8 @@ def list_sessions(
             closed_reason=s.closed_reason,
             total_messages=len(s.messages) if s.messages else 0
         )
-    return res_list
+        for s in sessions
+    ]
 
 
 @router.delete(

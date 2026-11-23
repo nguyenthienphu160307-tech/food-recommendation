@@ -23,7 +23,7 @@ from app.schemas.restaurant import (
     RestaurantImageResponse,
     RestaurantListItemResponse,
     RestaurantListResponse,
-    RestaurantMenuResponse,
+    # RestaurantMenuResponse,
 )
 from app.services.geo_service import (
     calculate_bounding_box,
