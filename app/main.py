@@ -25,8 +25,67 @@ from app.routers import (
     favorite_router,
 )
 
-# Tự động tạo bảng CSDL
+# Tự động tạo bảng CSDL và seed tài khoản demo
 Base.metadata.create_all(bind=engine)
+
+def seed_demo_accounts():
+    try:
+        from app.models.user import User, UserProfile, Role, UserRole
+        from app.core.security import hash_password
+        db = Session(bind=engine)
+
+        admin_role = db.query(Role).filter(Role.name == "admin").first()
+        if not admin_role:
+            admin_role = Role(name="admin", description="Quản trị viên hệ thống")
+            db.add(admin_role)
+            db.commit()
+            db.refresh(admin_role)
+
+        user_role = db.query(Role).filter(Role.name == "user").first()
+        if not user_role:
+            user_role = Role(name="user", description="Người dùng thông thường")
+            db.add(user_role)
+            db.commit()
+            db.refresh(user_role)
+
+        admin_user = db.query(User).filter(User.email == "admin@smartdining.vn").first()
+        if not admin_user:
+            admin_user = User(
+                email="admin@smartdining.vn",
+                phone_number="0909999888",
+                hashed_password=hash_password("123456"),
+                status="active"
+            )
+            db.add(admin_user)
+            db.commit()
+            db.refresh(admin_user)
+            db.add(UserProfile(user_id=admin_user.id, full_name="Quản trị viên Hệ thống"))
+            db.add(UserRole(user_id=admin_user.id, role_id=admin_role.id))
+            db.commit()
+        else:
+            admin_user.status = "active"
+            db.commit()
+
+        student_user = db.query(User).filter(User.email == "sinhvien@example.com").first()
+        if not student_user:
+            student_user = User(
+                email="sinhvien@example.com",
+                phone_number="0901234567",
+                hashed_password=hash_password("123456"),
+                status="active"
+            )
+            db.add(student_user)
+            db.commit()
+            db.refresh(student_user)
+            db.add(UserProfile(user_id=student_user.id, full_name="Nguyễn Văn A"))
+            db.add(UserRole(user_id=student_user.id, role_id=user_role.id))
+            db.commit()
+
+        db.close()
+    except Exception as e:
+        print(f"[Seed] Khong the seed tai khoan demo: {e}")
+
+seed_demo_accounts()
 
 app = FastAPI(
     title="Smart Dining - Hệ thống Gợi ý Địa điểm Ăn uống theo Vị trí",
@@ -173,6 +232,26 @@ def serve_admin_restaurants_page():
     if os.path.exists(admin_rest_file):
         return FileResponse(admin_rest_file)
     raise HTTPException(status_code=404, detail="Không tìm thấy trang quản trị nhà hàng.")
+
+
+@app.get("/admin/menu", tags=["Frontend UI"], summary="Trang Quản trị thực đơn nhà hàng")
+@app.get("/admin-menu", tags=["Frontend UI"], include_in_schema=False)
+@app.get("/admin-menu.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_admin_menu_page():
+    admin_menu_file = os.path.join(FRONTEND_DIR, "admin-menu.html")
+    if os.path.exists(admin_menu_file):
+        return FileResponse(admin_menu_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang quản trị thực đơn.")
+
+
+@app.get("/admin/images", tags=["Frontend UI"], summary="Trang Quản lý thư viện ảnh nhà hàng")
+@app.get("/admin-images", tags=["Frontend UI"], include_in_schema=False)
+@app.get("/admin-images.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_admin_images_page():
+    admin_images_file = os.path.join(FRONTEND_DIR, "admin-images.html")
+    if os.path.exists(admin_images_file):
+        return FileResponse(admin_images_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang quản trị thư viện ảnh.")
 
 
 @app.get("/index.html", tags=["Frontend UI"], include_in_schema=False)

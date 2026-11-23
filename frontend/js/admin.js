@@ -115,7 +115,28 @@ function checkAdminRouteGuard() {
     const guard403 = document.getElementById('guard-403');
     const userEmailSpan = document.getElementById('guard-user-email');
 
+    // Đồng bộ kiểm tra tài khoản đã đăng nhập trong LocalStorage
+    let user = null;
+    try {
+        const raw = localStorage.getItem('current_user') 
+                 || localStorage.getItem('smart_dining_user')
+                 || localStorage.getItem('foodai_demo_profile_state');
+        if (raw) user = JSON.parse(raw);
+    } catch (_) {}
 
+    const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token');
+
+    if (user && token) {
+        if (user.role === 'admin' || user.role === 'ADMIN') {
+            currentRole = 'admin';
+        } else {
+            currentRole = 'user';
+            if (userEmailSpan) userEmailSpan.innerText = user.email || user.full_name || 'user@foodai.vn';
+        }
+    } else if (!token && !user) {
+        const demoRole = localStorage.getItem(DEMO_ROLE_KEY);
+        if (demoRole) currentRole = demoRole;
+    }
 
     if (currentRole === 'guest') {
         // Chặn 401: Khách chưa đăng nhập
@@ -127,7 +148,7 @@ function checkAdminRouteGuard() {
         // Chặn 403: User thường cố truy cập
         guard401.classList.remove('active');
         guard403.classList.add('active');
-        if (userEmailSpan) userEmailSpan.innerText = 'user.demo@foodai.vn';
+        if (userEmailSpan && user) userEmailSpan.innerText = user.email || 'user.demo@foodai.vn';
         console.warn('[Route Guard] Chặn truy cập 403 Forbidden: Tài khoản không có vai trò Admin.');
         return false;
     } else {
@@ -160,14 +181,23 @@ async function handleAdminLogin(event) {
         });
         if (res.ok) {
             const data = await res.json();
-            const roles = data.user?.roles || [];
-            if (!roles.includes('admin')) {
+            const role = data.user?.role || (data.user?.roles && data.user.roles[0]) || '';
+            if (role !== 'admin') {
                 alert('Tài khoản này không có quyền Quản trị viên (Admin).');
                 return;
             }
-            if (data.tokens?.access_token) {
-                localStorage.setItem('auth_token', data.tokens.access_token);
-            }
+            const tokenStr = data.token || data.tokens?.access_token || '';
+            localStorage.setItem('access_token', tokenStr);
+            localStorage.setItem('smart_dining_token', tokenStr);
+            localStorage.setItem('current_user', JSON.stringify(data.user));
+            localStorage.setItem('smart_dining_user', JSON.stringify(data.user));
+            localStorage.setItem(DEMO_ROLE_KEY, 'admin');
+            currentRole = 'admin';
+            document.getElementById('guard-401').classList.remove('active');
+            document.getElementById('guard-403').classList.remove('active');
+            if (typeof renderAdminPortal === 'function') renderAdminPortal();
+            if (typeof showAdminToast === 'function') showAdminToast('Đăng nhập Quản trị viên thành công!', 'success');
+            return;
         }
     } catch (_) {
         // Fallback xử lý offline client-side
