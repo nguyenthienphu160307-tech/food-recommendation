@@ -29,6 +29,10 @@ from app.services.geo_service import (
     calculate_haversine_distance,
     format_distance_display,
 )
+from app.services.open_hours_service import (
+    get_vietnam_now,
+    check_restaurant_open_status,
+)
 
 router = APIRouter(prefix="/api/restaurants", tags=["Nhà hàng & Bộ lọc đa điều kiện (Restaurants)"])
 
