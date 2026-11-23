@@ -1497,17 +1497,44 @@
         }
 
         function renderAuthState() {
-            const user = window.FoodAPI ? FoodAPI.auth.getUser() : null;
+            let user = window.FoodAPI ? FoodAPI.auth.getUser() : null;
+            if (!user) {
+                try {
+                    const raw = localStorage.getItem('current_user') 
+                             || localStorage.getItem('smart_dining_user') 
+                             || localStorage.getItem('user')
+                             || localStorage.getItem('foodai_demo_profile_state');
+                    if (raw) user = JSON.parse(raw);
+                } catch (_) {}
+            }
+            const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token');
+            const isLoggedIn = Boolean(user && token);
+
             const show = (id, visible) => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = visible ? 'flex' : 'none';
             };
-            document.getElementById('nav-user-name').innerText = user ? (user.full_name || user.email || 'Tài khoản') : 'Khách';
-            document.getElementById('drop-user-name').innerText = user ? (user.full_name || user.email || 'Tài khoản') : 'Khách';
-            document.getElementById('drop-user-email').innerText = user ? (user.email || user.phone_number || '') : 'Chưa đăng nhập';
-            show('link-login', !user);
-            show('link-register', !user);
-            show('link-logout', !!user);
+
+            const displayName = (isLoggedIn && user) ? (user.full_name || user.email || 'Tài khoản') : 'Khách';
+            const displayEmail = (isLoggedIn && user) ? (user.email || user.phone_number || '') : 'Chưa đăng nhập';
+            const displayRole = (isLoggedIn && user) ? (user.role === 'admin' ? 'Quản trị viên' : 'Thành viên') : 'Khách vãng lai';
+
+            const navName = document.getElementById('nav-user-name');
+            const dropName = document.getElementById('drop-user-name');
+            const dropEmail = document.getElementById('drop-user-email');
+            const dropRole = document.getElementById('drop-user-role');
+
+            if (navName) navName.innerText = displayName;
+            if (dropName) dropName.innerText = displayName;
+            if (dropEmail) dropEmail.innerText = displayEmail;
+            if (dropRole) dropRole.innerText = displayRole;
+
+            show('link-login', !isLoggedIn);
+            show('link-register', !isLoggedIn);
+            show('link-profile', isLoggedIn);
+            show('link-preferences', isLoggedIn);
+            show('link-admin', isLoggedIn && user && user.role === 'admin');
+            show('link-logout', isLoggedIn);
         }
 
         function syncProfileData() {
@@ -1517,8 +1544,12 @@
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
                     const prof = JSON.parse(raw);
-                    if (prof.full_name) document.getElementById('nav-user-name').innerText = prof.full_name;
-                    if (prof.avatar_url) document.getElementById('nav-user-avatar').src = prof.avatar_url;
+                    if (prof.full_name && document.getElementById('nav-user-name')) {
+                        document.getElementById('nav-user-name').innerText = prof.full_name;
+                    }
+                    if (prof.avatar_url && document.getElementById('nav-user-avatar')) {
+                        document.getElementById('nav-user-avatar').src = prof.avatar_url;
+                    }
                 }
             } catch (_) {}
         }
@@ -1528,10 +1559,12 @@
             try {
                 const prof = await FoodAPI.profile.get();
                 if (prof.full_name) {
-                    document.getElementById('nav-user-name').innerText = prof.full_name;
-                    document.getElementById('drop-user-name').innerText = prof.full_name;
+                    if (document.getElementById('nav-user-name')) document.getElementById('nav-user-name').innerText = prof.full_name;
+                    if (document.getElementById('drop-user-name')) document.getElementById('drop-user-name').innerText = prof.full_name;
                 }
-                if (prof.avatar_url) document.getElementById('nav-user-avatar').src = prof.avatar_url;
+                if (prof.avatar_url && document.getElementById('nav-user-avatar')) {
+                    document.getElementById('nav-user-avatar').src = prof.avatar_url;
+                }
             } catch (err) {
                 console.warn('[FoodAPI] Không tải được hồ sơ từ máy chủ:', err.message);
             }
@@ -1539,6 +1572,12 @@
 
         async function handleLogoutFromIndex() {
             if (window.FoodAPI) await FoodAPI.auth.logout();
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("current_user");
+            localStorage.removeItem("smart_dining_token");
+            localStorage.removeItem("smart_dining_user");
+            localStorage.removeItem("user");
+            localStorage.removeItem("foodai_demo_profile_state");
             window.location.reload();
         }
 
@@ -1745,7 +1784,11 @@
                 const dist = v.distanceKm || 0;
                 const travelMins = Math.max(2, Math.round(dist * 3.2));
                 const distFormatted = formatExactDistance(dist);
-                const imageUrl = v.image || v.cover_image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
+                const rawImg = v.image || v.cover_image_url || "";
+                const isBadImg = !rawImg || rawImg.includes("example.com");
+                const imageUrl = isBadImg 
+                    ? "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800" 
+                    : rawImg;
                 const priceMin = Number(v.priceMin || v.min_price || 50000);
                 const priceMax = Number(v.priceMax || v.max_price || 300000);
 
@@ -1771,7 +1814,7 @@
 
                 card.innerHTML = `
                     <div class="venue-img-wrap">
-                        <img src="${imageUrl}" alt="${v.name}" loading="lazy">
+                        <img src="${imageUrl}" alt="${v.name}" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800';">
                         <span class="match-badge">Phù hợp ${v.matchScore}% • ${distFormatted}</span>
                         <button type="button" class="fav-btn ${isSaved ? 'saved' : ''}" onclick="toggleSaveVenue(event, ${v.id})">
                             ♥
@@ -2342,10 +2385,14 @@
             const lat = v.latitude || v.lat;
             const lng = v.longitude || v.lng;
             const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentPos.lat},${currentPos.lng}&destination=${lat},${lng}&travelmode=two-wheeler`;
-            const imageUrl = v.image || v.cover_image_url || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80";
+            const rawImg = v.image || v.cover_image_url || "";
+            const isBadImg = !rawImg || rawImg.includes("example.com");
+            const imageUrl = isBadImg 
+                ? "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800" 
+                : rawImg;
 
             box.innerHTML = `
-                <img src="${imageUrl}" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
+                <img src="${imageUrl}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800';" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
                 <h3 style="font-size:1.3rem;margin-bottom:4px;">${v.name}</h3>
                 <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:12px;">${v.address} • Giờ mở cửa: ${v.openHours || '08:00 - 22:00'}</p>
                 <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">

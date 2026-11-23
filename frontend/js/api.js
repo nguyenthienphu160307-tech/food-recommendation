@@ -132,9 +132,19 @@ const AuthAPI = {
 
     login: async (account, password) => {
         const result = await apiRequest("/auth/login", "POST", { account, password });
-        if (result.tokens) {
-            localStorage.setItem("access_token", result.tokens.access_token);
+        const token = (result.tokens && result.tokens.access_token) || result.token;
+        if (token) {
+            localStorage.setItem("access_token", token);
+            localStorage.setItem("smart_dining_token", token);
+        }
+        if (result.user) {
             localStorage.setItem("current_user", JSON.stringify(result.user));
+            localStorage.setItem("smart_dining_user", JSON.stringify(result.user));
+            localStorage.setItem("foodai_demo_profile_state", JSON.stringify({
+                full_name: result.user.full_name,
+                email: result.user.email,
+                role: result.user.role
+            }));
         }
         return result;
     },
@@ -142,9 +152,14 @@ const AuthAPI = {
     logout: async () => {
         try {
             await apiRequest("/auth/logout", "POST");
+        } catch (_) {
         } finally {
             localStorage.removeItem("access_token");
             localStorage.removeItem("current_user");
+            localStorage.removeItem("smart_dining_token");
+            localStorage.removeItem("smart_dining_user");
+            localStorage.removeItem("user");
+            localStorage.removeItem("foodai_demo_profile_state");
         }
     }
 };
@@ -177,11 +192,14 @@ window.FoodAPI = {
     auth: {
         getUser: () => {
             try {
-                const raw = localStorage.getItem("current_user");
+                const raw = localStorage.getItem("current_user")
+                         || localStorage.getItem("smart_dining_user")
+                         || localStorage.getItem("user")
+                         || localStorage.getItem("foodai_demo_profile_state");
                 return raw ? JSON.parse(raw) : null;
             } catch (_) { return null; }
         },
-        isLoggedIn: () => !!localStorage.getItem("access_token"),
+        isLoggedIn: () => !!(localStorage.getItem("access_token") || localStorage.getItem("smart_dining_token")),
         logout: () => AuthAPI.logout()
     },
     profile: {
@@ -201,31 +219,40 @@ window.FoodAPI = {
             if (text.includes("nhật") || text.includes("sushi")) return "japanese";
             return "other";
         },
-        toVenue: (r) => ({
-            id: r.id,
-            name: r.name,
-            address: r.address || "",
-            lat: parseFloat(r.latitude ?? r.lat ?? 10.776889),
-            lng: parseFloat(r.longitude ?? r.lng ?? 106.700806),
-            category: window.FoodAPI.restaurants.categoryOf(r),
-            cuisineLabel: r.cuisine_type || "Ẩm thực",
-            priceMin: r.min_price || 50000,
-            priceMax: r.max_price || 300000,
-            rating: r.avg_rating || 4.5,
-            reviews: r.total_reviews || 0,
-            parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
-            has_parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
-            private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
-            has_private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
-            outdoor: Boolean(r.amenities?.has_outdoor ?? r.has_outdoor),
-            has_outdoor: Boolean(r.amenities?.has_outdoor ?? r.has_outdoor),
-            pet_friendly: Boolean(r.amenities?.pet_friendly ?? r.pet_friendly),
-            has_pet_friendly: Boolean(r.amenities?.pet_friendly ?? r.pet_friendly),
-            vegetarian: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support),
-            vegetarian_support: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support),
-            openHours: r.open_hours || "08:00 - 22:00",
-            image: r.cover_image_url || r.cover_image || r.image_url || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
-            menu: r.menu || []
-        })
+        toVenue: (r) => {
+            const rawImg = r.cover_image_url || r.cover_image || r.image_url || "";
+            const isInvalidImg = !rawImg || rawImg.includes("example.com");
+            const safeImg = isInvalidImg
+                ? "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800"
+                : rawImg;
+
+            return {
+                id: r.id,
+                name: r.name,
+                address: r.address || "",
+                lat: parseFloat(r.latitude ?? r.lat ?? 10.776889),
+                lng: parseFloat(r.longitude ?? r.lng ?? 106.700806),
+                category: window.FoodAPI.restaurants.categoryOf(r),
+                cuisineLabel: r.cuisine_type || "Ẩm thực",
+                priceMin: r.min_price || 50000,
+                priceMax: r.max_price || 300000,
+                rating: r.avg_rating || 4.5,
+                reviews: r.total_reviews || 0,
+                parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
+                has_parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
+                private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
+                has_private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
+                outdoor: Boolean(r.amenities?.has_outdoor ?? r.has_outdoor),
+                has_outdoor: Boolean(r.amenities?.has_outdoor ?? r.has_outdoor),
+                pet_friendly: Boolean(r.amenities?.pet_friendly ?? r.pet_friendly),
+                has_pet_friendly: Boolean(r.amenities?.pet_friendly ?? r.pet_friendly),
+                vegetarian: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support),
+                vegetarian_support: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support),
+                openHours: r.open_hours || "08:00 - 22:00",
+                image: safeImg,
+                cover_image_url: safeImg,
+                menu: r.menu || []
+            };
+        }
     }
 };

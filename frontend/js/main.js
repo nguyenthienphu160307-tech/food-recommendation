@@ -103,9 +103,11 @@ function getAuthUser() {
 function setAuthSession(user, token) {
     if (user) {
         localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(user));
+        localStorage.setItem('current_user', JSON.stringify(user));
     }
     if (token) {
         localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+        localStorage.setItem('access_token', token);
     }
     renderAuthState();
 }
@@ -113,6 +115,11 @@ function setAuthSession(user, token) {
 function clearAuthSession() {
     localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem('current_user');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('smart_dining_user');
+    localStorage.removeItem('smart_dining_token');
+    localStorage.removeItem('foodai_demo_profile_state');
     renderAuthState();
 }
 

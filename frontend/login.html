@@ -359,11 +359,20 @@
                     return;
                 }
 
-                // Lưu thông tin người dùng và token
-                setAuthSession(data.user, data.token);
+                // Lưu thông tin người dùng và token đồng bộ trên tất cả các khóa
+                const tokenStr = data.token || (data.tokens && data.tokens.access_token) || "";
+                if (typeof setAuthSession === 'function') {
+                    setAuthSession(data.user, tokenStr);
+                }
+                localStorage.setItem('access_token', tokenStr);
+                localStorage.setItem('smart_dining_token', tokenStr);
+                localStorage.setItem('current_user', JSON.stringify(data.user));
+                localStorage.setItem('smart_dining_user', JSON.stringify(data.user));
                 localStorage.setItem('foodai_demo_profile_state', JSON.stringify({
+                    id: data.user.id,
                     full_name: data.user.full_name,
                     email: data.user.email,
+                    role: data.user.role,
                     avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
                 }));
 
