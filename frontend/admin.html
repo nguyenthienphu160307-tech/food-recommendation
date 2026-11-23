@@ -176,7 +176,7 @@
                     </div>
                 </div>
 
-                <!-- Panels Row: Phân bố Nhà hàng theo Quận & Theo Ẩm thực -->
+                <!-- Panels Row 1: Phân bố Nhà hàng theo Quận & Theo Ẩm thực -->
                 <div class="dashboard-row">
                     <div class="panel-card">
                         <div class="panel-header">
@@ -190,7 +190,7 @@
 
                     <div class="panel-card">
                         <div class="panel-header">
-                            <h4>Tỷ lệ Thể loại Ẩm thực</h4>
+                            <h4>Tỷ lệ Thể loại Ẩm thực Nhà hàng</h4>
                         </div>
                         <div id="cuisine-distribution-list">
                             <!-- Render bằng JS -->
@@ -198,24 +198,59 @@
                     </div>
                 </div>
 
-                <!-- Hoạt động gần đây -->
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <h4>Nhật ký Hoạt động Hệ thống Gần đây</h4>
-                        <span style="font-size:0.78rem;color:var(--brand-green);">● Hệ thống Trực tuyến</span>
+                <!-- Panels Row 2: Thống kê Tìm kiếm AI & Top Ẩm thực (Task TE9C67E - FR-15) -->
+                <div class="dashboard-row">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>🤖 Lượt Tìm kiếm AI theo Ngày (7 ngày qua)</h4>
+                            <span style="font-size:0.78rem;color:var(--text-muted);" id="ai-search-trend-summary">Thống kê tự động</span>
+                        </div>
+                        <div id="ai-search-trends-container" style="min-height:160px;display:flex;align-items:flex-end;justify-content:space-around;gap:8px;padding:20px 10px 0 10px;">
+                            <!-- Render bằng JS -->
+                        </div>
                     </div>
-                    <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;" id="recent-logs-list">
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
-                            <span>🔒 <strong>RBAC Guard:</strong> Đã bảo vệ các route nhạy cảm với Token JWT và phân quyền Admin/User.</span>
-                            <span style="color:var(--text-muted);font-size:0.75rem;">Vừa xong</span>
+
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>🔥 Top Loại Ẩm thực được tìm nhiều nhất</h4>
+                            <span style="font-size:0.78rem;color:var(--text-muted);">Trích xuất từ Chat AI</span>
                         </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
-                            <span>🗺️ <strong>Bản đồ số Leaflet:</strong> Tích hợp 50 quán ăn GPS và định vị vị trí tìm kiếm.</span>
-                            <span style="color:var(--text-muted);font-size:0.75rem;">10 phút trước</span>
+                        <div id="top-cuisines-list">
+                            <!-- Render bằng JS -->
                         </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
-                            <span>👤 <strong>Quy tắc BR-07:</strong> Sẵn sàng cơ chế khóa tài khoản vi phạm và ngăn chặn đăng nhập.</span>
-                            <span style="color:var(--text-muted);font-size:0.75rem;">30 phút trước</span>
+                    </div>
+                </div>
+
+                <!-- Panels Row 3: Top Nhà hàng được yêu thích & Hoạt động gần đây (Task TE9C67E - FR-15) -->
+                <div class="dashboard-row">
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>❤️ Top Nhà hàng được Yêu thích nhất</h4>
+                            <span style="font-size:0.78rem;color:var(--brand-rose);font-weight:600;">Danh sách Bookmarks</span>
+                        </div>
+                        <div id="top-favorites-list" style="display:flex;flex-direction:column;gap:12px;">
+                            <!-- Render bằng JS -->
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h4>Nhật ký Hoạt động Hệ thống Gần đây</h4>
+                            <span style="font-size:0.78rem;color:var(--brand-green);">● Hệ thống Trực tuyến</span>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:12px;font-size:0.85rem;" id="recent-logs-list">
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                                <span>🔒 <strong>RBAC Guard:</strong> Đã bảo vệ các route nhạy cảm với Token JWT và phân quyền Admin/User.</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;">Vừa xong</span>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                                <span>🗺️ <strong>Bản đồ số Leaflet:</strong> Tích hợp 50 quán ăn GPS và định vị vị trí tìm kiếm.</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;">10 phút trước</span>
+                            </div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:var(--bg-subtle);border-radius:8px;">
+                                <span>👤 <strong>Quy tắc BR-07:</strong> Sẵn sàng cơ chế khóa tài khoản vi phạm và ngăn chặn đăng nhập.</span>
+                                <span style="color:var(--text-muted);font-size:0.75rem;">30 phút trước</span>
+                            </div>
                         </div>
                     </div>
                 </div>

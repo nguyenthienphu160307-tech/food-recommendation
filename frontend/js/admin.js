@@ -249,6 +249,9 @@ function adminLogout() {
  * ==============================================================================
  */
 function initDataStorage() {
+    // 0. Nạp số liệu Thống kê & Báo cáo Admin Dashboard từ API (TE9C67E - FR-15)
+    fetchDashboardStatsFromAPI();
+
     // 1. Users
     const storedUsers = localStorage.getItem(ADMIN_USERS_KEY);
     usersData = storedUsers ? JSON.parse(storedUsers) : [...INITIAL_USERS];
@@ -351,10 +354,145 @@ function loadAllAdminData() {
     renderReportsTable();
 }
 
+let adminDashboardStats = null;
+
+/**
+ * Tải số liệu thống kê Dashboard từ Backend API (TE9C67E - FR-15)
+ */
+async function fetchDashboardStatsFromAPI() {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+
+    try {
+        const res = await fetch('/api/admin/dashboard/stats?days=7&top_limit=5', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+            const result = await res.json();
+            if (result && result.data) {
+                adminDashboardStats = result.data;
+                renderDashboardStats(result.data);
+            }
+        }
+    } catch (err) {
+        console.warn('[Admin] Lỗi khi nạp thống kê dashboard:', err);
+    }
+}
+
+/**
+ * Render dữ liệu Thống kê & Báo cáo nâng cao (Task TE9C67E)
+ */
+function renderDashboardStats(data) {
+    if (!data) return;
+
+    // 1. Cập nhật thẻ KPI
+    if (data.users) {
+        const uEl = document.getElementById('stat-total-users');
+        if (uEl) uEl.innerText = data.users.total;
+        const bEl = document.getElementById('badge-users-count');
+        if (bEl) bEl.innerText = data.users.total;
+    }
+
+    if (data.restaurants) {
+        const rEl = document.getElementById('stat-total-venues');
+        if (rEl) rEl.innerText = data.restaurants.total;
+        const rbEl = document.getElementById('badge-venues-count');
+        if (rbEl) rbEl.innerText = data.restaurants.total;
+        const ratingEl = document.getElementById('stat-avg-rating');
+        if (ratingEl) ratingEl.innerText = data.restaurants.avg_rating || '4.5';
+    }
+
+    // 2. Render Biểu đồ cột Xu hướng Tìm kiếm AI theo ngày
+    const trendsContainer = document.getElementById('ai-search-trends-container');
+    if (trendsContainer && Array.isArray(data.ai_search_trends)) {
+        trendsContainer.innerHTML = '';
+        const trends = data.ai_search_trends;
+        const maxVal = Math.max(...trends.map(t => t.search_count), 1);
+        const totalInPeriod = data.total_ai_searches_in_period || trends.reduce((acc, t) => acc + t.search_count, 0);
+
+        const summaryEl = document.getElementById('ai-search-trend-summary');
+        if (summaryEl) summaryEl.innerText = `Tổng: ${totalInPeriod} lượt tìm kiếm`;
+
+        trends.forEach(item => {
+            const heightPct = Math.max(12, Math.round((item.search_count / maxVal) * 100));
+            const parts = item.date.split('-');
+            const shortDate = parts.length === 3 ? `${parts[2]}/${parts[1]}` : item.date;
+
+            const col = document.createElement('div');
+            col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:6px;';
+            col.innerHTML = `
+                <span style="font-size:0.75rem;font-weight:700;color:var(--brand-rose);">${item.search_count}</span>
+                <div style="width:100%;max-width:32px;height:${heightPct}%;background:linear-gradient(180deg,#f43f5e,#be123c);border-radius:6px 6px 0 0;transition:height 0.4s ease;" title="${item.date}: ${item.search_count} lượt"></div>
+                <span style="font-size:0.7rem;color:var(--text-muted);">${shortDate}</span>
+            `;
+            trendsContainer.appendChild(col);
+        });
+    }
+
+    // 3. Render Top loại ẩm thực được tìm nhiều nhất
+    const topCuisinesContainer = document.getElementById('top-cuisines-list');
+    if (topCuisinesContainer && Array.isArray(data.top_cuisines)) {
+        topCuisinesContainer.innerHTML = '';
+        if (data.top_cuisines.length === 0) {
+            topCuisinesContainer.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:0.85rem;">Chưa có dữ liệu tìm kiếm ẩm thực.</div>`;
+        } else {
+            data.top_cuisines.forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'dist-bar-item';
+                item.innerHTML = `
+                    <div class="dist-bar-header">
+                        <span>🍲 ${c.cuisine}</span>
+                        <span>${c.search_count} lượt (${c.percentage}%)</span>
+                    </div>
+                    <div class="dist-bar-track">
+                        <div class="dist-bar-fill" style="width: ${c.percentage}%; background: linear-gradient(90deg, #f59e0b, #ef4444);"></div>
+                    </div>
+                `;
+                topCuisinesContainer.appendChild(item);
+            });
+        }
+    }
+
+    // 4. Render Top nhà hàng được yêu thích nhất
+    const topFavContainer = document.getElementById('top-favorites-list');
+    if (topFavContainer && Array.isArray(data.top_favorited_restaurants)) {
+        topFavContainer.innerHTML = '';
+        if (data.top_favorited_restaurants.length === 0) {
+            topFavContainer.innerHTML = `<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:0.85rem;">Chưa có lượt bookmark nhà hàng nào.</div>`;
+        } else {
+            data.top_favorited_restaurants.forEach((r, idx) => {
+                const item = document.createElement('div');
+                item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg-subtle);border-radius:10px;gap:12px;';
+                const img = r.cover_image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200';
+                item.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                        <span style="font-weight:800;color:var(--brand-rose);font-size:0.9rem;width:20px;">#${idx + 1}</span>
+                        <img src="${img}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+                        <div style="min-width:0;">
+                            <div style="font-weight:700;font-size:0.88rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name}</div>
+                            <div style="font-size:0.75rem;color:var(--text-muted);">${r.cuisine_type || 'Món Việt'} • ⭐ ${r.avg_rating || 0}</div>
+                        </div>
+                    </div>
+                    <div style="flex-shrink:0;text-align:right;">
+                        <span style="display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(225,29,72,0.1);color:#e11d48;font-size:0.78rem;font-weight:700;">❤️ ${r.favorite_count}</span>
+                    </div>
+                `;
+                topFavContainer.appendChild(item);
+            });
+        }
+    }
+}
+
 /**
  * Render Tab 1: Tổng quan Dashboard & Biểu đồ phân bố
  */
 function renderStatsOverview() {
+    if (adminDashboardStats) {
+        renderDashboardStats(adminDashboardStats);
+    } else {
+        fetchDashboardStatsFromAPI();
+    }
+
     // Cập nhật số liệu KPI Cards
     const totalUsers = usersData.length;
     const activeUsers = usersData.filter(u => u.status === 'active').length;
@@ -363,12 +501,20 @@ function renderStatsOverview() {
     const totalVenues = venuesData.length;
     const pendingReports = reportsData.filter(r => r.status === 'pending').length;
 
-    document.getElementById('stat-total-users').innerText = totalUsers;
-    document.getElementById('badge-users-count').innerText = totalUsers;
-    document.getElementById('stat-total-venues').innerText = totalVenues;
-    document.getElementById('badge-venues-count').innerText = totalVenues;
-    document.getElementById('stat-pending-reports').innerText = pendingReports;
-    document.getElementById('badge-reports-count').innerText = pendingReports;
+    const uEl = document.getElementById('stat-total-users');
+    if (uEl) uEl.innerText = totalUsers;
+    const buEl = document.getElementById('badge-users-count');
+    if (buEl) buEl.innerText = totalUsers;
+
+    const vEl = document.getElementById('stat-total-venues');
+    if (vEl) vEl.innerText = totalVenues;
+    const bvEl = document.getElementById('badge-venues-count');
+    if (bvEl) bvEl.innerText = totalVenues;
+
+    const prEl = document.getElementById('stat-pending-reports');
+    if (prEl) prEl.innerText = pendingReports;
+    const bprEl = document.getElementById('badge-reports-count');
+    if (bprEl) bprEl.innerText = pendingReports;
 
     // Phân bố nhà hàng theo Quận
     const districtCounts = {};
@@ -378,22 +524,24 @@ function renderStatsOverview() {
     });
 
     const distListContainer = document.getElementById('district-distribution-list');
-    distListContainer.innerHTML = '';
-    Object.entries(districtCounts).forEach(([district, count]) => {
-        const pct = Math.round((count / totalVenues) * 100);
-        const item = document.createElement('div');
-        item.className = 'dist-bar-item';
-        item.innerHTML = `
-            <div class="dist-bar-header">
-                <span>📍 ${district}</span>
-                <span>${count} quán (${pct}%)</span>
-            </div>
-            <div class="dist-bar-track">
-                <div class="dist-bar-fill" style="width: ${pct}%;"></div>
-            </div>
-        `;
-        distListContainer.appendChild(item);
-    });
+    if (distListContainer) {
+        distListContainer.innerHTML = '';
+        Object.entries(districtCounts).forEach(([district, count]) => {
+            const pct = Math.round((count / (totalVenues || 1)) * 100);
+            const item = document.createElement('div');
+            item.className = 'dist-bar-item';
+            item.innerHTML = `
+                <div class="dist-bar-header">
+                    <span>📍 ${district}</span>
+                    <span>${count} quán (${pct}%)</span>
+                </div>
+                <div class="dist-bar-track">
+                    <div class="dist-bar-fill" style="width: ${pct}%;"></div>
+                </div>
+            `;
+            distListContainer.appendChild(item);
+        });
+    }
 
     // Tỷ lệ thể loại ẩm thực
     const cuisineCounts = {};
@@ -403,22 +551,24 @@ function renderStatsOverview() {
     });
 
     const cuisineListContainer = document.getElementById('cuisine-distribution-list');
-    cuisineListContainer.innerHTML = '';
-    Object.entries(cuisineCounts).slice(0, 5).forEach(([cuisine, count]) => {
-        const pct = Math.round((count / totalVenues) * 100);
-        const item = document.createElement('div');
-        item.className = 'dist-bar-item';
-        item.innerHTML = `
-            <div class="dist-bar-header">
-                <span>🍽️ ${cuisine}</span>
-                <span>${count} quán (${pct}%)</span>
-            </div>
-            <div class="dist-bar-track">
-                <div class="dist-bar-fill" style="width: ${pct}%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
-            </div>
-        `;
-        cuisineListContainer.appendChild(item);
-    });
+    if (cuisineListContainer) {
+        cuisineListContainer.innerHTML = '';
+        Object.entries(cuisineCounts).slice(0, 5).forEach(([cuisine, count]) => {
+            const pct = Math.round((count / (totalVenues || 1)) * 100);
+            const item = document.createElement('div');
+            item.className = 'dist-bar-item';
+            item.innerHTML = `
+                <div class="dist-bar-header">
+                    <span>🍽️ ${cuisine}</span>
+                    <span>${count} quán (${pct}%)</span>
+                </div>
+                <div class="dist-bar-track">
+                    <div class="dist-bar-fill" style="width: ${pct}%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                </div>
+            `;
+            cuisineListContainer.appendChild(item);
+        });
+    }
 }
 
 /**

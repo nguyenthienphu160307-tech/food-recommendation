@@ -18,7 +18,7 @@ Cung cấp các API:
 ==============================================================================
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -29,7 +29,17 @@ from app.core.database import get_db
 from app.core.rbac import get_current_admin
 from app.models.user import User, UserProfile, Role, UserRole, RevokedToken
 from app.models.restaurant import Restaurant, RestaurantAmenity, RestaurantImage
-from app.models.search import SearchSession
+from app.models.search import SearchSession, SearchCriteria
+from app.models.interaction import UserFavorite
+from app.schemas.admin import (
+    AdminDashboardStatsResponse,
+    AdminDashboardStatsData,
+    UserStats,
+    RestaurantStats,
+    AISearchTrendItem,
+    TopCuisineItem,
+    TopFavoritedRestaurantItem,
+)
 
 admin_router = APIRouter(
     prefix="/api/admin",
@@ -135,25 +145,124 @@ def _format_restaurant_detail(r: Restaurant) -> Dict[str, Any]:
 
 
 # ==============================================================================
-# 1. API THỐNG KÊ TỔNG QUAN (DASHBOARD STATS)
+# 1. API THỐNG KÊ & BÁO CÁO ADMIN DASHBOARD (FR-15, UC-06e - TASK TE9C67E)
 # ==============================================================================
 
 @admin_router.get(
+    "/dashboard/stats",
+    response_model=AdminDashboardStatsResponse,
+    summary="Thống kê & Báo cáo tổng quan Admin Dashboard (Task TE9C67E - FR-15, UC-06e)"
+)
+@admin_router.get(
     "/stats",
+    response_model=AdminDashboardStatsResponse,
     summary="Lấy số liệu KPI thống kê tổng quan hệ thống cho Admin Dashboard"
 )
 def get_dashboard_stats(
+    days: int = Query(7, ge=1, le=90, description="Số ngày thống kê lượt tìm kiếm AI theo ngày (mặc định 7)"),
+    top_limit: int = Query(5, ge=1, le=50, description="Số lượng top loại ẩm thực và top nhà hàng yêu thích (mặc định 5)"),
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ) -> Dict[str, Any]:
+    # 1. Thống kê Người dùng (Users)
     total_users = db.query(func.count(User.id)).scalar() or 0
     active_users = db.query(func.count(User.id)).filter(User.status == "active").scalar() or 0
     locked_users = db.query(func.count(User.id)).filter(User.status == "locked").scalar() or 0
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    new_this_week = db.query(func.count(User.id)).filter(User.created_at >= seven_days_ago).scalar() or 0
 
+    # 2. Thống kê Nhà hàng (Restaurants)
     total_restaurants = db.query(func.count(Restaurant.id)).scalar() or 0
     active_restaurants = db.query(func.count(Restaurant.id)).filter(Restaurant.status == "active").scalar() or 0
     hidden_restaurants = db.query(func.count(Restaurant.id)).filter(Restaurant.status != "active").scalar() or 0
+    avg_rating_raw = db.query(func.avg(Restaurant.avg_rating)).scalar()
+    avg_rating = round(float(avg_rating_raw), 1) if avg_rating_raw is not None else 0.0
 
+    # 3. Thống kê số lượt tìm kiếm AI theo ngày (Daily AI Searches Trend)
+    today = datetime.utcnow().date()
+    start_date = today - timedelta(days=days - 1)
+    start_dt = datetime.combine(start_date, datetime.min.time())
+
+    session_rows = (
+        db.query(func.date(SearchSession.started_at), func.count(SearchSession.session_id))
+        .filter(SearchSession.started_at >= start_dt)
+        .group_by(func.date(SearchSession.started_at))
+        .all()
+    )
+    session_map = {str(row[0]): row[1] for row in session_rows if row[0] is not None}
+
+    ai_search_trends = []
+    total_ai_searches_in_period = 0
+    for i in range(days):
+        d = start_date + timedelta(days=i)
+        d_str = d.strftime("%Y-%m-%d")
+        cnt = session_map.get(d_str, 0)
+        total_ai_searches_in_period += cnt
+        ai_search_trends.append({
+            "date": d_str,
+            "search_count": cnt
+        })
+
+    # 4. Top loại ẩm thực được tìm kiếm AI nhiều nhất (Top Searched Cuisines)
+    total_cuisine_searches = (
+        db.query(func.count(SearchCriteria.criteria_id))
+        .filter(SearchCriteria.cuisine.isnot(None), SearchCriteria.cuisine != "")
+        .scalar() or 0
+    )
+    cuisine_rows = (
+        db.query(
+            SearchCriteria.cuisine,
+            func.count(SearchCriteria.criteria_id).label("cuisine_count")
+        )
+        .filter(SearchCriteria.cuisine.isnot(None), SearchCriteria.cuisine != "")
+        .group_by(SearchCriteria.cuisine)
+        .order_by(func.count(SearchCriteria.criteria_id).desc())
+        .limit(top_limit)
+        .all()
+    )
+    top_cuisines = []
+    for c_name, c_cnt in cuisine_rows:
+        pct = round((c_cnt / total_cuisine_searches * 100), 1) if total_cuisine_searches > 0 else 0.0
+        top_cuisines.append({
+            "cuisine": c_name,
+            "search_count": c_cnt,
+            "percentage": pct
+        })
+
+    # 5. Top nhà hàng được yêu thích nhất (Top Favorited Restaurants từ UserFavorite)
+    fav_rows = (
+        db.query(
+            Restaurant,
+            func.count(UserFavorite.id).label("favorite_count")
+        )
+        .join(UserFavorite, Restaurant.id == UserFavorite.restaurant_id)
+        .group_by(Restaurant.id)
+        .order_by(func.count(UserFavorite.id).desc(), Restaurant.avg_rating.desc())
+        .limit(top_limit)
+        .all()
+    )
+    top_favorited_restaurants = []
+    for r, fav_cnt in fav_rows:
+        cover_image = None
+        for img in r.images:
+            if img.is_cover:
+                cover_image = img.image_url
+                break
+        if not cover_image and r.images:
+            cover_image = r.images[0].image_url
+
+        top_favorited_restaurants.append({
+            "id": r.id,
+            "restaurant_id": r.id,
+            "name": r.name,
+            "cuisine_type": r.cuisine_type,
+            "address": r.address,
+            "avg_rating": round(float(r.avg_rating or 0.0), 1),
+            "cover_image_url": cover_image,
+            "favorite_count": fav_cnt
+        })
+
+    # Dữ liệu phân bố hỗ trợ biểu đồ cũ (Distributions)
     cuisine_counts = (
         db.query(Restaurant.cuisine_type, func.count(Restaurant.id))
         .group_by(Restaurant.cuisine_type)
@@ -164,10 +273,10 @@ def get_dashboard_stats(
         for row in cuisine_counts
     ]
 
-    restaurants = db.query(Restaurant.address).all()
+    all_addresses = db.query(Restaurant.address).all()
     district_map: Dict[str, int] = {}
-    for r in restaurants:
-        parts = [p.strip() for p in r.address.split(",")]
+    for addr_row in all_addresses:
+        parts = [p.strip() for p in (addr_row[0] or "").split(",")]
         district = "Khác"
         if len(parts) >= 2:
             district = parts[-2]
@@ -185,14 +294,21 @@ def get_dashboard_stats(
                 "total": total_users,
                 "active": active_users,
                 "locked": locked_users,
-                "new_this_week": max(1, int(total_users * 0.15))
+                "new_this_week": new_this_week
             },
             "restaurants": {
                 "total": total_restaurants,
                 "active": active_restaurants,
                 "hidden": hidden_restaurants,
-                "avg_rating": round(float(db.query(func.avg(Restaurant.avg_rating)).scalar() or 4.5), 1)
+                "avg_rating": avg_rating
             },
+            "ai_search_trends": ai_search_trends,
+            "ai_searches_trend": ai_search_trends,
+            "total_ai_searches_in_period": total_ai_searches_in_period,
+            "top_cuisines": top_cuisines,
+            "top_searched_cuisines": top_cuisines,
+            "top_favorited_restaurants": top_favorited_restaurants,
+            "top_favorites": top_favorited_restaurants,
             "reports": {
                 "pending": 3,
                 "resolved": 12,
