@@ -47,6 +47,7 @@ class Restaurant(Base):
     menus = relationship("RestaurantMenu", back_populates="restaurant", cascade="all, delete-orphan")
     images = relationship("RestaurantImage", back_populates="restaurant", cascade="all, delete-orphan")
     reviews = relationship("RestaurantReview", back_populates="restaurant", cascade="all, delete-orphan")
+    favorites = relationship("UserFavorite", back_populates="restaurant", cascade="all, delete-orphan")
 
 
 class RestaurantAmenity(Base):

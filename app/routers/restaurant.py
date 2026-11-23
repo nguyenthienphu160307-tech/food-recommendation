@@ -79,6 +79,46 @@ def _build_list_item(r: Restaurant) -> RestaurantListItemResponse:
     )
 
 
+@router.get(
+    "/{restaurant_id}/open-status",
+    response_model=RestaurantOpenStatusResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Kiểm tra chi tiết trạng thái giờ mở cửa theo thời gian thực (BR-03 / TSK-37)"
+)
+def get_restaurant_open_status(
+    restaurant_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    API kiểm tra chi tiết trạng thái đóng/mở cửa của một nhà hàng cụ thể theo thời gian thực:
+    - Múi giờ chuẩn: Việt Nam (UTC+7).
+    - Phân tích chuỗi `open_hours` (ca thường, ca gãy, qua đêm, 24/7).
+    - Trả về nhãn trạng thái và điểm thưởng ưu tiên xếp hạng (BR-03).
+    """
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy nhà hàng với ID={restaurant_id}."
+        )
+
+    now_vn = get_vietnam_now()
+    open_info = check_restaurant_open_status(restaurant.open_hours, check_dt=now_vn)
+
+    return RestaurantOpenStatusResponse(
+        restaurant_id=restaurant.id,
+        restaurant_name=restaurant.name,
+        open_hours_raw=restaurant.open_hours,
+        is_open=open_info["is_open"],
+        status_code=open_info["status_code"],
+        status_label=open_info["status_label"],
+        detail_text=open_info["detail_text"],
+        badge_color=open_info["badge_color"],
+        bonus_score=open_info["bonus_score"],
+        checked_at=now_vn.isoformat()
+    )
+
+
 VALID_SORT_MODES = {"default", "distance", "rating", "price_asc", "price_desc"}
 
 
@@ -103,6 +143,9 @@ def _serialize_restaurant(
     else:
         amenities_data = AmenityResponse()
 
+    now_vn = get_vietnam_now()
+    open_info = check_restaurant_open_status(r.open_hours, check_dt=now_vn)
+
     return RestaurantFilterItemResponse(
         id=r.id,
         name=r.name,
@@ -121,6 +164,10 @@ def _serialize_restaurant(
         cover_image_url=cover_image_url,
         amenities=amenities_data,
         distance_km=distance_km,
+        is_open=open_info["is_open"],
+        open_status_label=open_info["status_label"],
+        open_status_detail=open_info["detail_text"],
+        ranking_bonus=open_info["bonus_score"],
     )
 
 
@@ -402,6 +449,8 @@ def get_restaurants(
     pet_friendly: Optional[bool] = Query(None, description="Thân thiện với thú cưng"),
     vegetarian_support: Optional[bool] = Query(None, description="Có hỗ trợ món chay"),
     sort_by: str = Query("default", description="Kiểu sắp xếp"),
+    open_now: Optional[bool] = Query(None, description="Lọc chỉ các nhà hàng đang mở cửa"),
+    sort_by_open: Optional[bool] = Query(False, description="Ưu tiên xếp nhà hàng đang mở cửa lên trước"),
     db: Session = Depends(get_db),
 ):
     items, pagination = _query_filtered_restaurants(
@@ -429,6 +478,15 @@ def get_restaurants(
         RestaurantListItemResponse(**item.model_dump(exclude={"distance_km"}))
         for item in items
     ]
+
+    if open_now is True:
+        list_items = [it for it in list_items if it.is_open]
+    elif open_now is False:
+        list_items = [it for it in list_items if not it.is_open]
+
+    if sort_by_open:
+        list_items.sort(key=lambda x: (x.ranking_bonus, x.avg_rating), reverse=True)
+
     return RestaurantListResponse(
         data=list_items,
         pagination=pagination,

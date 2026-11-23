@@ -91,6 +91,15 @@ from .ai_search import (
     # QueryRelaxationResponse,
 )
 
+from .favorite import (
+    FavoriteCreateRequest,
+    FavoriteDeleteRequest,
+    FavoriteItemResponse,
+    FavoriteListResponse,
+    FavoriteActionResponse,
+    FavoriteCheckResponse,
+)
+
 __all__ = [
     "SendOTPRequest",
     "RegisterRequest",
@@ -154,4 +163,10 @@ __all__ = [
     "ReviewResponse",
     "RestaurantReviewListResponse",
     "DeleteReviewResponse",
+    "FavoriteCreateRequest",
+    "FavoriteDeleteRequest",
+    "FavoriteItemResponse",
+    "FavoriteListResponse",
+    "FavoriteActionResponse",
+    "FavoriteCheckResponse",
 ]

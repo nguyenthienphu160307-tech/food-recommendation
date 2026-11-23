@@ -277,7 +277,7 @@ def run_tests():
         _ = get_search_history(user_id=user_id, page=1, limit=10, db=db)
     elapsed_ms = (time.perf_counter() - t0) * 1000
     print(f"  Tổng thời gian xử lý {iterations} lượt: {elapsed_ms:.2f} ms ({elapsed_ms / iterations:.4f} ms/lượt)")
-    assert elapsed_ms < 1000, f"Hiệu năng quá chậm: {elapsed_ms}ms"
+    assert elapsed_ms < 3000, f"Hiệu năng quá chậm: {elapsed_ms}ms"
     print(f"  => PASSED: Tốc độ phản hồi cực nhanh ({elapsed_ms:.2f} ms << 3000 ms tiêu chuẩn NFR-01)!")
 
     print("\n" + "=" * 80)

@@ -27,6 +27,8 @@ class User(Base):
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     # Quan hệ 1 - N với bảng RestaurantReviews (Module 5 - TSK-51)
     reviews = relationship("RestaurantReview", back_populates="user", cascade="all, delete-orphan")
+    # Quan hệ 1 - N với bảng UserFavorites (Bookmark - FR-11 / TE9C67D)
+    favorites = relationship("UserFavorite", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserProfile(Base):
