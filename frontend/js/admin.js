@@ -280,16 +280,64 @@ function initDataStorage() {
         .catch(err => console.warn('Không thể nạp users từ API:', err));
     }
 
-    // 2. Venues (từ venues-data.js đã seed 50 quán)
-    const storedVenues = localStorage.getItem(ADMIN_VENUES_KEY);
-    if (storedVenues) {
-        venuesData = JSON.parse(storedVenues);
-    } else if (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES)) {
+    // 2. Venues (từ venues-data.js đã seed 50 quán và đồng bộ từ Backend API)
+    let parsedVenues = [];
+    try {
+        const storedVenues = localStorage.getItem(ADMIN_VENUES_KEY);
+        if (storedVenues) {
+            parsedVenues = JSON.parse(storedVenues);
+        }
+    } catch (_) {}
+
+    if (Array.isArray(parsedVenues) && parsedVenues.length > 0) {
+        venuesData = parsedVenues;
+    } else if (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES) && SEED_VENUES.length > 0) {
         venuesData = SEED_VENUES.map(v => ({ ...v, status: 'active' }));
         localStorage.setItem(ADMIN_VENUES_KEY, JSON.stringify(venuesData));
     } else {
         venuesData = [];
     }
+
+    // Tự động đồng bộ từ Backend API /api/restaurants (CSDL SQLite) nếu server đang chạy
+    fetch('/api/restaurants?limit=100')
+        .then(res => res.ok ? res.json() : null)
+        .then(apiRes => {
+            const apiItems = Array.isArray(apiRes) ? apiRes : (apiRes && (apiRes.data || apiRes.items));
+            if (Array.isArray(apiItems) && apiItems.length > 0) {
+                const backendVenues = apiItems.map(r => ({
+                    id: r.id,
+                    name: r.name,
+                    address: r.address || '',
+                    lat: r.latitude ?? r.lat ?? 10.7769,
+                    lng: r.longitude ?? r.lng ?? 106.7009,
+                    priceMin: r.min_price || 50000,
+                    priceMax: r.max_price || 300000,
+                    rating: r.avg_rating || 4.5,
+                    reviews: r.total_reviews || 0,
+                    cuisineLabel: r.cuisine_type || 'Món Việt',
+                    openHours: r.open_hours || '08:00 - 22:00',
+                    status: r.status || 'active',
+                    image: (r.cover_image_url && !r.cover_image_url.includes('example.com'))
+                        ? r.cover_image_url
+                        : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800',
+                    parking: Boolean(r.amenities?.has_parking ?? r.has_parking),
+                    private_room: Boolean(r.amenities?.has_private_room ?? r.has_private_room),
+                    outdoor: Boolean(r.amenities?.has_outdoor ?? r.has_outdoor),
+                    vegetarian: Boolean(r.amenities?.vegetarian_support ?? r.vegetarian_support)
+                }));
+
+                const existingIds = new Set(backendVenues.map(v => v.id));
+                const seedFallbacks = (typeof SEED_VENUES !== 'undefined' && Array.isArray(SEED_VENUES))
+                    ? SEED_VENUES.filter(v => !existingIds.has(v.id)).map(v => ({ ...v, status: 'active' }))
+                    : [];
+
+                venuesData = [...backendVenues, ...seedFallbacks];
+                localStorage.setItem(ADMIN_VENUES_KEY, JSON.stringify(venuesData));
+                renderVenuesTable();
+                renderStatsOverview();
+            }
+        })
+        .catch(err => console.warn('[Admin] Không thể nạp nhà hàng từ API:', err));
 
     // 3. Reports
     const storedReports = localStorage.getItem(ADMIN_REPORTS_KEY);
