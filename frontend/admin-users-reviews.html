@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Quản lý Người dùng & Kiểm duyệt Đánh giá (UC-06c, UC-06d)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #f8fafc; --bg-surface: #ffffff; --text-primary: #0f172a;
+            --text-muted: #64748b; --border: #e2e8f0; --brand-red: #e11d48;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-page); color: var(--text-primary); }
+        .topbar {
+            background: #0f172a; color: #fff; height: 64px; padding: 0 28px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .topbar a { color: #cbd5e1; text-decoration: none; font-size: 0.88rem; font-weight: 600; margin-left: 16px; }
+        .topbar a:hover { color: #fff; }
+        .container { max-width: 1180px; margin: 28px auto; padding: 0 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn {
+            padding: 10px 18px; border-radius: 10px; border: 1px solid var(--border);
+            background: var(--bg-surface); cursor: pointer; font-weight: 600; font-size: 0.9rem;
+        }
+        .tab-btn.active { background: var(--brand-red); color: #fff; border-color: var(--brand-red); }
+        .panel { display: none; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .panel.active { display: block; }
+        .toolbar { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; flex-wrap: wrap; }
+        .toolbar input, .toolbar select { height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.86rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+        th, td { padding: 14px 18px; border-bottom: 1px solid var(--border); text-align: left; }
+        th { background: #f8fafc; font-weight: 600; color: var(--text-muted); }
+        .badge { padding: 3px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+        .badge-active { background: #ecfdf5; color: #059669; }
+        .badge-locked { background: #fef2f2; color: #dc2626; }
+        .btn { padding: 6px 12px; border-radius: 7px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: #fff; }
+        .btn-lock { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .btn-unlock { color: #059669; border-color: #a7f3d0; background: #ecfdf5; }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <strong>⚡ Smart Dining Admin — UC-06c & UC-06d</strong>
+        <div>
+            <a href="admin.html">Dashboard</a>
+            <a href="admin-restaurants.html">Nhà hàng</a>
+            <a href="index.html">Trang chủ</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="tabs">
+            <button type="button" class="tab-btn active" onclick="switchAdminPanel('users', this)">👥 Quản lý Người dùng (UC-06c)</button>
+            <button type="button" class="tab-btn" onclick="switchAdminPanel('reviews', this)">⭐ Kiểm duyệt Đánh giá (UC-06d)</button>
+        </div>
+
+        <!-- PANEL 1: QUẢN LÝ NGƯỜI DÙNG (UC-06c) -->
+        <section id="panel-users" class="panel active">
+            <div class="toolbar">
+                <input type="text" id="search-user" placeholder="Tìm theo tên hoặc email..." oninput="renderUsers()" style="flex:1;min-width:220px;">
+                <select id="filter-status" onchange="renderUsers()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="locked">Bị khóa (BR-07)</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ tên & Email</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align:right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+            </table>
+        </section>
+
+        <!-- PANEL 2: KIỂM DUYỆT ĐÁNH GIÁ (UC-06d) -->
+        <section id="panel-reviews" class="panel">
+            <div class="toolbar">
+                <input type="text" id="search-review" placeholder="Lọc theo nội dung đánh giá hoặc tên quán..." oninput="renderReviews()" style="flex:1;min-width:220px;">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nhà hàng</th>
+                        <th>Người đánh giá</th>
+                        <th>Số sao</th>
+                        <th>Nội dung nhận xét</th>
+                        <th style="text-align:right;">Kiểm duyệt</th>
+                    </tr>
+                </thead>
+                <tbody id="reviews-tbody"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        let users = [
+            { id: 1, full_name: 'Quản trị viên Smart Dining', email: 'admin@smartdining.vn', role: 'admin', status: 'active' },
+            { id: 2, full_name: 'Nguyễn Văn An', email: 'sinhvien@example.com', role: 'user', status: 'active' },
+            { id: 3, full_name: 'Trần Văn Spam', email: 'spam99@foodai.vn', role: 'user', status: 'locked' }
+        ];
+
+        let reviews = [
+            { id: 10, restaurant_name: "Pizza 4P's Bến Thành", user_name: 'Nguyễn Văn An', rating: 5, comment: 'Pizza phô mai rất ngon, phục vụ nhiệt tình.' },
+            { id: 11, restaurant_name: 'Quán Bụi - Ngô Văn Năm', user_name: 'Trần Văn Spam', rating: 1, comment: '[Vi phạm] Bình luận spam quảng cáo link rác...' },
+            { id: 12, restaurant_name: 'Sushi Tei - Đông Du', user_name: 'Phạm Mai Anh', rating: 4, comment: 'Sashimi tươi, không gian đẹp.' }
+        ];
+
+        function switchAdminPanel(name, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('panel-' + name).classList.add('active');
+        }
+
+        async function loadUsersFromAPI() {
+            const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+            if (!token) return;
+            try {
+                const res = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (Array.isArray(json.data) && json.data.length > 0) users = json.data;
+                }
+            } catch (_) {}
+            renderUsers();
+        }
+
+        function renderUsers() {
+            const kw = document.getElementById('search-user').value.trim().toLowerCase();
+            const st = document.getElementById('filter-status').value;
+            const filtered = users.filter(u =>
+                (!kw || (u.full_name || '').toLowerCase().includes(kw) || (u.email || '').toLowerCase().includes(kw)) &&
+                (!st || u.status === st)
+            );
+            document.getElementById('users-tbody').innerHTML = filtered.map(u => {
+                const isLocked = u.status === 'locked';
+                const isAdmin = u.role === 'admin';
+                return `
+                    <tr>
+                        <td>#${u.id}</td>
+                        <td><strong>${u.full_name}</strong><br><small style="color:var(--text-muted)">${u.email}</small></td>
+                        <td>${isAdmin ? 'Admin' : 'User'}</td>
+                        <td><span class="badge ${isLocked ? 'badge-locked' : 'badge-active'}">${isLocked ? '⛔ Bị khóa' : '✓ Hoạt động'}</span></td>
+                        <td style="text-align:right;">
+                            ${isAdmin ? '<small style="color:var(--text-muted)">Mặc định</small>' :
+                                `<button type="button" class="btn ${isLocked ? 'btn-unlock' : 'btn-lock'}" onclick="toggleUserStatus(${u.id})">
+                                    ${isLocked ? '🔓 Mở khóa' : '🔒 Khóa tài khoản'}
+                                </button>`}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function toggleUserStatus(userId) {
+            const u = users.find(x => x.id === userId);
+            if (!u) return;
+            const nextStatus = u.status === 'active' ? 'locked' : 'active';
+            const token = localStorage.getItem('access_token') || localStorage.getItem('auth_token');
+            if (token) {
+                try {
+                    await fetch(`/api/admin/users/${userId}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ status: nextStatus, reason: 'Admin cập nhật từ UC-06c' })
+                    });
+                } catch (_) {}
+            }
+            u.status = nextStatus;
+            renderUsers();
+        }
+
+        function renderReviews() {
+            const kw = document.getElementById('search-review').value.trim().toLowerCase();
+            const filtered = reviews.filter(r =>
+                !kw || r.restaurant_name.toLowerCase().includes(kw) || r.comment.toLowerCase().includes(kw)
+            );
+            document.getElementById('reviews-tbody').innerHTML = filtered.map(r => `
+                <tr>
+                    <td>#${r.id}</td>
+                    <td><strong>${r.restaurant_name}</strong></td>
+                    <td>${r.user_name}</td>
+                    <td style="color:#f59e0b;font-weight:700;">★ ${r.rating}</td>
+                    <td>${r.comment}</td>
+                    <td style="text-align:right;">
+                        <button type="button" class="btn btn-lock" onclick="deleteReview(${r.id})">🗑️ Xóa vi phạm</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteReview(reviewId) {
+            if (!confirm('Xóa đánh giá vi phạm #' + reviewId + '?')) return;
+            try {
+                await fetch(`/api/reviews/${reviewId}?user_id=1&is_admin=true`, { method: 'DELETE' });
+            } catch (_) {}
+            reviews = reviews.filter(r => r.id !== reviewId);
+            renderReviews();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderUsers();
+            renderReviews();
+            loadUsersFromAPI();
+        });
+    </script>
+</body>
+</html>
