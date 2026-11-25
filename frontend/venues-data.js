@@ -1,4 +1,4 @@
-// Dữ liệu 50 nhà hàng TP.HCM khởi tạo từ CSDL seed\nconst SEED_VENUES = [
+const SEED_VENUES = [
   {
     "id": 1,
     "name": "Pizza 4P's Bến Thành",
@@ -15,7 +15,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "10:00 - 23:00",
-    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+    "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800",
     "menu": [
       {
         "name": "Pizza 4 Loại Phô Mai (4 Cheese Pizza)",
@@ -134,7 +134,8 @@
       }
     ],
     "description": "Thương hiệu pizza phô mai tươi thủ công nướng lò củi nổi tiếng bậc nhất Sài Gòn, không gian sang trọng và ấm cúng.",
-    "phone_number": "02836220500"
+    "phone_number": "02836220500",
+    "cover_image_url": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800"
   },
   {
     "id": 2,
@@ -240,7 +241,8 @@
       }
     ],
     "description": "Địa chỉ ẩm thực Việt Nam hoài cổ với các món ăn gia đình ba miền đậm đà, không gian Indochine tinh tế giữa lòng Quận 1.",
-    "phone_number": "02838291299"
+    "phone_number": "02838291299",
+    "cover_image_url": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800"
   },
   {
     "id": 3,
@@ -258,7 +260,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "10:30 - 22:00",
-    "image": "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=800",
+    "image": "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800",
     "menu": [
       {
         "name": "Há Cảo Tôm Tươi Hấp",
@@ -346,7 +348,8 @@
       }
     ],
     "description": "Thiên đường ẩm thực Quảng Đông hiện đại, nổi danh với các món Dimsum chế biến công phu, vịt quay Bắc Kinh da giòn.",
-    "phone_number": "02838266668"
+    "phone_number": "02838266668",
+    "cover_image_url": "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800"
   },
   {
     "id": 4,
@@ -364,7 +367,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "06:00 - 21:30",
-    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+    "image": "https://images.unsplash.com/photo-1576777647209-e8733d9b85c3?w=800",
     "menu": [
       {
         "name": "Cơm Tấm Sườn Cốt Lết Nướng",
@@ -452,7 +455,8 @@
       }
     ],
     "description": "Thương hiệu cơm tấm Sài Gòn lâu đời với miếng sườn nướng mật ong thơm lừng và chả trứng hấp mềm mịn đặc trưng.",
-    "phone_number": "02839250935"
+    "phone_number": "02839250935",
+    "cover_image_url": "https://images.unsplash.com/photo-1576777647209-e8733d9b85c3?w=800"
   },
   {
     "id": 5,
@@ -548,7 +552,8 @@
       }
     ],
     "description": "Nhà hàng Nhật Bản chuẩn mực với nguồn nguyên liệu hải sản tươi sống nhập khẩu trực tiếp từ chợ cá Toyosu Nhật Bản.",
-    "phone_number": "02862841188"
+    "phone_number": "02862841188",
+    "cover_image_url": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800"
   },
   {
     "id": 6,
@@ -644,7 +649,8 @@
       }
     ],
     "description": "Nhà hàng bít tết phong cách Argentina sang trọng hàng đầu TP.HCM, thịt bò Black Angus và Wagyu nhập khẩu nướng than củi mộc.",
-    "phone_number": "02838258500"
+    "phone_number": "02838258500",
+    "cover_image_url": "https://images.unsplash.com/photo-1544025162-d76694265947?w=800"
   },
   {
     "id": 7,
@@ -662,7 +668,7 @@
     "private_room": false,
     "vegetarian": true,
     "openHours": "10:30 - 22:30",
-    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+    "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
     "menu": [
       {
         "name": "Bánh Xèo Tôm Thịt Chảo Nhỏ",
@@ -724,7 +730,8 @@
       }
     ],
     "description": "Quán ăn ẩm thực đường phố Việt Nam đạt chứng nhận Michelin Bib Gourmand, nổi tiếng với bánh xèo tôm nhảy và cơm chiên trái dừa.",
-    "phone_number": "02838244666"
+    "phone_number": "02838244666",
+    "cover_image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"
   },
   {
     "id": 8,
@@ -820,7 +827,8 @@
       }
     ],
     "description": "Bistro ẩm thực Thái Lan sành điệu giữa trung tâm Sài Gòn với các món Tom Yum, pad Thái và gỏi đu đủ chua cay đúng điệu Bangkok.",
-    "phone_number": "02838251676"
+    "phone_number": "02838251676",
+    "cover_image_url": "https://images.unsplash.com/photo-1559314809-0d155014e29e?w=800"
   },
   {
     "id": 9,
@@ -900,7 +908,8 @@
       }
     ],
     "description": "Quán phở bò gia truyền hoạt động 24/7 tại khu phố Tây Bùi Viện, nước dùng hầm xương tủy bò 18 tiếng ngọt lịm tự nhiên.",
-    "phone_number": "02838368515"
+    "phone_number": "02838368515",
+    "cover_image_url": "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800"
   },
   {
     "id": 10,
@@ -965,7 +974,8 @@
       }
     ],
     "description": "Hệ thống nướng Yakiniku trứ danh đến từ Nhật Bản, phục vụ thịt bò hảo hạng nướng trên bếp than hoa không khói.",
-    "phone_number": "02838218958"
+    "phone_number": "02838218958",
+    "cover_image_url": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800"
   },
   {
     "id": 11,
@@ -983,7 +993,7 @@
     "private_room": false,
     "vegetarian": true,
     "openHours": "11:00 - 22:00",
-    "image": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800",
+    "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800",
     "menu": [
       {
         "name": "Bông Bí Xào Tỏi",
@@ -1030,7 +1040,8 @@
       }
     ],
     "description": "Khu vườn ẩm thực bí mật trên tầng thượng chung cư cổ Pasteur, mang đến trải nghiệm ăn uống mộc mạc trong vườn cây xanh mát.",
-    "phone_number": "0909904621"
+    "phone_number": "0909904621",
+    "cover_image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800"
   },
   {
     "id": 12,
@@ -1048,7 +1059,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "10:00 - 22:00",
-    "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800",
+    "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800",
     "menu": [
       {
         "name": "Cơm Gạo Lứt Hạt Sen Lá Sen",
@@ -1095,7 +1106,8 @@
       }
     ],
     "description": "Nhà hàng chay mỹ vị cao cấp hàng đầu Việt Nam, tôn vinh ẩm thực thuần thực vật tươi ngon trong không gian thiền tịnh tĩnh tại.",
-    "phone_number": "02838238999"
+    "phone_number": "02838238999",
+    "cover_image_url": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800"
   },
   {
     "id": 13,
@@ -1113,7 +1125,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "06:00 - 22:00",
-    "image": "https://images.unsplash.com/photo-1559847844-5315695dadae?w=800",
+    "image": "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?w=800",
     "menu": [
       {
         "name": "Bánh Mì Thập Cẩm Đặc Biệt",
@@ -1150,7 +1162,8 @@
       }
     ],
     "description": "Ổ bánh mì pate thịt nguội nổi tiếng bậc nhất Sài Gòn với biệt danh 'bánh mì ô môi', đầy ắp 5-6 loại chả lụa pate béo ngậy.",
-    "phone_number": "02839250885"
+    "phone_number": "02839250885",
+    "cover_image_url": "https://images.unsplash.com/photo-1626804475297-41608ea09aeb?w=800"
   },
   {
     "id": 14,
@@ -1215,7 +1228,8 @@
       }
     ],
     "description": "Hệ thống nhà hàng hải sản tươi sống cao cấp với bể hải sản quy mô lớn, chế biến tại chỗ các loại cua hoàng đế, tôm hùm, cá mú.",
-    "phone_number": "02838210387"
+    "phone_number": "02838210387",
+    "cover_image_url": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800"
   },
   {
     "id": 15,
@@ -1233,7 +1247,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "09:30 - 23:00",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1547592180-85f173990554?w=800",
     "menu": [
       {
         "name": "Lẩu Gà Lá É Nồi Nhỏ (2 người)",
@@ -1280,7 +1294,8 @@
       }
     ],
     "description": "Đặc sản lẩu gà lá é nổi tiếng Đà Lạt nay có mặt tại Quận 1, nước dùng ngọt thanh từ măng le tươi và vị cay nồng the the của lá é.",
-    "phone_number": "0977221345"
+    "phone_number": "0977221345",
+    "cover_image_url": "https://images.unsplash.com/photo-1547592180-85f173990554?w=800"
   },
   {
     "id": 16,
@@ -1298,7 +1313,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "06:00 - 22:30",
-    "image": "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800",
+    "image": "https://images.unsplash.com/photo-1594998893017-36147cbcae05?w=800",
     "menu": [
       {
         "name": "Phở Tái Lăn Áp Chảo",
@@ -1345,7 +1360,8 @@
       }
     ],
     "description": "Quán phở biểu tượng hơn 50 năm của Sài Gòn trên con đường Pasteur, gắn liền với ký ức ẩm thực của nhiều thế hệ người dân TP.HCM.",
-    "phone_number": "02838297943"
+    "phone_number": "02838297943",
+    "cover_image_url": "https://images.unsplash.com/photo-1594998893017-36147cbcae05?w=800"
   },
   {
     "id": 17,
@@ -1363,7 +1379,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "10:00 - 22:00",
-    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+    "image": "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800",
     "menu": [
       {
         "name": "Cơm Đập Cháy Hai Mặt",
@@ -1410,7 +1426,8 @@
       }
     ],
     "description": "Nhà hàng cơm niêu nổi tiếng với nghệ thuật tung hứng 'cơm đập' độc đáo và các món ăn đậm đà phong vị làng quê Bắc - Trung - Nam.",
-    "phone_number": "02839326344"
+    "phone_number": "02839326344",
+    "cover_image_url": "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800"
   },
   {
     "id": 18,
@@ -1475,7 +1492,8 @@
       }
     ],
     "description": "Quán bánh xèo miền Tây khổng lồ với vỏ bánh mỏng tanh vàng giòn, nhân tôm thịt nấm củ hũ dừa và rổ rau rừng Tây Ninh tươi sạch.",
-    "phone_number": "02839301969"
+    "phone_number": "02839301969",
+    "cover_image_url": "https://images.unsplash.com/photo-1559847844-5315695dadae?w=800"
   },
   {
     "id": 19,
@@ -1493,7 +1511,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "10:00 - 23:30",
-    "image": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800",
+    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
     "menu": [
       {
         "name": "Gà Ta Hấp Mắm Nhĩ",
@@ -1540,7 +1558,8 @@
       }
     ],
     "description": "Khu ẩm thực dân dã quy mô lớn rợp bóng tre trúc, hội tụ hơn 200 món ăn ba miền đặc sắc trong không gian làng quê Việt.",
-    "phone_number": "0938226166"
+    "phone_number": "0938226166",
+    "cover_image_url": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800"
   },
   {
     "id": 20,
@@ -1558,7 +1577,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "10:00 - 22:30",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800",
     "menu": [
       {
         "name": "Suất Buffet Lẩu Premium",
@@ -1595,7 +1614,8 @@
       }
     ],
     "description": "Lẩu Đài Loan buffet thượng hạng với nước lẩu Mala cay nồng, lẩu collagen ngọt dưỡng và thịt bò Mỹ nhúng tươi ngon.",
-    "phone_number": "02873007981"
+    "phone_number": "02873007981",
+    "cover_image_url": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800"
   },
   {
     "id": 21,
@@ -1660,7 +1680,8 @@
       }
     ],
     "description": "Quán chay mang phong cách nghệ thuật ấm áp, kết hợp hài hòa nguyên liệu bản địa và kỹ thuật ẩm thực Á Đông thanh nhẹ.",
-    "phone_number": "0916414133"
+    "phone_number": "0916414133",
+    "cover_image_url": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800"
   },
   {
     "id": 22,
@@ -1678,7 +1699,7 @@
     "private_room": true,
     "vegetarian": false,
     "openHours": "09:30 - 23:00",
-    "image": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800",
+    "image": "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=800",
     "menu": [
       {
         "name": "Mực Trứng Hấp Gừng",
@@ -1725,7 +1746,8 @@
       }
     ],
     "description": "Nhà hàng hải sản tươi sống lâu năm tại Quận 3, nổi bật với thực đơn cua ghẹ Nha Trang, tôm hùm baby và cá mú đỏ biển sâu.",
-    "phone_number": "02838206888"
+    "phone_number": "02838206888",
+    "cover_image_url": "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=800"
   },
   {
     "id": 23,
@@ -1743,7 +1765,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "10:30 - 23:00",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800",
     "menu": [
       {
         "name": "Lẩu Dựng Dê Thuốc Bắc",
@@ -1790,7 +1812,8 @@
       }
     ],
     "description": "Quán lẩu dê gia truyền nổi tiếng Sài Gòn, thịt dê đồi Ninh Bình tươi ngon không hề hôi, nước lẩu hầm thuốc bắc thơm nồng.",
-    "phone_number": "02839304296"
+    "phone_number": "02839304296",
+    "cover_image_url": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800"
   },
   {
     "id": 24,
@@ -1808,7 +1831,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "07:00 - 22:00",
-    "image": "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=800",
+    "image": "https://images.unsplash.com/photo-1526318896980-cf78c088247c?w=800",
     "menu": [
       {
         "name": "Mì Hoành Thánh Tôm Thịt Xá Xíu",
@@ -1855,7 +1878,8 @@
       }
     ],
     "description": "Ngôi nhà ẩm thực Quảng Đông hiện đại với mô hình bếp mở trực quan, phục vụ các món mì kéo sợi tươi và dimsum hấp dẫn.",
-    "phone_number": "02839302888"
+    "phone_number": "02839302888",
+    "cover_image_url": "https://images.unsplash.com/photo-1526318896980-cf78c088247c?w=800"
   },
   {
     "id": 25,
@@ -1873,7 +1897,7 @@
     "private_room": true,
     "vegetarian": false,
     "openHours": "10:30 - 22:00",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800",
     "menu": [
       {
         "name": "Ba Chỉ Bò Mỹ Sốt Miso Cay",
@@ -1910,7 +1934,8 @@
       }
     ],
     "description": "Thương hiệu nướng Yakiniku số 1 Nhật Bản, thỏa mãn đam mê ẩm thực nướng than hoa với các loại sốt nướng đậm đà chuẩn vị Tokyo.",
-    "phone_number": "02862907481"
+    "phone_number": "02862907481",
+    "cover_image_url": "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800"
   },
   {
     "id": 26,
@@ -1928,7 +1953,7 @@
     "private_room": true,
     "vegetarian": false,
     "openHours": "10:00 - 23:00",
-    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+    "image": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=800",
     "menu": [
       {
         "name": "Bò Tơ Cuốn Bánh Tráng Rau Rừng",
@@ -1990,7 +2015,8 @@
       }
     ],
     "description": "Không gian phố xưa Hà Nội thập niên 80 giữa lòng Bình Thạnh, nổi danh với bò tơ non mềm ngọt thịt cuốn bánh tráng rau rừng.",
-    "phone_number": "0946221188"
+    "phone_number": "0946221188",
+    "cover_image_url": "https://images.unsplash.com/photo-1541544741938-0af808871cc0?w=800"
   },
   {
     "id": 27,
@@ -2008,7 +2034,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "10:30 - 22:00",
-    "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+    "image": "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=800",
     "menu": [
       {
         "name": "Gà Nướng Tiêu Rừng Tây Bắc (Nguyên con)",
@@ -2065,7 +2091,8 @@
       }
     ],
     "description": "Thiên đường gà nướng với hơn 10 vị sốt độc quyền sáng tạo như sốt ớt cay Địa Trung Hải, sốt tiêu rừng Tây Bắc, xôi chiên giòn.",
-    "phone_number": "1900636009"
+    "phone_number": "1900636009",
+    "cover_image_url": "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?w=800"
   },
   {
     "id": 28,
@@ -2130,7 +2157,8 @@
       }
     ],
     "description": "Thương hiệu cháo gỏi vịt trứ danh vùng bán đảo Thanh Đa hơn 30 năm, thịt vịt cỏ ít mỡ chắc thịt, gỏi bắp cải trộn hành phi giòn rụm.",
-    "phone_number": "02838986656"
+    "phone_number": "02838986656",
+    "cover_image_url": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800"
   },
   {
     "id": 29,
@@ -2148,7 +2176,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "09:00 - 21:30",
-    "image": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800",
+    "image": "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=800",
     "menu": [
       {
         "name": "Lẩu Nấm Thập Cẩm Chay",
@@ -2195,7 +2223,8 @@
       }
     ],
     "description": "Không gian ẩm thực chay xanh mát như khu vườn nhiệt đới, thực đơn phong phú hơn 100 món chay thanh đạm bồi bổ sức khỏe.",
-    "phone_number": "02836200778"
+    "phone_number": "02836200778",
+    "cover_image_url": "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=800"
   },
   {
     "id": 30,
@@ -2213,7 +2242,7 @@
     "private_room": true,
     "vegetarian": false,
     "openHours": "10:00 - 23:00",
-    "image": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800",
+    "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
     "menu": [
       {
         "name": "Tôm Càng Xanh Nướng Muối Ớt",
@@ -2260,7 +2289,8 @@
       }
     ],
     "description": "Nhà hàng hải sản ven sông Sài Gòn lộng gió, điểm hẹn lý tưởng để thưởng thức bia mát lạnh và hải sản tươi rói lúc hoàng hôn.",
-    "phone_number": "02835561122"
+    "phone_number": "02835561122",
+    "cover_image_url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800"
   },
   {
     "id": 31,
@@ -2325,7 +2355,8 @@
       }
     ],
     "description": "Quán nướng bình dân đông đúc nổi tiếng với các món nướng ngói và nướng than hoa ướp sa tế cay nồng dành cho giới trẻ.",
-    "phone_number": "0908776655"
+    "phone_number": "0908776655",
+    "cover_image_url": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800"
   },
   {
     "id": 32,
@@ -2343,7 +2374,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "06:00 - 21:00",
-    "image": "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800",
+    "image": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800",
     "menu": [
       {
         "name": "Bún Bò Giò Nạc Chả Cua",
@@ -2380,7 +2411,8 @@
       }
     ],
     "description": "Quán bún bò Huế lâu năm tại Bình Thạnh với nước dùng đậm đà mùi mắm ruốc Huế, sả tươi và miếng bắp bò hoa giòn ngọt.",
-    "phone_number": "02838401234"
+    "phone_number": "02838401234",
+    "cover_image_url": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800"
   },
   {
     "id": 33,
@@ -2398,7 +2430,7 @@
     "private_room": true,
     "vegetarian": false,
     "openHours": "10:30 - 22:00",
-    "image": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+    "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=800",
     "menu": [
       {
         "name": "Buffet Nướng Sumo Otoku",
@@ -2435,7 +2467,8 @@
       }
     ],
     "description": "Nhà hàng buffet nướng lẩu Nhật Bản cao cấp tại tòa nhà chọc trời Landmark 81, thưởng thức thịt bò Wagyu và hải sản không giới hạn.",
-    "phone_number": "02873007393"
+    "phone_number": "02873007393",
+    "cover_image_url": "https://images.unsplash.com/photo-1544025162-d76694265947?w=800"
   },
   {
     "id": 34,
@@ -2453,7 +2486,7 @@
     "private_room": false,
     "vegetarian": true,
     "openHours": "10:00 - 22:00",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800",
     "menu": [
       {
         "name": "Suất Buffet Lẩu Không Giới Hạn",
@@ -2490,7 +2523,8 @@
       }
     ],
     "description": "Mô hình lẩu băng chuyền hiện đại chuyển động không ngừng với gần 100 món nhúng lẩu tươi ngon từ bò Mỹ đến hải sản.",
-    "phone_number": "02873007994"
+    "phone_number": "02873007994",
+    "cover_image_url": "https://images.unsplash.com/photo-1574484284002-952d92456975?w=800"
   },
   {
     "id": 35,
@@ -2555,7 +2589,8 @@
       }
     ],
     "description": "Tụ điểm ăn ốc giá học sinh sinh viên náo nhiệt bậc nhất Bình Thạnh, nổi tiếng với các món ốc móng tay xào rau muống, ốc hương sốt trứng muối.",
-    "phone_number": "0934112233"
+    "phone_number": "0934112233",
+    "cover_image_url": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800"
   },
   {
     "id": 36,
@@ -2573,7 +2608,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "11:00 - 22:30",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=800",
     "menu": [
       {
         "name": "Ba Chỉ Heo Nướng Kim Chi Tươi",
@@ -2620,7 +2655,8 @@
       }
     ],
     "description": "Quán nướng phong cách Hàn Quốc đường phố với thịt ba chỉ heo nướng kim chi, rượu Soju và các món panchan không giới hạn.",
-    "phone_number": "02835123456"
+    "phone_number": "02835123456",
+    "cover_image_url": "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=800"
   },
   {
     "id": 37,
@@ -2638,7 +2674,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "10:00 - 23:00",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1547592180-85f173990554?w=800",
     "menu": [
       {
         "name": "Vú Dê Nướng Chao Giòn Béo",
@@ -2685,7 +2721,8 @@
       }
     ],
     "description": "Quán nhậu đặc sản dê ré nổi tiếng Bình Thạnh, thịt dê tươi làm trong ngày, các món dê xào lăn, dê hấp tía tô và vú dê nướng chao.",
-    "phone_number": "02835510988"
+    "phone_number": "02835510988",
+    "cover_image_url": "https://images.unsplash.com/photo-1547592180-85f173990554?w=800"
   },
   {
     "id": 38,
@@ -2750,7 +2787,8 @@
       }
     ],
     "description": "Điểm hẹn cà phê hiện đại với không gian rộng rãi 3 tầng lầu, phục vụ cà phê phin Việt Nam, trà đào cam sả và bánh ngọt tươi mỗi ngày.",
-    "phone_number": "18006936"
+    "phone_number": "18006936",
+    "cover_image_url": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800"
   },
   {
     "id": 39,
@@ -2768,7 +2806,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "08:00 - 23:30",
-    "image": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800",
+    "image": "https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=800",
     "menu": [
       {
         "name": "Cá Hồi Na Uy Áp Chảo Sốt Miso",
@@ -2815,7 +2853,8 @@
       }
     ],
     "description": "Nhà hàng phong cách Pan-Asian bên bờ sông Sài Gòn sang trọng bậc nhất Thảo Điền, ngắm hoàng hôn lộng lẫy cùng cocktail tinh tế.",
-    "phone_number": "02837446632"
+    "phone_number": "02837446632",
+    "cover_image_url": "https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=800"
   },
   {
     "id": 40,
@@ -2833,7 +2872,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "08:00 - 23:00",
-    "image": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800",
+    "image": "https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800",
     "menu": [
       {
         "name": "Thịt Heo Kho Trứng Nước Dừa",
@@ -2880,7 +2919,8 @@
       }
     ],
     "description": "Khu vườn ẩm thực Việt giữa lòng Thảo Điền với hồ sen, hàng chuối và các món ăn quê nhà ba miền ấm áp nghĩa tình.",
-    "phone_number": "02838989088"
+    "phone_number": "02838989088",
+    "cover_image_url": "https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800"
   },
   {
     "id": 41,
@@ -2898,7 +2938,7 @@
     "private_room": true,
     "vegetarian": false,
     "openHours": "09:30 - 23:00",
-    "image": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800",
+    "image": "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800",
     "menu": [
       {
         "name": "Cua Huỳnh Đế Hấp Gừng Hành",
@@ -2945,7 +2985,8 @@
       }
     ],
     "description": "Thiên đường hải sản lớn bậc nhất TP. Thủ Đức với khuôn viên hơn 4000m2, hồ hải sản đa dạng tôm cua ghẹ ốc tươi rói bơi lội.",
-    "phone_number": "0981100100"
+    "phone_number": "0981100100",
+    "cover_image_url": "https://images.unsplash.com/photo-1550547660-d9450f859349?w=800"
   },
   {
     "id": 42,
@@ -2963,7 +3004,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "10:00 - 23:00",
-    "image": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800",
+    "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=800",
     "menu": [
       {
         "name": "Lẩu Thịt Dê Đùi Tươi (Nồi vừa)",
@@ -3010,7 +3051,8 @@
       }
     ],
     "description": "Thương hiệu lẩu dê gia truyền hơn 30 năm tại Thủ Đức, thịt dê tươi chấm chao bùi béo kết hợp tía tô và nước lẩu ngọt đậm đà.",
-    "phone_number": "02838965678"
+    "phone_number": "02838965678",
+    "cover_image_url": "https://images.unsplash.com/photo-1544025162-d76694265947?w=800"
   },
   {
     "id": 43,
@@ -3028,7 +3070,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "09:00 - 22:30",
-    "image": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800",
+    "image": "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=800",
     "menu": [
       {
         "name": "Cá Lóc Nướng Trui Rơm Cuốn Bánh Tráng",
@@ -3075,7 +3117,8 @@
       }
     ],
     "description": "Không gian sinh thái hồ sen thoáng đãng tại Làng Đại học Quốc gia, chuyên phục vụ các món cá sông, gà đồi và lẩu dân dã giá cả sinh viên.",
-    "phone_number": "0903334455"
+    "phone_number": "0903334455",
+    "cover_image_url": "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=800"
   },
   {
     "id": 44,
@@ -3130,7 +3173,8 @@
       }
     ],
     "description": "Trải nghiệm nướng Yakiniku Nhật Bản tiêu chuẩn quốc tế ngay tại trung tâm thương mại Vincom Mega Mall Thảo Điền.",
-    "phone_number": "02837446688"
+    "phone_number": "02837446688",
+    "cover_image_url": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800"
   },
   {
     "id": 45,
@@ -3148,7 +3192,7 @@
     "private_room": true,
     "vegetarian": true,
     "openHours": "10:00 - 22:00",
-    "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+    "image": "https://images.unsplash.com/photo-1547592180-85f173990554?w=800",
     "menu": [
       {
         "name": "Set Lẩu Nấm Dưỡng Sinh Hoàng Kim",
@@ -3185,7 +3229,8 @@
       }
     ],
     "description": "Nhà hàng lẩu nấm thanh tao với hơn 20 loại nấm quý tự nhiên bồi dưỡng cơ thể, không gian sân vườn xanh mát tĩnh lặng.",
-    "phone_number": "02835191234"
+    "phone_number": "02835191234",
+    "cover_image_url": "https://images.unsplash.com/photo-1547592180-85f173990554?w=800"
   },
   {
     "id": 46,
@@ -3250,7 +3295,8 @@
       }
     ],
     "description": "Quán ăn gia đình đậm chất miền Tây Nam Bộ tại trung tâm Thủ Đức, đặc sản cá tai tượng chiên xù và lẩu mắm đậm đà.",
-    "phone_number": "02838971122"
+    "phone_number": "02838971122",
+    "cover_image_url": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=800"
   },
   {
     "id": 47,
@@ -3268,7 +3314,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "16:00 - 02:00",
-    "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=800",
+    "image": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800",
     "menu": [
       {
         "name": "Chảo Bò Sốt Hàu Phô Mai Cay",
@@ -3315,7 +3361,8 @@
       }
     ],
     "description": "Tụ điểm gặp gỡ bạn bè bia hơi và mồi nhậu bình dân nổi tiếng đường Đặng Văn Bi với các món bò sốt hàu, sụn gà hoàng kim giòn rụm.",
-    "phone_number": "0909554433"
+    "phone_number": "0909554433",
+    "cover_image_url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800"
   },
   {
     "id": 48,
@@ -3333,7 +3380,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "06:30 - 22:00",
-    "image": "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800",
+    "image": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800",
     "menu": [
       {
         "name": "Hủ Tiếu Mực Tươi Đặc Biệt",
@@ -3380,7 +3427,8 @@
       }
     ],
     "description": "Thương hiệu hủ tiếu mực nổi danh đất Sài Gòn, mực tươi chong đèn dày cùi giòn ngọt sần sật, nước súp hầm mực khô thanh vị tự nhiên.",
-    "phone_number": "0903099955"
+    "phone_number": "0903099955",
+    "cover_image_url": "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800"
   },
   {
     "id": 49,
@@ -3398,7 +3446,7 @@
     "private_room": false,
     "vegetarian": false,
     "openHours": "15:00 - 23:30",
-    "image": "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=800",
+    "image": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800",
     "menu": [
       {
         "name": "Bạch Tuộc Nướng Muối Ớt Xanh",
@@ -3445,7 +3493,8 @@
       }
     ],
     "description": "Quán hải sản và bia tuyết mát lạnh nổi tiếng tại khu vực Bình Trưng Tây, không gian sân thượng thoáng đãng view ngắm đường phố về đêm.",
-    "phone_number": "0937665544"
+    "phone_number": "0937665544",
+    "cover_image_url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800"
   },
   {
     "id": 50,
@@ -3500,6 +3549,11 @@
       }
     ],
     "description": "Tụ điểm buffet nướng lẩu sinh viên nhộn nhịp bậc nhất Thủ Đức trên phố ẩm thực Hoàng Diệu 2, thực đơn đa dạng hơn 50 món nướng tự chọn.",
-    "phone_number": "0988771122"
+    "phone_number": "0988771122",
+    "cover_image_url": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800"
   }
-];\n
+];
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { SEED_VENUES };
+}

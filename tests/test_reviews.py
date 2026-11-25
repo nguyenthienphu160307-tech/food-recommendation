@@ -499,5 +499,9 @@ def run_tests():
     print("=" * 80)
 
 
+def test_reviews():
+    run_tests()
+
+
 if __name__ == "__main__":
     run_tests()

@@ -851,6 +851,47 @@
             overflow-y: auto; padding: 24px; position: relative;
         }
 
+        .star-picker-star {
+            color: #94a3b8;
+            transition: color 0.15s ease, transform 0.15s ease;
+            user-select: none;
+            display: inline-block;
+        }
+        .star-picker-star.active,
+        .star-picker-star.hovered {
+            color: #f59e0b;
+        }
+        .star-picker-star:hover {
+            transform: scale(1.2);
+        }
+        .review-card-item {
+            padding: 12px;
+            background: var(--bg-subtle);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+        }
+        .review-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInToast 0.3s ease;
+        }
+        @keyframes slideInToast {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         .site-footer {
             background: var(--bg-surface); border-top: 1px solid var(--border);
             padding: 40px 28px; margin-top: auto;
@@ -2408,7 +2449,348 @@
             renderVenues(filtered);
         }
 
+        let currentModalVenue = null;
+        let currentReviewRating = 5;
+        let currentMyReviewId = null;
+
+        const RATING_LABELS = {
+            1: '⭐ 1/5 — Chưa hài lòng',
+            2: '⭐ 2/5 — Tạm được, cần cải thiện',
+            3: '⭐ 3/5 — Khá ổn, vừa miệng',
+            4: '⭐ 4/5 — Rất ngon, đáng thử!',
+            5: '⭐ 5/5 — Tuyệt vời, rất hài lòng!'
+        };
+
+        function showReviewToast(msg, isError = false) {
+            const existing = document.getElementById('review-toast-box');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'review-toast-box';
+            toast.className = 'review-toast';
+            toast.style.background = isError ? '#be123c' : '#059669';
+            toast.innerHTML = `<span>${isError ? '⚠️' : '✓'}</span><span>${msg}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                if (toast && toast.parentNode) toast.remove();
+            }, 3500);
+        }
+
+        function setReviewRating(val) {
+            currentReviewRating = val;
+            updateStarUI();
+        }
+
+        function hoverReviewRating(val) {
+            const stars = document.querySelectorAll('.star-picker-star');
+            stars.forEach(s => {
+                const v = parseInt(s.getAttribute('data-val') || '0', 10);
+                if (v <= val) {
+                    s.classList.add('hovered');
+                } else {
+                    s.classList.remove('hovered');
+                }
+            });
+        }
+
+        function resetStarHover() {
+            const stars = document.querySelectorAll('.star-picker-star');
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function updateStarUI() {
+            const stars = document.querySelectorAll('.star-picker-star');
+            stars.forEach(s => {
+                const v = parseInt(s.getAttribute('data-val') || '0', 10);
+                if (v <= currentReviewRating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+            const label = document.getElementById('star-rating-label');
+            if (label) {
+                label.innerText = RATING_LABELS[currentReviewRating] || `${currentReviewRating} sao`;
+            }
+        }
+
+        function toggleReviewForm(show) {
+            const formBox = document.getElementById('venue-review-form-container');
+            if (!formBox) return;
+            formBox.style.display = show ? 'block' : 'none';
+            if (show) {
+                const commentInput = document.getElementById('review-comment-input');
+                if (commentInput) {
+                    commentInput.focus();
+                }
+                formBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function handleWriteReview(venueId) {
+            if (window.GuestModeGuard && !window.GuestModeGuard.requireAuth('review')) return;
+            toggleReviewForm(true);
+        }
+
+        async function loadVenueReviews(venueId) {
+            const listContainer = document.getElementById('venue-reviews-list');
+            const countEl = document.getElementById('modal-reviews-count');
+            if (!listContainer) return;
+
+            listContainer.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-muted);font-size:0.85rem;">Đang tải nhận xét từ cộng đồng...</div>`;
+
+            // Kiểm tra xem người dùng hiện tại đã có đánh giá chưa
+            let user = null;
+            try {
+                const raw = localStorage.getItem('current_user') 
+                         || localStorage.getItem('smart_dining_user') 
+                         || localStorage.getItem('user');
+                if (raw) user = JSON.parse(raw);
+            } catch (_) {}
+            const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token');
+
+            currentMyReviewId = null;
+
+            if (user && (user.id || user.user_id)) {
+                const uid = user.id || user.user_id;
+                try {
+                    const myRes = await fetch(`/api/reviews/restaurant/${venueId}/my-review?user_id=${uid}`, {
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                    });
+                    if (myRes.ok) {
+                        const myRev = await myRes.json();
+                        if (myRev && myRev.id) {
+                            currentMyReviewId = myRev.id;
+                            setReviewRating(myRev.rating || 5);
+                            const commentInput = document.getElementById('review-comment-input');
+                            if (commentInput) commentInput.value = myRev.comment || '';
+                            const submitBtn = document.getElementById('btn-submit-review');
+                            if (submitBtn) submitBtn.innerText = 'Cập Nhật Đánh Giá';
+                            const delBtn = document.getElementById('btn-delete-review');
+                            if (delBtn) delBtn.style.display = 'inline-block';
+                            const titleEl = document.getElementById('review-form-title');
+                            if (titleEl) titleEl.innerText = '✏️ Chỉnh sửa đánh giá của bạn';
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            if (!currentMyReviewId) {
+                setReviewRating(5);
+                const commentInput = document.getElementById('review-comment-input');
+                if (commentInput) commentInput.value = '';
+                const submitBtn = document.getElementById('btn-submit-review');
+                if (submitBtn) submitBtn.innerText = 'Gửi Đánh Giá';
+                const delBtn = document.getElementById('btn-delete-review');
+                if (delBtn) delBtn.style.display = 'none';
+                const titleEl = document.getElementById('review-form-title');
+                if (titleEl) titleEl.innerText = '📝 Viết đánh giá & nhận xét của bạn';
+            }
+
+            // Tải danh sách đánh giá của quán
+            try {
+                const res = await fetch(`/api/reviews/restaurant/${venueId}?limit=15`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const items = data.items || [];
+                    if (countEl) countEl.innerText = data.total_reviews !== undefined ? data.total_reviews : items.length;
+
+                    if (items.length === 0) {
+                        listContainer.innerHTML = `
+                            <div style="text-align:center;padding:22px 12px;color:var(--text-muted);font-size:0.85rem;background:var(--bg-subtle);border-radius:10px;">
+                                <span>⭐</span> Chưa có nhận xét nào cho quán này.<br>Hãy là người đầu tiên trải nghiệm và chia sẻ nhé!
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    listContainer.innerHTML = '';
+                    items.forEach(r => {
+                        const isMe = user && (r.user_id === (user.id || user.user_id));
+                        const authorName = (r.user && r.user.full_name) ? r.user.full_name : 'Thực khách';
+                        const avatar = (r.user && r.user.avatar_url) ? r.user.avatar_url : `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=f43f5e&color=fff&size=80`;
+                        const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('vi-VN') : 'Mới đây';
+                        const starsText = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'review-card-item';
+                        itemDiv.innerHTML = `
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <img src="${avatar}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.src='https://ui-avatars.com/api/?name=User&background=64748b&color=fff';">
+                                    <span style="font-weight:700;font-size:0.86rem;color:var(--text-primary);">${authorName}</span>
+                                    ${isMe ? '<span style="font-size:0.7rem;padding:2px 6px;border-radius:4px;background:rgba(225,29,72,0.1);color:#e11d48;font-weight:700;">(Bạn)</span>' : ''}
+                                </div>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="color:#f59e0b;font-size:0.86rem;letter-spacing:1px;">${starsText}</span>
+                                    <span style="font-size:0.75rem;color:var(--text-muted);">${dateStr}</span>
+                                </div>
+                            </div>
+                            <p style="font-size:0.84rem;color:var(--text-secondary);margin:0;line-height:1.5;">${r.comment || '<span style="color:var(--text-muted);font-style:italic;">(Đánh giá ' + r.rating + ' sao không kèm bình luận)</span>'}</p>
+                        `;
+                        listContainer.appendChild(itemDiv);
+                    });
+                }
+            } catch (err) {
+                listContainer.innerHTML = `<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:0.82rem;">Không thể tải danh sách đánh giá.</div>`;
+            }
+        }
+
+        async function submitVenueReview(venueId) {
+            if (window.GuestModeGuard && !window.GuestModeGuard.requireAuth('review')) return;
+
+            let user = null;
+            try {
+                const raw = localStorage.getItem('current_user') 
+                         || localStorage.getItem('smart_dining_user') 
+                         || localStorage.getItem('user');
+                if (raw) user = JSON.parse(raw);
+            } catch (_) {}
+            const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token');
+            const uid = user ? (user.id || user.user_id) : 1;
+
+            const commentInput = document.getElementById('review-comment-input');
+            const comment = commentInput ? commentInput.value.trim() : '';
+
+            const payload = {
+                restaurant_id: venueId,
+                user_id: uid,
+                rating: currentReviewRating,
+                comment: comment || null
+            };
+
+            const submitBtn = document.getElementById('btn-submit-review');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'Đang lưu...';
+            }
+
+            try {
+                let res;
+                if (currentMyReviewId) {
+                    res = await fetch(`/api/reviews/${currentMyReviewId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify({
+                            user_id: uid,
+                            rating: currentReviewRating,
+                            comment: comment || null
+                        })
+                    });
+                } else {
+                    res = await fetch('/api/reviews', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                if (res.ok) {
+                    showReviewToast(currentMyReviewId ? 'Cập nhật đánh giá thành công! 🎉' : 'Gửi đánh giá thành công! Cảm ơn bạn. 🎉');
+                    toggleReviewForm(false);
+
+                    // Cập nhật điểm rating mới và làm mới giao diện
+                    fetch(`/api/reviews/restaurant/${venueId}`)
+                        .then(r => r.json())
+                        .then(rData => {
+                            if (rData && rData.avg_rating !== undefined) {
+                                if (currentModalVenue) {
+                                    currentModalVenue.rating = rData.avg_rating;
+                                    currentModalVenue.reviews = rData.total_reviews;
+                                }
+                                const ratingTag = document.getElementById('modal-venue-rating-tag');
+                                if (ratingTag) {
+                                    ratingTag.innerText = `★ ${Number(rData.avg_rating).toFixed(1)} (${rData.total_reviews} đánh giá)`;
+                                }
+                                const found = venues.find(x => x.id === venueId);
+                                if (found) {
+                                    found.rating = rData.avg_rating;
+                                    found.reviews = rData.total_reviews;
+                                    renderVenues();
+                                }
+                            }
+                        })
+                        .catch(() => {});
+
+                    loadVenueReviews(venueId);
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    if (res.status === 409) {
+                        showReviewToast('Bạn đã đánh giá quán này. Đang chuyển sang chế độ cập nhật...', false);
+                        loadVenueReviews(venueId);
+                    } else {
+                        showReviewToast(errData.detail || 'Không thể gửi đánh giá.', true);
+                    }
+                }
+            } catch (err) {
+                showReviewToast('Lỗi mạng khi kết nối máy chủ.', true);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = currentMyReviewId ? 'Cập Nhật Đánh Giá' : 'Gửi Đánh Giá';
+                }
+            }
+        }
+
+        async function deleteVenueReview(venueId) {
+            if (!currentMyReviewId) return;
+            if (!confirm('Bạn có chắc chắn muốn xóa bài đánh giá này?')) return;
+
+            let user = null;
+            try {
+                const raw = localStorage.getItem('current_user') 
+                         || localStorage.getItem('smart_dining_user') 
+                         || localStorage.getItem('user');
+                if (raw) user = JSON.parse(raw);
+            } catch (_) {}
+            const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token');
+            const uid = user ? (user.id || user.user_id) : 1;
+
+            try {
+                const res = await fetch(`/api/reviews/${currentMyReviewId}?user_id=${uid}`, {
+                    method: 'DELETE',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    showReviewToast('Đã xóa đánh giá thành công.');
+                    toggleReviewForm(false);
+                    currentMyReviewId = null;
+
+                    if (data.avg_rating !== undefined) {
+                        if (currentModalVenue) {
+                            currentModalVenue.rating = data.avg_rating;
+                            currentModalVenue.reviews = data.total_reviews;
+                        }
+                        const ratingTag = document.getElementById('modal-venue-rating-tag');
+                        if (ratingTag) {
+                            ratingTag.innerText = `★ ${Number(data.avg_rating).toFixed(1)} (${data.total_reviews} đánh giá)`;
+                        }
+                        const found = venues.find(x => x.id === venueId);
+                        if (found) {
+                            found.rating = data.avg_rating;
+                            found.reviews = data.total_reviews;
+                            renderVenues();
+                        }
+                    }
+                    loadVenueReviews(venueId);
+                } else {
+                    showReviewToast('Không thể xóa đánh giá.', true);
+                }
+            } catch (err) {
+                showReviewToast('Lỗi mạng khi kết nối máy chủ.', true);
+            }
+        }
+
         function openVenueModal(v) {
+            currentModalVenue = v;
             const modal = document.getElementById('venue-modal');
             const box = document.getElementById('venue-modal-content');
             const lat = v.latitude || v.lat;
@@ -2421,37 +2803,71 @@
                 : rawImg;
 
             box.innerHTML = `
-                <img src="${imageUrl}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800';" style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
+                <img src="${imageUrl}" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800';" style="width:100%;height:220px;object-fit:cover;border-radius:12px;margin-bottom:16px;">
                 <h3 style="font-size:1.3rem;margin-bottom:4px;">${v.name}</h3>
                 <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:12px;">${v.address} • Giờ mở cửa: ${v.openHours || '08:00 - 22:00'}</p>
                 <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
-                    <span class="venue-tag">★ ${Number(v.rating || v.avg_rating || 4.5).toFixed(1)} (${v.reviews || v.total_reviews || 0} đánh giá)</span>
+                    <span class="venue-tag" id="modal-venue-rating-tag">★ ${Number(v.rating || v.avg_rating || 4.5).toFixed(1)} (${v.reviews || v.total_reviews || 0} đánh giá)</span>
                     <span class="venue-tag">Cách ${formatExactDistance(v.distanceKm !== undefined ? v.distanceKm : (v.distance_km || 0))}</span>
                     <span class="venue-tag">${Number(v.priceMin || v.min_price || 50000).toLocaleString()}đ - ${Number(v.priceMax || v.max_price || 300000).toLocaleString()}đ/người</span>
                 </div>
-                <div style="display:flex;gap:10px;">
+                <div style="display:flex;gap:10px;margin-bottom:20px;">
                     <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
                         Mở chỉ đường Google Maps
                     </a>
                     <button type="button" onclick="handleWriteReview(${v.id})"
-                        style="height:40px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);cursor:pointer;font-weight:600;">
+                        style="height:40px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);cursor:pointer;font-weight:600;display:flex;align-items:center;gap:6px;">
                         ⭐ Đánh giá
                     </button>
                     <button type="button" onclick="closeVenueModal()" style="height:40px;padding:0 18px;border:1px solid var(--border);border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);cursor:pointer;font-weight:600;">
                         Đóng
                     </button>
                 </div>
+
+                <!-- Form Viết / Chỉnh sửa Đánh giá -->
+                <div id="venue-review-form-container" style="display:none;background:var(--bg-subtle);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                        <h4 id="review-form-title" style="font-size:0.95rem;font-weight:700;margin:0;">📝 Viết đánh giá & nhận xét của bạn</h4>
+                        <button type="button" onclick="toggleReviewForm(false)" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.1rem;">×</button>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <div id="star-rating-picker" style="display:flex;align-items:center;gap:6px;font-size:1.8rem;cursor:pointer;" onmouseleave="resetStarHover()">
+                            <span class="star-picker-star active" data-val="1" onclick="setReviewRating(1)" onmouseenter="hoverReviewRating(1)">★</span>
+                            <span class="star-picker-star active" data-val="2" onclick="setReviewRating(2)" onmouseenter="hoverReviewRating(2)">★</span>
+                            <span class="star-picker-star active" data-val="3" onclick="setReviewRating(3)" onmouseenter="hoverReviewRating(3)">★</span>
+                            <span class="star-picker-star active" data-val="4" onclick="setReviewRating(4)" onmouseenter="hoverReviewRating(4)">★</span>
+                            <span class="star-picker-star active" data-val="5" onclick="setReviewRating(5)" onmouseenter="hoverReviewRating(5)">★</span>
+                            <span id="star-rating-label" style="font-size:0.85rem;font-weight:700;color:var(--brand-amber);margin-left:8px;">5 sao — Xuất sắc!</span>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <textarea id="review-comment-input" rows="3" placeholder="Chia sẻ nhận xét về món ăn, giá cả, không gian, phục vụ... (tối thiểu 5 ký tự)" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);font-family:inherit;font-size:0.88rem;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;gap:8px;">
+                        <button type="button" onclick="toggleReviewForm(false)" style="height:36px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-muted);cursor:pointer;font-weight:600;font-size:0.82rem;">Hủy</button>
+                        <button type="button" id="btn-delete-review" onclick="deleteVenueReview(${v.id})" style="display:none;height:36px;padding:0 14px;border:1px solid rgba(225,29,72,0.3);border-radius:8px;background:rgba(225,29,72,0.1);color:#e11d48;cursor:pointer;font-weight:600;font-size:0.82rem;">Xóa đánh giá</button>
+                        <button type="button" id="btn-submit-review" onclick="submitVenueReview(${v.id})" class="btn-ai-ask" style="height:36px;padding:0 18px;border-radius:8px;font-size:0.84rem;">Gửi Đánh Giá</button>
+                    </div>
+                </div>
+
+                <!-- Danh sách Đánh giá từ cộng đồng -->
+                <div style="border-top:1px solid var(--border);padding-top:16px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                        <h4 style="font-size:0.95rem;font-weight:700;margin:0;">💬 Nhận xét từ thực khách (<span id="modal-reviews-count">${v.reviews || v.total_reviews || 0}</span>)</h4>
+                        <button type="button" onclick="handleWriteReview(${v.id})" style="background:none;border:none;color:var(--brand-primary);font-size:0.82rem;font-weight:700;cursor:pointer;">+ Viết đánh giá</button>
+                    </div>
+                    <div id="venue-reviews-list">
+                        <!-- Danh sách đánh giá nạp từ API -->
+                    </div>
+                </div>
             `;
             modal.classList.add('open');
+            loadVenueReviews(v.id);
         }
 
         function closeVenueModal() {
             document.getElementById('venue-modal').classList.remove('open');
-        }
-
-        function handleWriteReview(venueId) {
-            if (window.GuestModeGuard && !window.GuestModeGuard.requireAuth('review')) return;
-            alert('Mở form đánh giá cho nhà hàng #' + venueId + '!');
+            currentModalVenue = null;
         }
 
         function toggleSaveVenue(e, id) {

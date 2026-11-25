@@ -1583,7 +1583,7 @@ RESTAURANTS_DATA = [
             }
         ],
         "images": [
-            {"image_url": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800", "caption": "Nhà chòi ven hồ sen thoáng mát yên bình", "is_cover": True},
+            {"image_url": "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=800", "caption": "Nhà chòi ven hồ sen thoáng mát yên bình", "is_cover": True},
         ]
     },
     {

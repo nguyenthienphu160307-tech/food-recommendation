@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.rbac import get_current_guest_or_user
+from app.models.user import User
 from app.services.review_service import ReviewService
 from app.schemas.review import (
     ReviewCreateRequest,
@@ -24,7 +26,8 @@ router = APIRouter(prefix="/api/reviews", tags=["Đánh giá & Nhận xét Nhà 
 )
 def create_review(
     payload: ReviewCreateRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_guest_or_user)
 ):
     """
     API Chấm điểm và gửi nhận xét cho nhà hàng:
@@ -33,10 +36,19 @@ def create_review(
     - Nếu đã đánh giá rồi, hệ thống trả về HTTP 409 Conflict yêu cầu sử dụng API chỉnh sửa (PUT).
     - Sau khi lưu, tự động tính toán lại `avg_rating` và `total_reviews` trong bảng `Restaurants`.
     """
+    effective_user_id = payload.user_id
+    if isinstance(current_user, User):
+        effective_user_id = current_user.id
+    elif not effective_user_id or effective_user_id <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Vui lòng đăng nhập để gửi đánh giá nhà hàng."
+        )
+
     review = ReviewService.create_review(
         db=db,
         restaurant_id=payload.restaurant_id,
-        user_id=payload.user_id,
+        user_id=effective_user_id,
         rating=payload.rating,
         comment=payload.comment
     )
@@ -72,7 +84,8 @@ def create_review(
 def update_review(
     review_id: int,
     payload: ReviewUpdateRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_guest_or_user)
 ):
     """
     API Chỉnh sửa đánh giá cũ của người dùng (BR-06 cho phép sửa):
@@ -80,10 +93,14 @@ def update_review(
     - Kiểm tra bảo mật: Chỉ chính chủ mới có quyền sửa đánh giá của mình (403 Forbidden).
     - Tự động cập nhật lại `avg_rating` trong bảng `Restaurants`.
     """
+    effective_user_id = payload.user_id
+    if isinstance(current_user, User):
+        effective_user_id = current_user.id
+
     review = ReviewService.update_review(
         db=db,
         review_id=review_id,
-        user_id=payload.user_id,
+        user_id=effective_user_id,
         rating=payload.rating,
         comment=payload.comment
     )
@@ -154,18 +171,25 @@ def get_restaurant_reviews(
 )
 def get_my_review(
     restaurant_id: int,
-    user_id: int = Query(..., description="Mã ID người dùng đã đăng nhập"),
-    db: Session = Depends(get_db)
+    user_id: Optional[int] = Query(None, description="Mã ID người dùng đã đăng nhập"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_guest_or_user)
 ):
     """
     API kiểm tra xem người dùng hiện tại đã đánh giá nhà hàng này hay chưa:
     - Nếu đã đánh giá: Trả về thông tin đánh giá để hiển thị form chỉnh sửa.
     - Nếu chưa đánh giá: Trả về null.
     """
+    effective_user_id = user_id
+    if isinstance(current_user, User):
+        effective_user_id = current_user.id
+    if not effective_user_id:
+        return None
+
     review = ReviewService.get_user_review_for_restaurant(
         db=db,
         restaurant_id=restaurant_id,
-        user_id=user_id
+        user_id=effective_user_id
     )
     if not review:
         return None
@@ -199,9 +223,10 @@ def get_my_review(
 )
 def delete_review(
     review_id: int,
-    user_id: int = Query(..., description="Mã ID người dùng sở hữu đánh giá"),
+    user_id: Optional[int] = Query(None, description="Mã ID người dùng sở hữu đánh giá"),
     is_admin: bool = Query(False, description="Cờ xác nhận quyền Admin"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_guest_or_user)
 ):
     """
     API Xóa đánh giá:
@@ -211,6 +236,18 @@ def delete_review(
     if hasattr(is_admin, "default"):
         is_admin = is_admin.default
 
+    effective_user_id = user_id
+    effective_is_admin = is_admin
+    if isinstance(current_user, User):
+        effective_user_id = current_user.id
+        effective_is_admin = any(ur.role.name == "admin" for ur in current_user.user_roles if ur.role)
+
+    if not effective_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Yêu cầu thông tin người dùng để xóa đánh giá."
+        )
+
     # Lấy restaurant_id trước khi xóa để trả về trong response
     review = db.query(ReviewService.recalculate_restaurant_rating.__globals__["RestaurantReview"]).filter_by(id=review_id).first()
     restaurant_id = review.restaurant_id if review else 0
@@ -218,8 +255,8 @@ def delete_review(
     avg_rating, total_reviews = ReviewService.delete_review(
         db=db,
         review_id=review_id,
-        user_id=user_id,
-        is_admin=is_admin
+        user_id=effective_user_id,
+        is_admin=effective_is_admin
     )
 
     return DeleteReviewResponse(
