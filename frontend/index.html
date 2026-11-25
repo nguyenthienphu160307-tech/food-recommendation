@@ -177,47 +177,70 @@
         .filter-ribbon {
             background: var(--bg-surface);
             border-bottom: 1px solid var(--border);
-            padding: 10px 24px;
+            padding: 10px 28px 8px;
             display: flex;
-            align-items: center;
-            gap: 12px;
-            overflow-x: auto;
-            scrollbar-width: thin;
+            flex-direction: column;
+            gap: 8px;
             position: sticky;
             top: 72px;
             z-index: 950;
             box-shadow: var(--shadow-sm);
         }
-        .filter-ribbon::-webkit-scrollbar { height: 4px; }
-        .filter-ribbon::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .filter-row-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-row-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .filter-row-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border);
+            flex-wrap: wrap;
+        }
 
         .filter-drawer-trigger-btn {
-            height: 38px;
-            padding: 0 16px;
+            height: 36px;
+            padding: 0 15px;
             border-radius: 999px;
             background: var(--brand-red);
             color: #ffffff;
             border: none;
-            font-size: 0.84rem;
+            font-size: 0.82rem;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 7px;
             cursor: pointer;
             white-space: nowrap;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s ease;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.22);
         }
         .filter-drawer-trigger-btn:hover {
             background: var(--brand-red-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.32);
         }
         .active-filter-badge {
             background: #ffffff;
             color: var(--brand-red);
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 800;
             min-width: 18px;
             height: 18px;
@@ -226,44 +249,80 @@
             align-items: center;
             justify-content: center;
             padding: 0 5px;
-            margin-left: 2px;
         }
 
         .filter-divider-v {
             width: 1px;
-            height: 24px;
+            height: 22px;
             background: var(--border);
             flex-shrink: 0;
         }
 
-        .category-pills, .radius-filters, .amenity-filters {
+        .category-pills {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* Cụm bán kính dạng Segmented Control gọn gàng */
+        .radius-filters {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: var(--bg-subtle);
+            padding: 3px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
             flex-shrink: 0;
+        }
+        .radius-filters .filter-section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 0 6px 0 8px;
+            white-space: nowrap;
+        }
+        .radius-filters .filter-pill {
+            height: 28px;
+            padding: 0 11px;
+            font-size: 0.78rem;
+            border: none;
+            background: transparent;
+        }
+        .radius-filters .filter-pill.active {
+            background: var(--text-primary);
+            color: var(--bg-surface);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        }
+
+        .amenity-filters {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .filter-section-label {
-            font-size: 0.78rem;
-            font-weight: 700;
+            font-size: 0.76rem;
+            font-weight: 600;
             color: var(--text-muted);
             white-space: nowrap;
-            letter-spacing: 0.02em;
         }
 
         .filter-pill {
-            height: 36px;
-            padding: 0 14px;
+            height: 34px;
+            padding: 0 13px;
             border-radius: 999px;
             border: 1px solid var(--border);
             background: var(--bg-surface);
             color: var(--text-secondary);
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             white-space: nowrap;
             transition: all 0.15s ease;
             user-select: none;
@@ -279,6 +338,17 @@
             border-color: var(--text-primary);
             font-weight: 700;
         }
+        .filter-pill.amenity-pill {
+            height: 29px;
+            padding: 0 11px;
+            font-size: 0.76rem;
+            background: var(--bg-subtle);
+            border-color: transparent;
+        }
+        .filter-pill.amenity-pill:hover {
+            border-color: var(--border);
+            background: var(--bg-surface);
+        }
         .filter-pill.amenity-pill.active {
             background: #0f172a;
             color: #ffffff;
@@ -290,6 +360,9 @@
             border-color: #f8fafc;
         }
         .filter-pill.reset-pill {
+            height: 29px;
+            padding: 0 11px;
+            font-size: 0.76rem;
             background: rgba(225, 29, 72, 0.08);
             border-color: rgba(225, 29, 72, 0.3);
             color: var(--brand-red);
@@ -991,64 +1064,68 @@
     </header>
 
     <div class="filter-ribbon" id="filter-ribbon">
-        <!-- Nút mở Filter Drawer nổi bật với badge đếm số lượng bộ lọc đang active -->
-        <button type="button" class="filter-drawer-trigger-btn" id="btn-open-filter-drawer" onclick="openFilterDrawer()" title="Mở bộ lọc tìm kiếm nâng cao">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-            <span>Tất cả bộ lọc</span>
-            <span class="active-filter-badge" id="active-filter-count" style="display:none;">0</span>
-        </button>
+        <!-- Hàng 1: Bộ lọc nâng cao + Danh mục món (đầy đặn) + Bán kính -->
+        <div class="filter-row-top">
+            <div class="filter-row-left">
+                <button type="button" class="filter-drawer-trigger-btn" id="btn-open-filter-drawer" onclick="openFilterDrawer()" title="Mở bộ lọc tìm kiếm nâng cao">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <span>Bộ lọc</span>
+                    <span class="active-filter-badge" id="active-filter-count" style="display:none;">0</span>
+                </button>
 
-        <div class="filter-divider-v"></div>
+                <div class="filter-divider-v"></div>
 
-        <!-- Category Pills -->
-        <div class="category-pills" id="category-pills">
-            <button type="button" class="filter-pill active" data-category="all" onclick="setCategory('all', this)">Tất cả</button>
-            <button type="button" class="filter-pill" data-category="Món Việt" onclick="setCategory('Món Việt', this)">🇻🇳 Món Việt</button>
-            <button type="button" class="filter-pill" data-category="Cơm tấm" onclick="setCategory('Cơm tấm', this)">🍚 Cơm tấm</button>
-            <button type="button" class="filter-pill" data-category="Món Chay" onclick="setCategory('Món Chay', this)">🌱 Đồ chay</button>
-            <button type="button" class="filter-pill" data-category="BBQ Hàn Quốc" onclick="setCategory('BBQ Hàn Quốc', this)">🥩 Lẩu & BBQ</button>
-            <button type="button" class="filter-pill" data-category="Cà phê" onclick="setCategory('Cà phê', this)">☕ Cà phê / Trà</button>
-            <button type="button" class="filter-pill" data-category="Món Âu" onclick="setCategory('Món Âu', this)">🍕 Món Âu</button>
+                <div class="category-pills" id="category-pills">
+                    <button type="button" class="filter-pill active" data-category="all" onclick="setCategory('all', this)">Tất cả</button>
+                    <button type="button" class="filter-pill" data-category="Món Việt" onclick="setCategory('Món Việt', this)">🇻🇳 Món Việt</button>
+                    <button type="button" class="filter-pill" data-category="Cơm tấm" onclick="setCategory('Cơm tấm', this)">🍚 Cơm tấm</button>
+                    <button type="button" class="filter-pill" data-category="Món Chay" onclick="setCategory('Món Chay', this)">🌱 Đồ chay</button>
+                    <button type="button" class="filter-pill" data-category="BBQ Hàn Quốc" onclick="setCategory('BBQ Hàn Quốc', this)">🥩 Lẩu & BBQ</button>
+                    <button type="button" class="filter-pill" data-category="Hải Sản" onclick="setCategory('Hải Sản', this)">🦐 Hải sản</button>
+                    <button type="button" class="filter-pill" data-category="Món Nhật" onclick="setCategory('Món Nhật', this)">🍣 Món Nhật</button>
+                    <button type="button" class="filter-pill" data-category="Cà phê" onclick="setCategory('Cà phê', this)">☕ Cà phê / Trà</button>
+                    <button type="button" class="filter-pill" data-category="Món Âu" onclick="setCategory('Món Âu', this)">🍕 Món Âu</button>
+                </div>
+            </div>
+
+            <!-- Bán kính dạng Segmented Control -->
+            <div class="radius-filters" id="radius-filters">
+                <span class="filter-section-label">🎯 Bán kính</span>
+                <button type="button" class="filter-pill radius-ribbon-btn" data-radius="1" onclick="setSearchRadius(1)">1 km</button>
+                <button type="button" class="filter-pill radius-ribbon-btn" data-radius="3" onclick="setSearchRadius(3)">3 km</button>
+                <button type="button" class="filter-pill radius-ribbon-btn active" data-radius="5" onclick="setSearchRadius(5)">5 km</button>
+                <button type="button" class="filter-pill radius-ribbon-btn" data-radius="10" onclick="setSearchRadius(10)">10 km</button>
+            </div>
         </div>
 
-        <div class="filter-divider-v"></div>
+        <!-- Hàng 2: Tiện ích nhanh + Mức giá nhanh + Đánh giá cao + Xóa bộ lọc -->
+        <div class="filter-row-bottom">
+            <div class="amenity-filters" id="amenity-filters">
+                <span class="filter-section-label">✨ Tiện ích:</span>
+                <button type="button" class="filter-pill amenity-pill" id="btn-parking" onclick="toggleAmenity('parking')">🚗 Đỗ ô tô</button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-room" onclick="toggleAmenity('private_room')">🚪 Phòng riêng</button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-outdoor" onclick="toggleAmenity('outdoor')">🌿 Ngoài trời</button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-pet" onclick="toggleAmenity('pet_friendly')">🐾 Thú cưng</button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-vegan" onclick="toggleAmenity('vegetarian')">🌱 Món chay</button>
 
-        <!-- Bán kính tìm kiếm (Radius 1km, 3km, 5km, 10km) -->
-        <div class="radius-filters" id="radius-filters" style="display:flex;align-items:center;gap:6px;">
-            <span class="filter-section-label">🎯 Bán kính:</span>
-            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="1" onclick="setSearchRadius(1)">1 km</button>
-            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="3" onclick="setSearchRadius(3)">3 km</button>
-            <button type="button" class="filter-pill radius-ribbon-btn active" data-radius="5" onclick="setSearchRadius(5)">5 km</button>
-            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="10" onclick="setSearchRadius(10)">10 km</button>
-        </div>
+                <div class="filter-divider-v" style="margin: 0 4px;"></div>
 
-        <div class="filter-divider-v"></div>
+                <span class="filter-section-label">💵 Ngân sách:</span>
+                <button type="button" class="filter-pill amenity-pill quick-budget-btn" data-budget="100000" onclick="toggleQuickBudget(100000, this)">Dưới 100k</button>
+                <button type="button" class="filter-pill amenity-pill quick-budget-btn" data-budget="200000" onclick="toggleQuickBudget(200000, this)">Dưới 200k</button>
+                <button type="button" class="filter-pill amenity-pill quick-budget-btn" data-budget="300000" onclick="toggleQuickBudget(300000, this)">Dưới 300k</button>
 
-        <!-- 5 nút tiện ích chuẩn trong RestaurantAmenities -->
-        <div class="amenity-filters" id="amenity-filters">
-            <button type="button" class="filter-pill amenity-pill" id="btn-parking" onclick="toggleAmenity('parking')" title="Có chỗ đậu ô tô">
-                🚗 Đỗ ô tô
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-room" onclick="toggleAmenity('private_room')" title="Có phòng riêng">
-                🚪 Phòng riêng
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-outdoor" onclick="toggleAmenity('outdoor')" title="Không gian ngoài trời">
-                🌿 Ngoài trời
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-pet" onclick="toggleAmenity('pet_friendly')" title="Thân thiện với thú cưng">
-                🐾 Thú cưng
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-vegan" onclick="toggleAmenity('vegetarian')" title="Hỗ trợ món chay">
-                🌱 Món chay
+                <div class="filter-divider-v" style="margin: 0 4px;"></div>
+
+                <button type="button" class="filter-pill amenity-pill" id="btn-quick-rating" onclick="toggleQuickRating(4.5, this)">⭐ Từ 4.5+</button>
+            </div>
+
+            <button type="button" class="filter-pill reset-pill" id="btn-reset-filters" onclick="resetAllFilters()" style="display:none;" title="Xóa toàn bộ bộ lọc và đặt lại mặc định">
+                ✕ Xóa bộ lọc
             </button>
         </div>
-
-        <!-- Nút Reset Nhanh -->
-        <button type="button" class="filter-pill reset-pill" id="btn-reset-filters" onclick="resetAllFilters()" style="display:none;" title="Xóa toàn bộ bộ lọc và đặt lại mặc định">
-            ✕ Xóa bộ lọc
-        </button>
     </div>
 
     <main class="discovery-layout view-list">
@@ -2252,7 +2329,29 @@
             fetchFilteredRestaurantsFromAPI();
         }
 
+        function toggleQuickBudget(amount, btn) {
+            const isSame = maxBudgetFilter === amount;
+            maxBudgetFilter = isSame ? null : amount;
+            document.querySelectorAll('.quick-budget-btn').forEach(el => {
+                el.classList.toggle('active', !isSame && Number(el.dataset.budget) === amount);
+            });
+            updateActiveFilterBadge();
+            renderVenues();
+            fetchFilteredRestaurantsFromAPI();
+        }
+
+        function toggleQuickRating(stars, btn) {
+            minRatingFilter = (minRatingFilter === stars) ? 0 : stars;
+            if (btn) btn.classList.toggle('active', minRatingFilter === stars);
+            updateActiveFilterBadge();
+            renderVenues();
+            fetchFilteredRestaurantsFromAPI();
+        }
+
         function resetAllFilters() {
+            document.querySelectorAll('.quick-budget-btn').forEach(el => el.classList.remove('active'));
+            const qRateBtn = document.getElementById('btn-quick-rating');
+            if (qRateBtn) qRateBtn.classList.remove('active');
             activeCategory = 'all';
             searchRadiusKm = 5;
             maxBudgetFilter = null;
