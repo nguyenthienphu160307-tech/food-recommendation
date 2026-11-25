@@ -106,6 +106,7 @@ class RestaurantImageResponse(BaseModel):
 
 class RestaurantDetailResponse(RestaurantListItemResponse):
     """Chi tiết một nhà hàng: thông tin cơ bản + thực đơn + thư viện ảnh"""
+    distance_km: Optional[float] = Field(None, description="Khoảng cách từ vị trí người dùng đến nhà hàng (km)")
     menus: List[MenuCategoryResponse] = []
     images: List[RestaurantImageResponse] = []
 

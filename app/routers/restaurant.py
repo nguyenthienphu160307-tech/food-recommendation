@@ -504,7 +504,18 @@ def get_restaurants(
     status_code=status.HTTP_200_OK,
     summary="Chi tiết một nhà hàng: thực đơn, thư viện ảnh, tiện ích (TSK-25 / FR-09)"
 )
-def get_restaurant_detail(restaurant_id: int, db: Session = Depends(get_db)):
+def get_restaurant_detail(
+    restaurant_id: int,
+    lat: Optional[float] = Query(None, description="Vĩ độ người dùng (để tính khoảng cách)"),
+    lng: Optional[float] = Query(None, description="Kinh độ người dùng (để tính khoảng cách)"),
+    db: Session = Depends(get_db)
+):
+    if (lat is not None and lng is None) or (lat is None and lng is not None):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vui lòng cung cấp đầy đủ cả hai tọa độ lat và lng để tính khoảng cách."
+        )
+
     restaurant = (
         db.query(Restaurant)
         .options(
@@ -518,11 +529,19 @@ def get_restaurant_detail(restaurant_id: int, db: Session = Depends(get_db)):
     if restaurant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy nhà hàng.")
 
+    distance_km = None
+    if lat is not None and lng is not None:
+        distance_km = round(
+            calculate_haversine_distance(lat, lng, restaurant.latitude, restaurant.longitude, unit="km"),
+            2
+        )
+
     base = _build_list_item(restaurant)
     menus = sorted(restaurant.menus, key=lambda m: (m.display_order, m.id))
     images = sorted(restaurant.images, key=lambda i: (i.display_order, i.id))
     return RestaurantDetailResponse(
         **base.model_dump(),
+        distance_km=distance_km,
         menus=[
             MenuCategoryResponse(
                 id=m.id, name=m.name, description=m.description, display_order=m.display_order,

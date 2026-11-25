@@ -174,22 +174,83 @@
         .dropdown-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
         /* TASK TE9C661: HIGH-SPEED FILTER BAR & FILTER DRAWER UI */
-        .filter-ribbon {
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border);
-            padding: 10px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            overflow-x: auto;
-            scrollbar-width: thin;
+        .filter-bar-container {
             position: sticky;
             top: 72px;
             z-index: 950;
-            box-shadow: var(--shadow-sm);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            position: relative;
         }
-        .filter-ribbon::-webkit-scrollbar { height: 4px; }
-        .filter-ribbon::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .filter-ribbon {
+            background: var(--bg-surface);
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+        .filter-ribbon::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        .scroll-fade {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 32px;
+            pointer-events: none;
+            z-index: 5;
+            transition: opacity 0.2s ease;
+        }
+        .scroll-fade-left {
+            left: 0;
+            background: linear-gradient(to right, var(--bg-surface) 40%, transparent);
+            opacity: 0;
+        }
+        .scroll-fade-right {
+            right: 0;
+            background: linear-gradient(to left, var(--bg-surface) 40%, transparent);
+            opacity: 1;
+        }
+
+        .filter-scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+        .filter-scroll-btn:hover {
+            background: var(--bg-subtle);
+            border-color: var(--text-primary);
+            transform: translateY(-50%) scale(1.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        }
+        .filter-scroll-left { left: 8px; display: none; }
+        .filter-scroll-right { right: 8px; }
 
         .filter-drawer-trigger-btn {
             height: 38px;
@@ -906,24 +967,396 @@
         .footer-col p { line-height: 1.6; margin-bottom: 6px; }
         .footer-col a { display: block; color: var(--text-secondary); text-decoration: none; margin-bottom: 8px; }
         .footer-col a:hover { color: var(--brand-red); }
+
+        /* =========================================================
+           RESPONSIVE DESIGN SYSTEM (DESKTOP, LAPTOP, TABLET, MOBILE)
+           ========================================================= */
+
+        .topbar-row-top {
+            display: contents; /* Desktop: unwrap row-top so left, search, right sit in 1 line */
+        }
+        .topbar-left { order: 1; }
+        .search-wrapper { order: 2; flex: 1; max-width: 580px; position: relative; }
+        .topbar-right { order: 3; }
+
+        /* Mobile View Switcher (Floating Map/List Button) */
+        .mobile-view-toggle-bar {
+            display: none;
+            position: fixed;
+            bottom: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            pointer-events: none;
+        }
+        .btn-mobile-toggle-view {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 22px;
+            border-radius: 999px;
+            background: #0f172a;
+            color: #ffffff;
+            font-size: 0.86rem;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s;
+            user-select: none;
+            backdrop-filter: blur(8px);
+        }
+        .btn-mobile-toggle-view:active {
+            transform: scale(0.95);
+        }
+        :root[data-theme="dark"] .btn-mobile-toggle-view {
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* 1. LAPTOPS & INTERMEDIATE SCREENS (1025px - 1280px) */
+        @media (max-width: 1280px) {
+            .topbar { padding: 0 20px; gap: 14px; }
+            .location-pill { max-width: 210px; }
+            .search-wrapper { max-width: 460px; }
+            .discovery-layout { grid-template-columns: 1fr 400px; }
+            .listings-column { padding: 20px 22px; }
+        }
+
+        /* 2. TABLET SCREENS (769px - 1024px) */
+        @media (max-width: 1024px) {
+            .topbar { min-height: 66px; padding: 0 16px; gap: 12px; }
+            .filter-bar-container { top: 66px; }
+            .location-pill { max-width: 175px; padding: 6px 10px; }
+            .location-pill-text { font-size: 0.78rem; }
+            .search-wrapper { max-width: 380px; }
+            .search-bar { height: 40px; }
+            .account-trigger span { max-width: 85px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .discovery-layout { grid-template-columns: 1fr; }
+            .map-column { height: 340px; order: -1; }
+            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+            .listings-column { padding: 18px 20px; }
+        }
+
+        /* 3. MOBILE SCREENS (<= 768px) */
+        @media (max-width: 768px) {
+            .topbar {
+                min-height: auto;
+                height: auto;
+                padding: 10px 14px 12px;
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+            .topbar-row-top {
+                display: flex !important;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                gap: 10px;
+                order: 1;
+            }
+            .topbar-left {
+                gap: 8px;
+                min-width: 0;
+                flex: 1;
+            }
+            .logo {
+                font-size: 1.05rem;
+                gap: 6px;
+            }
+            .logo-mark {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+            }
+            .location-pill {
+                max-width: 135px;
+                padding: 5px 8px;
+                border-radius: 999px;
+            }
+            .location-pill svg { width: 14px; height: 14px; }
+            .location-pill-text { font-size: 0.73rem; }
+
+            .topbar-right {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+            .btn-icon-only {
+                width: 34px;
+                height: 34px;
+            }
+            .btn-icon-only svg {
+                width: 15px;
+                height: 15px;
+            }
+            .account-trigger {
+                padding: 4px;
+                gap: 0;
+            }
+            .account-trigger span, .account-trigger svg {
+                display: none;
+            }
+            .account-trigger img {
+                width: 28px;
+                height: 28px;
+            }
+
+            /* Full-width Search Bar on Row 2 */
+            .search-wrapper {
+                order: 2;
+                width: 100%;
+                max-width: 100%;
+            }
+            .search-bar {
+                height: 40px;
+                padding: 0 4px 0 12px;
+            }
+            .search-bar input {
+                font-size: 0.84rem;
+                padding: 0 6px;
+            }
+            .btn-ai-ask {
+                height: 30px;
+                padding: 0 12px;
+                font-size: 0.76rem;
+            }
+
+            /* Filter bar position & padding on mobile */
+            .filter-bar-container {
+                top: 108px;
+            }
+            .filter-ribbon {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            .filter-scroll-btn {
+                display: none !important;
+            }
+            .scroll-fade {
+                display: none;
+            }
+            .filter-drawer-trigger-btn {
+                height: 34px;
+                padding: 0 12px;
+                font-size: 0.78rem;
+                gap: 6px;
+            }
+            .filter-pill {
+                height: 34px;
+                padding: 0 11px;
+                font-size: 0.78rem;
+                gap: 5px;
+            }
+            .filter-divider-v {
+                height: 18px;
+            }
+
+            /* Discovery layout toggleable on mobile */
+            .discovery-layout {
+                display: flex;
+                flex-direction: column;
+            }
+            .discovery-layout .map-column {
+                display: none;
+                height: calc(100vh - 165px);
+                min-height: 420px;
+                position: sticky;
+                top: 165px;
+                z-index: 10;
+            }
+            .discovery-layout.mobile-map-active .listings-column {
+                display: none;
+            }
+            .discovery-layout.mobile-map-active .map-column {
+                display: block;
+            }
+
+            .mobile-view-toggle-bar {
+                display: block;
+            }
+
+            .listings-column {
+                padding: 16px 14px 84px; /* Space for floating button */
+            }
+            .listings-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .listings-header h2 {
+                font-size: 1.05rem;
+            }
+            .sort-select {
+                width: 100%;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .venue-card .venue-img-wrap {
+                height: 170px;
+            }
+
+            /* Filter Drawer as Fullscreen / Bottom-sheet on mobile */
+            .filter-drawer {
+                width: 100vw;
+                max-width: 100vw;
+                height: 90vh;
+                top: auto;
+                bottom: 0;
+                border-radius: 20px 20px 0 0;
+                transform: translateY(100%);
+            }
+            .filter-drawer.open {
+                transform: translateY(0);
+            }
+            .filter-drawer-header {
+                padding: 16px 18px;
+            }
+            .filter-drawer-body {
+                padding: 16px 18px;
+            }
+            .filter-drawer-footer {
+                padding: 14px 18px;
+            }
+
+            /* AI Drawer full screen on mobile */
+            .ai-drawer {
+                width: 100vw;
+                max-width: 100vw;
+                height: 84vh;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                border-radius: 20px 20px 0 0;
+            }
+
+            /* Modals */
+            .modal-backdrop {
+                padding: 10px;
+                align-items: flex-end;
+            }
+            .modal-card {
+                padding: 20px 16px;
+                border-radius: 20px 20px 0 0;
+                max-height: 90vh;
+            }
+
+            /* Account Dropdown max width */
+            .account-dropdown {
+                right: -6px;
+                min-width: 260px;
+                max-width: calc(100vw - 20px);
+            }
+        }
+
+        /* 4. EXTRA SMALL MOBILE (<= 420px) */
+        @media (max-width: 420px) {
+            .logo-text {
+                display: none;
+            }
+            .location-pill {
+                max-width: 165px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <header class="topbar">
-        <div class="topbar-left">
-            <a href="index.html" class="logo">
-                <div class="logo-mark">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
-                    </svg>
-                </div>
-                <span>Smart Dining</span>
-            </a>
+        <div class="topbar-row-top">
+            <div class="topbar-left">
+                <a href="index.html" class="logo">
+                    <div class="logo-mark">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+                        </svg>
+                    </div>
+                    <span class="logo-text">Smart Dining</span>
+                </a>
 
-            <div class="location-pill" onclick="locateUserGPS()" title="Nhấp để định vị GPS hoặc đổi vị trí thủ công (UC-03)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span class="location-pill-text" id="current-address-label">11 Nguyễn Đình Chiểu, Quận 1</span>
+                <div class="location-pill" onclick="locateUserGPS()" title="Nhấp để định vị GPS hoặc đổi vị trí thủ công (UC-03)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span class="location-pill-text" id="current-address-label">11 Nguyễn Đình Chiểu, Quận 1</span>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <button type="button" class="btn-icon-only" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
+                </button>
+
+                <button type="button" class="btn-icon-only" onclick="toggleAIDrawer()" title="Mở Trợ lý hội thoại AI">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </button>
+
+                <div class="account-trigger" onclick="toggleAccountDropdown()">
+                    <img id="nav-user-avatar" src="https://ui-avatars.com/api/?name=Guest&background=64748B&color=fff" alt="Avatar">
+                    <span id="nav-user-name">Khách</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+
+                <div class="account-dropdown" id="account-dropdown">
+                    <div class="dropdown-user-header">
+                        <strong id="drop-user-name">Khách</strong>
+                        <small id="drop-user-email">Chưa đăng nhập</small>
+                    </div>
+                    <a href="profile.html" class="dropdown-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Chỉnh sửa hồ sơ cá nhân
+                    </a>
+                    <a href="profile.html#location-section" class="dropdown-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Địa chỉ & Tọa độ mặc định
+                    </a>
+                    <div class="dropdown-link" onclick="filterSavedVenues()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        Quán ăn yêu thích đã lưu
+                    </div>
+
+                    <!-- KHU VỰC DÀNH CHO QUẢN TRỊ VIÊN (ADMIN PORTAL) -->
+                    <div id="drop-admin-section" style="display:none;">
+                        <div class="dropdown-divider"></div>
+                        <div style="padding: 4px 12px; font-size: 0.72rem; font-weight: 700; color: var(--brand-red); text-transform: uppercase; letter-spacing: 0.5px;">
+                            🛡️ Quản trị viên
+                        </div>
+                        <a href="/admin" class="dropdown-link" id="link-admin" style="color:var(--brand-red); font-weight:600;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            Bảng điều khiển Quản trị (Dashboard)
+                        </a>
+                        <a href="/admin-restaurants" class="dropdown-link" id="link-admin-restaurants">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                            Quản trị Nhà hàng & Bản đồ
+                        </a>
+                        <a href="/admin/menu" class="dropdown-link" id="link-admin-menu">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            Quản trị Thực đơn (Menu)
+                        </a>
+                        <a href="/admin/images" class="dropdown-link" id="link-admin-images">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            Quản lý Thư viện Ảnh
+                        </a>
+                    </div>
+
+                    <div class="dropdown-divider"></div>
+                    <div id="drop-auth-actions" style="display:flex;flex-direction:column;">
+                        <a href="login.html" class="dropdown-link" id="link-login" style="color:var(--brand-red);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                            Đăng nhập
+                        </a>
+                        <a href="register.html" class="dropdown-link" id="link-register">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                            Đăng ký tài khoản
+                        </a>
+                        <a href="javascript:void(0)" onclick="handleLogoutFromIndex()" class="dropdown-link" id="link-logout" style="display:none; color:var(--brand-red);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Đăng xuất tài khoản
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -954,143 +1387,80 @@
                 </div>
             </div>
         </div>
-
-        <div class="topbar-right">
-            <button type="button" class="btn-icon-only" onclick="toggleTheme()" title="Đổi giao diện Sáng / Tối">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
-            </button>
-
-            <button type="button" class="btn-icon-only" onclick="toggleAIDrawer()" title="Mở Trợ lý hội thoại AI">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </button>
-
-            <div class="account-trigger" onclick="toggleAccountDropdown()">
-                <img id="nav-user-avatar" src="https://ui-avatars.com/api/?name=Guest&background=64748B&color=fff" alt="Avatar">
-                <span id="nav-user-name">Khách</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-
-            <div class="account-dropdown" id="account-dropdown">
-                <div class="dropdown-user-header">
-                    <strong id="drop-user-name">Khách</strong>
-                    <small id="drop-user-email">Chưa đăng nhập</small>
-                </div>
-                <a href="profile.html" class="dropdown-link">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Chỉnh sửa hồ sơ cá nhân
-                </a>
-                <a href="profile.html#location-section" class="dropdown-link">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Địa chỉ & Tọa độ mặc định
-                </a>
-                <div class="dropdown-link" onclick="filterSavedVenues()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                    Quán ăn yêu thích đã lưu
-                </div>
-
-                <!-- KHU VỰC DÀNH CHO QUẢN TRỊ VIÊN (ADMIN PORTAL) -->
-                <div id="drop-admin-section" style="display:none;">
-                    <div class="dropdown-divider"></div>
-                    <div style="padding: 4px 12px; font-size: 0.72rem; font-weight: 700; color: var(--brand-red); text-transform: uppercase; letter-spacing: 0.5px;">
-                        🛡️ Quản trị viên
-                    </div>
-                    <a href="/admin" class="dropdown-link" id="link-admin" style="color:var(--brand-red); font-weight:600;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                        Bảng điều khiển Quản trị (Dashboard)
-                    </a>
-                    <a href="/admin-restaurants" class="dropdown-link" id="link-admin-restaurants">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-                        Quản trị Nhà hàng & Bản đồ
-                    </a>
-                    <a href="/admin/menu" class="dropdown-link" id="link-admin-menu">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                        Quản trị Thực đơn (Menu)
-                    </a>
-                    <a href="/admin/images" class="dropdown-link" id="link-admin-images">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        Quản lý Thư viện Ảnh
-                    </a>
-                </div>
-
-                <div class="dropdown-divider"></div>
-                <div id="drop-auth-actions" style="display:flex;flex-direction:column;">
-                    <a href="login.html" class="dropdown-link" id="link-login" style="color:var(--brand-red);">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                        Đăng nhập
-                    </a>
-                    <a href="register.html" class="dropdown-link" id="link-register">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                        Đăng ký tài khoản
-                    </a>
-                    <a href="javascript:void(0)" onclick="handleLogoutFromIndex()" class="dropdown-link" id="link-logout" style="display:none; color:var(--brand-red);">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                        Đăng xuất tài khoản
-                    </a>
-                </div>
-            </div>
-        </div>
     </header>
 
-    <div class="filter-ribbon" id="filter-ribbon">
-        <!-- Nút mở Filter Drawer nổi bật với badge đếm số lượng bộ lọc đang active -->
-        <button type="button" class="filter-drawer-trigger-btn" id="btn-open-filter-drawer" onclick="openFilterDrawer()" title="Mở bộ lọc tìm kiếm nâng cao">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-            <span>Tất cả bộ lọc</span>
-            <span class="active-filter-badge" id="active-filter-count" style="display:none;">0</span>
+    <nav class="filter-bar-container" id="filter-bar-container" aria-label="Thanh công cụ lọc quán ăn">
+        <div class="scroll-fade scroll-fade-left" id="scroll-fade-left"></div>
+        <button type="button" class="filter-scroll-btn filter-scroll-left" id="filter-scroll-left" onclick="scrollFilterBar(-240)" aria-label="Cuộn sang trái">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
 
-        <div class="filter-divider-v"></div>
+        <div class="filter-ribbon" id="filter-ribbon" onscroll="handleFilterRibbonScroll()">
+            <!-- Nút mở Filter Drawer nổi bật với badge đếm số lượng bộ lọc đang active -->
+            <button type="button" class="filter-drawer-trigger-btn" id="btn-open-filter-drawer" onclick="openFilterDrawer()" title="Mở bộ lọc tìm kiếm nâng cao">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Tất cả bộ lọc</span>
+                <span class="active-filter-badge" id="active-filter-count" style="display:none;">0</span>
+            </button>
 
-        <!-- Category Pills -->
-        <div class="category-pills" id="category-pills">
-            <button type="button" class="filter-pill active" data-category="all" onclick="setCategory('all', this)">Tất cả</button>
-            <button type="button" class="filter-pill" data-category="Món Việt" onclick="setCategory('Món Việt', this)">🇻🇳 Món Việt</button>
-            <button type="button" class="filter-pill" data-category="Cơm tấm" onclick="setCategory('Cơm tấm', this)">🍚 Cơm tấm</button>
-            <button type="button" class="filter-pill" data-category="Món Chay" onclick="setCategory('Món Chay', this)">🌱 Đồ chay</button>
-            <button type="button" class="filter-pill" data-category="BBQ Hàn Quốc" onclick="setCategory('BBQ Hàn Quốc', this)">🥩 Lẩu & BBQ</button>
-            <button type="button" class="filter-pill" data-category="Cà phê" onclick="setCategory('Cà phê', this)">☕ Cà phê / Trà</button>
-            <button type="button" class="filter-pill" data-category="Món Âu" onclick="setCategory('Món Âu', this)">🍕 Món Âu</button>
+            <div class="filter-divider-v"></div>
+
+            <!-- Category Pills -->
+            <div class="category-pills" id="category-pills">
+                <button type="button" class="filter-pill active" data-category="all" onclick="setCategory('all', this)">Tất cả</button>
+                <button type="button" class="filter-pill" data-category="Món Việt" onclick="setCategory('Món Việt', this)">🇻🇳 Món Việt</button>
+                <button type="button" class="filter-pill" data-category="Cơm tấm" onclick="setCategory('Cơm tấm', this)">🍚 Cơm tấm</button>
+                <button type="button" class="filter-pill" data-category="Món Chay" onclick="setCategory('Món Chay', this)">🌱 Đồ chay</button>
+                <button type="button" class="filter-pill" data-category="BBQ Hàn Quốc" onclick="setCategory('BBQ Hàn Quốc', this)">🥩 Lẩu & BBQ</button>
+                <button type="button" class="filter-pill" data-category="Cà phê" onclick="setCategory('Cà phê', this)">☕ Cà phê / Trà</button>
+                <button type="button" class="filter-pill" data-category="Món Âu" onclick="setCategory('Món Âu', this)">🍕 Món Âu</button>
+            </div>
+
+            <div class="filter-divider-v"></div>
+
+            <!-- Bán kính tìm kiếm (Radius 1km, 3km, 5km, 10km) -->
+            <div class="radius-filters" id="radius-filters" style="display:flex;align-items:center;gap:6px;">
+                <span class="filter-section-label">🎯 Bán kính:</span>
+                <button type="button" class="filter-pill radius-ribbon-btn" data-radius="1" onclick="setSearchRadius(1)">1 km</button>
+                <button type="button" class="filter-pill radius-ribbon-btn" data-radius="3" onclick="setSearchRadius(3)">3 km</button>
+                <button type="button" class="filter-pill radius-ribbon-btn active" data-radius="5" onclick="setSearchRadius(5)">5 km</button>
+                <button type="button" class="filter-pill radius-ribbon-btn" data-radius="10" onclick="setSearchRadius(10)">10 km</button>
+            </div>
+
+            <div class="filter-divider-v"></div>
+
+            <!-- 5 nút tiện ích chuẩn trong RestaurantAmenities -->
+            <div class="amenity-filters" id="amenity-filters">
+                <button type="button" class="filter-pill amenity-pill" id="btn-parking" onclick="toggleAmenity('parking')" title="Có chỗ đậu ô tô">
+                    🚗 Đỗ ô tô
+                </button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-room" onclick="toggleAmenity('private_room')" title="Có phòng riêng">
+                    🚪 Phòng riêng
+                </button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-outdoor" onclick="toggleAmenity('outdoor')" title="Không gian ngoài trời">
+                    🌿 Ngoài trời
+                </button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-pet" onclick="toggleAmenity('pet_friendly')" title="Thân thiện với thú cưng">
+                    🐾 Thú cưng
+                </button>
+                <button type="button" class="filter-pill amenity-pill" id="btn-vegan" onclick="toggleAmenity('vegetarian')" title="Hỗ trợ món chay">
+                    🌱 Món chay
+                </button>
+            </div>
+
+            <!-- Nút Reset Nhanh -->
+            <button type="button" class="filter-pill reset-pill" id="btn-reset-filters" onclick="resetAllFilters()" style="display:none;" title="Xóa toàn bộ bộ lọc và đặt lại mặc định">
+                ✕ Xóa bộ lọc
+            </button>
         </div>
 
-        <div class="filter-divider-v"></div>
-
-        <!-- Bán kính tìm kiếm (Radius 1km, 3km, 5km, 10km) -->
-        <div class="radius-filters" id="radius-filters" style="display:flex;align-items:center;gap:6px;">
-            <span class="filter-section-label">🎯 Bán kính:</span>
-            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="1" onclick="setSearchRadius(1)">1 km</button>
-            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="3" onclick="setSearchRadius(3)">3 km</button>
-            <button type="button" class="filter-pill radius-ribbon-btn active" data-radius="5" onclick="setSearchRadius(5)">5 km</button>
-            <button type="button" class="filter-pill radius-ribbon-btn" data-radius="10" onclick="setSearchRadius(10)">10 km</button>
-        </div>
-
-        <div class="filter-divider-v"></div>
-
-        <!-- 5 nút tiện ích chuẩn trong RestaurantAmenities -->
-        <div class="amenity-filters" id="amenity-filters">
-            <button type="button" class="filter-pill amenity-pill" id="btn-parking" onclick="toggleAmenity('parking')" title="Có chỗ đậu ô tô">
-                🚗 Đỗ ô tô
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-room" onclick="toggleAmenity('private_room')" title="Có phòng riêng">
-                🚪 Phòng riêng
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-outdoor" onclick="toggleAmenity('outdoor')" title="Không gian ngoài trời">
-                🌿 Ngoài trời
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-pet" onclick="toggleAmenity('pet_friendly')" title="Thân thiện với thú cưng">
-                🐾 Thú cưng
-            </button>
-            <button type="button" class="filter-pill amenity-pill" id="btn-vegan" onclick="toggleAmenity('vegetarian')" title="Hỗ trợ món chay">
-                🌱 Món chay
-            </button>
-        </div>
-
-        <!-- Nút Reset Nhanh -->
-        <button type="button" class="filter-pill reset-pill" id="btn-reset-filters" onclick="resetAllFilters()" style="display:none;" title="Xóa toàn bộ bộ lọc và đặt lại mặc định">
-            ✕ Xóa bộ lọc
+        <button type="button" class="filter-scroll-btn filter-scroll-right" id="filter-scroll-right" onclick="scrollFilterBar(240)" aria-label="Cuộn sang phải">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </button>
-    </div>
+        <div class="scroll-fade scroll-fade-right" id="scroll-fade-right"></div>
+    </nav>
 
     <main class="discovery-layout view-list">
         <section class="listings-column">
@@ -1131,9 +1501,29 @@
         </aside>
     </main>
 
+    <!-- Mobile Floating View Switcher (Xem Bản đồ / Xem Danh sách) -->
+    <div class="mobile-view-toggle-bar" id="mobile-view-toggle-bar">
+        <button type="button" class="btn-mobile-toggle-view" id="btn-mobile-toggle-view" onclick="toggleMobileView()">
+            <span id="floating-switch-icon">🗺️</span>
+            <span id="floating-switch-text">Xem Bản đồ</span>
+        </button>
+    </div>
+
+    <!-- Floating Chat Trigger Button -->
+    <button type="button" class="floating-chat-trigger" id="floating-chat-trigger" onclick="toggleAIDrawer()" title="Mở Trợ lý hội thoại AI (NFR-02)" aria-label="Mở Trợ lý hội thoại AI" style="position:fixed;bottom:24px;right:24px;width:50px;height:50px;border-radius:50%;background:var(--brand-red);color:#fff;border:none;box-shadow:0 6px 20px rgba(225,29,72,0.4);z-index:990;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.2s;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="floating-chat-badge" style="position:absolute;top:-2px;right:-2px;background:#10b981;color:#fff;font-size:0.65rem;font-weight:800;padding:2px 6px;border-radius:999px;">AI</span>
+    </button>
+
     <div class="ai-drawer" id="ai-drawer">
         <div class="ai-drawer-header">
-            <h4>Trợ lý Tìm kiếm Ẩm thực AI</h4>
+            <div>
+                <h4 id="ai-drawer-title" style="margin:0;font-size:0.95rem;">Trợ lý Ẩm thực AI</h4>
+                <div class="ai-status-badge" id="ai-status-badge" style="display:inline-flex;align-items:center;gap:5px;font-size:0.7rem;color:#10b981;margin-top:2px;">
+                    <span class="ai-status-dot" id="ai-status-dot" style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+                    <span class="ai-status-text" id="ai-status-text">Sẵn sàng phản hồi</span>
+                </div>
+            </div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <button type="button" id="btn-toggle-split-chat" onclick="AIChatMapSync.toggleSplitScreen()"
                     style="background:rgba(255,255,255,0.14);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:0.74rem;cursor:pointer;">
@@ -2835,7 +3225,10 @@
                     <span class="venue-tag">Cách ${formatExactDistance(v.distanceKm !== undefined ? v.distanceKm : (v.distance_km || 0))}</span>
                     <span class="venue-tag">${Number(v.priceMin || v.min_price || 50000).toLocaleString()}đ - ${Number(v.priceMax || v.max_price || 300000).toLocaleString()}đ/người</span>
                 </div>
-                <div style="display:flex;gap:10px;margin-bottom:20px;">
+                <a href="restaurant-detail.html?id=${v.id}" class="btn-detail-link" style="display:flex;align-items:center;justify-content:center;gap:6px;height:38px;padding:0 14px;border-radius:8px;background:var(--bg-subtle);color:var(--text-primary);text-decoration:none;font-weight:600;font-size:0.85rem;margin-bottom:12px;border:1px solid var(--border);">
+                    🍽️ Xem thực đơn & chi tiết quán
+                </a>
+                <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
                     <a href="${gmapsUrl}" target="_blank" class="btn-ai-ask" style="flex:1;height:40px;justify-content:center;text-decoration:none;border-radius:8px;">
                         Mở chỉ đường Google Maps
                     </a>
@@ -3057,36 +3450,91 @@
             if (window.smartDiningLocationManager) {
                 window.smartDiningLocationManager.requestBrowserGPS(true);
             }
+
+            const ribbon = document.getElementById('filter-ribbon');
+            if (ribbon) {
+                ribbon.addEventListener('scroll', handleFilterRibbonScroll);
+                window.addEventListener('resize', handleFilterRibbonScroll);
+                setTimeout(handleFilterRibbonScroll, 200);
+            }
         });
+
+        // Filter Bar smooth scroll controller
+        function scrollFilterBar(amount) {
+            const ribbon = document.getElementById('filter-ribbon');
+            if (ribbon) {
+                ribbon.scrollBy({ left: amount, behavior: 'smooth' });
+            }
+        }
+
+        function handleFilterRibbonScroll() {
+            const ribbon = document.getElementById('filter-ribbon');
+            const btnLeft = document.getElementById('filter-scroll-left');
+            const btnRight = document.getElementById('filter-scroll-right');
+            const fadeLeft = document.getElementById('scroll-fade-left');
+            const fadeRight = document.getElementById('scroll-fade-right');
+            if (!ribbon) return;
+
+            const maxScroll = ribbon.scrollWidth - ribbon.clientWidth;
+            const scrollLeft = ribbon.scrollLeft;
+
+            if (btnLeft && fadeLeft) {
+                if (scrollLeft > 15) {
+                    btnLeft.style.display = 'flex';
+                    fadeLeft.style.opacity = '1';
+                } else {
+                    btnLeft.style.display = 'none';
+                    fadeLeft.style.opacity = '0';
+                }
+            }
+
+            if (btnRight && fadeRight) {
+                if (maxScroll - scrollLeft > 15) {
+                    btnRight.style.display = 'flex';
+                    fadeRight.style.opacity = '1';
+                } else {
+                    btnRight.style.display = 'none';
+                    fadeRight.style.opacity = '0';
+                }
+            }
+        }
+
+        // Mobile Responsive View Switcher (Map vs List)
+        let isMobileMapActive = false;
+        function toggleMobileView() {
+            switchMobileView(isMobileMapActive ? 'list' : 'map');
+        }
 
         function switchMobileView(mode) {
             const layout = document.querySelector('.discovery-layout');
+            const floatingIcon = document.getElementById('floating-switch-icon');
+            const floatingText = document.getElementById('floating-switch-text');
             const btnList = document.getElementById('btn-view-list');
             const btnMap = document.getElementById('btn-view-map');
             if (!layout) return;
 
             if (mode === 'map') {
+                isMobileMapActive = true;
+                layout.classList.add('mobile-map-active');
                 layout.classList.remove('view-list');
                 layout.classList.add('view-map');
+                if (floatingIcon) floatingIcon.textContent = '📋';
+                if (floatingText) floatingText.textContent = 'Xem Danh sách';
                 if (btnList) btnList.classList.remove('active');
                 if (btnMap) btnMap.classList.add('active');
-                if (mapComponent) mapComponent.invalidateSize();
+                if (window.mapComponent) window.mapComponent.invalidateSize();
             } else {
+                isMobileMapActive = false;
+                layout.classList.remove('mobile-map-active');
                 layout.classList.remove('view-map');
                 layout.classList.add('view-list');
+                if (floatingIcon) floatingIcon.textContent = '🗺️';
+                if (floatingText) floatingText.textContent = 'Xem Bản đồ';
                 if (btnList) btnList.classList.add('active');
                 if (btnMap) btnMap.classList.remove('active');
             }
         }
     </script>
-    <div class="mobile-view-toggle-bar" id="mobile-view-toggle">
-        <button type="button" class="mobile-view-btn active" id="btn-view-list" onclick="switchMobileView('list')">
-            📋 Danh sách
-        </button>
-        <button type="button" class="mobile-view-btn" id="btn-view-map" onclick="switchMobileView('map')">
-            🗺️ Bản đồ
-        </button>
-    </div>
     <script src="js/guest-mode.js"></script>
     <script src="js/ai-chat-map-sync.js"></script>
 </body>
