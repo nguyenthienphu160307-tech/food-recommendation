@@ -50,7 +50,7 @@
                 <!-- User Area -->
                 <div id="nav-user-area" class="user-account-dropdown" style="display: none;">
                     <button type="button" class="user-chip-btn" onclick="toggleUserDropdown()">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Avatar" class="user-avatar-img">
+                        <img src="https://ui-avatars.com/api/?name=User&background=E11D48&color=fff" alt="Avatar" class="user-avatar-img">
                         <span class="user-display-name">Người dùng</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
@@ -361,6 +361,8 @@
 
                 // Lưu thông tin người dùng và token đồng bộ trên tất cả các khóa
                 const tokenStr = data.token || (data.tokens && data.tokens.access_token) || "";
+                const userAvatar = data.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.full_name || 'User')}&background=E11D48&color=fff&bold=true`;
+                data.user.avatar_url = userAvatar;
                 if (typeof setAuthSession === 'function') {
                     setAuthSession(data.user, tokenStr);
                 }
@@ -373,7 +375,7 @@
                     full_name: data.user.full_name,
                     email: data.user.email,
                     role: data.user.role,
-                    avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
+                    avatar_url: userAvatar
                 }));
 
                 showToast('success', `Chào mừng ${data.user.full_name} quay trở lại!`, 'Đăng nhập thành công');

@@ -327,8 +327,8 @@
             </button>
 
             <div class="user-chip">
-                <img id="header-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="User">
-                <span id="header-name">Nguyễn Văn An</span>
+                <img id="header-avatar" src="https://ui-avatars.com/api/?name=User&background=E11D48&color=fff" alt="User">
+                <span id="header-name">Người dùng</span>
             </div>
         </div>
     </header>
@@ -374,7 +374,7 @@
 
                     <div class="section-body">
                         <div class="photo-row">
-                            <img id="avatar-preview" class="avatar-large" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=80" alt="Avatar">
+                            <img id="avatar-preview" class="avatar-large" src="https://ui-avatars.com/api/?name=User&background=E11D48&color=fff" alt="Avatar">
                             <div class="photo-actions">
                                 <div class="photo-btn-group">
                                     <label for="avatar-file-input" class="btn-outline">
@@ -524,10 +524,10 @@
         const STORAGE_KEY = 'foodai_demo_profile_state';
 
         const defaultProfileData = {
-            profile_id: 2,
-            user_id: 2,
-            full_name: "Nguyễn Văn An",
-            avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=240&q=80",
+            profile_id: 1,
+            user_id: 1,
+            full_name: "Người dùng",
+            avatar_url: "https://ui-avatars.com/api/?name=User&background=E11D48&color=fff",
             gender: "Nam",
             date_of_birth: "2000-01-15",
             default_address: "11 Nguyễn Đình Chiểu, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh",
@@ -544,7 +544,7 @@
         async function loadUserProfile() {
             let authUser = null;
             try {
-                const rawAuth = localStorage.getItem('smart_dining_user');
+                const rawAuth = localStorage.getItem('smart_dining_user') || localStorage.getItem('current_user');
                 if (rawAuth) authUser = JSON.parse(rawAuth);
             } catch (_) {}
 
@@ -552,18 +552,19 @@
             let data = saved ? JSON.parse(saved) : defaultProfileData;
 
             // Tự động gọi GET /api/users/profile từ Backend API (Module 1 / TSK-04)
+            const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token');
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
             const queryEmail = (authUser && authUser.email) ? authUser.email : (data.email || null);
-            if (queryEmail) {
-                try {
-                    const res = await fetch(`/api/users/profile?email=${encodeURIComponent(queryEmail)}`);
-                    if (res.ok) {
-                        const apiData = await res.json();
-                        data = { ...data, ...apiData };
-                        console.log('[BE API] Nạp hồ sơ thành công từ GET /api/users/profile:', apiData);
-                    }
-                } catch (e) {
-                    console.warn('[BE API] Chưa thể kết nối GET /api/users/profile, dùng dữ liệu lưu tạm:', e);
+            const url = queryEmail ? `/api/users/profile?email=${encodeURIComponent(queryEmail)}` : '/api/users/profile';
+            try {
+                const res = await fetch(url, { headers });
+                if (res.ok) {
+                    const apiData = await res.json();
+                    data = { ...data, ...apiData };
+                    console.log('[BE API] Nạp hồ sơ thành công từ GET /api/users/profile:', apiData);
                 }
+            } catch (e) {
+                console.warn('[BE API] Chưa thể kết nối GET /api/users/profile, dùng dữ liệu lưu tạm:', e);
             }
 
             if (authUser) {
@@ -577,13 +578,13 @@
                 if (emailEl) emailEl.value = data.email;
             }
 
-            document.getElementById('full_name').value = data.full_name;
-            document.getElementById('avatar_url').value = data.avatar_url;
-            document.getElementById('gender').value = data.gender;
-            document.getElementById('date_of_birth').value = data.date_of_birth;
-            document.getElementById('default_address').value = data.default_address;
-            document.getElementById('default_lat').value = Number(data.default_lat).toFixed(7);
-            document.getElementById('default_lng').value = Number(data.default_lng).toFixed(7);
+            document.getElementById('full_name').value = data.full_name || '';
+            document.getElementById('avatar_url').value = data.avatar_url || '';
+            document.getElementById('gender').value = data.gender || 'Nam';
+            document.getElementById('date_of_birth').value = data.date_of_birth || '';
+            document.getElementById('default_address').value = data.default_address || '';
+            document.getElementById('default_lat').value = Number(data.default_lat || 10.776889).toFixed(7);
+            document.getElementById('default_lng').value = Number(data.default_lng || 106.700806).toFixed(7);
 
             syncHeaderAndInspector(data, "GET /api/users/profile (200 OK)");
             initMap(data.default_lat, data.default_lng);
@@ -751,9 +752,12 @@
         }
 
         function syncHeaderAndInspector(data, statusText) {
-            document.getElementById('avatar-preview').src = data.avatar_url;
-            document.getElementById('header-avatar').src = data.avatar_url;
-            document.getElementById('header-name').innerText = data.full_name;
+            const avatar = data.avatar_url && !data.avatar_url.includes('photo-1534528741775-53994a69daeb')
+                ? data.avatar_url
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name || 'User')}&background=E11D48&color=fff&bold=true`;
+            document.getElementById('avatar-preview').src = avatar;
+            document.getElementById('header-avatar').src = avatar;
+            document.getElementById('header-name').innerText = data.full_name || 'Người dùng';
             document.getElementById('api-json-preview').innerText =
                 `// ${statusText}\n` + JSON.stringify(data, null, 2);
         }

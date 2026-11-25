@@ -965,7 +965,7 @@
             </button>
 
             <div class="account-trigger" onclick="toggleAccountDropdown()">
-                <img id="nav-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar">
+                <img id="nav-user-avatar" src="https://ui-avatars.com/api/?name=Guest&background=64748B&color=fff" alt="Avatar">
                 <span id="nav-user-name">Khách</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
@@ -1568,8 +1568,7 @@
                 try {
                     const raw = localStorage.getItem('current_user') 
                              || localStorage.getItem('smart_dining_user') 
-                             || localStorage.getItem('user')
-                             || localStorage.getItem('foodai_demo_profile_state');
+                             || localStorage.getItem('user');
                     if (raw) user = JSON.parse(raw);
                 } catch (_) {}
             }
@@ -1589,11 +1588,24 @@
             const dropName = document.getElementById('drop-user-name');
             const dropEmail = document.getElementById('drop-user-email');
             const dropRole = document.getElementById('drop-user-role');
+            const navAvatar = document.getElementById('nav-user-avatar');
 
             if (navName) navName.innerText = displayName;
             if (dropName) dropName.innerText = displayName;
             if (dropEmail) dropEmail.innerText = displayEmail;
             if (dropRole) dropRole.innerText = displayRole;
+
+            if (navAvatar) {
+                if (isLoggedIn && user) {
+                    if (user.avatar_url && !user.avatar_url.includes('photo-1534528741775-53994a69daeb')) {
+                        navAvatar.src = user.avatar_url;
+                    } else {
+                        navAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=E11D48&color=fff&bold=true`;
+                    }
+                } else {
+                    navAvatar.src = "https://ui-avatars.com/api/?name=Guest&background=64748B&color=fff";
+                }
+            }
 
             const isAdmin = Boolean(isLoggedIn && user && (user.role === 'admin' || user.role === 'ADMIN'));
             const adminSec = document.getElementById('drop-admin-section');
@@ -1610,6 +1622,8 @@
         function syncProfileData() {
             renderAuthState();
             if (window.FoodAPI && FoodAPI.auth.isLoggedIn()) return;
+            const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token');
+            if (token) return;
             try {
                 const raw = localStorage.getItem(STORAGE_KEY);
                 if (raw) {
@@ -1617,7 +1631,7 @@
                     if (prof.full_name && document.getElementById('nav-user-name')) {
                         document.getElementById('nav-user-name').innerText = prof.full_name;
                     }
-                    if (prof.avatar_url && document.getElementById('nav-user-avatar')) {
+                    if (prof.avatar_url && document.getElementById('nav-user-avatar') && !prof.avatar_url.includes('photo-1534528741775-53994a69daeb')) {
                         document.getElementById('nav-user-avatar').src = prof.avatar_url;
                     }
                 }
@@ -1628,11 +1642,21 @@
             if (!window.FoodAPI || !FoodAPI.auth.isLoggedIn()) return;
             try {
                 const prof = await FoodAPI.profile.get();
-                if (prof.full_name) {
+                if (prof && prof.full_name) {
                     if (document.getElementById('nav-user-name')) document.getElementById('nav-user-name').innerText = prof.full_name;
                     if (document.getElementById('drop-user-name')) document.getElementById('drop-user-name').innerText = prof.full_name;
+
+                    let curUser = FoodAPI.auth.getUser() || {};
+                    curUser.full_name = prof.full_name;
+                    if (prof.email) curUser.email = prof.email;
+                    if (prof.avatar_url) curUser.avatar_url = prof.avatar_url;
+                    localStorage.setItem('current_user', JSON.stringify(curUser));
+                    localStorage.setItem('smart_dining_user', JSON.stringify(curUser));
                 }
-                if (prof.avatar_url && document.getElementById('nav-user-avatar')) {
+                if (prof && prof.email && document.getElementById('drop-user-email')) {
+                    document.getElementById('drop-user-email').innerText = prof.email;
+                }
+                if (prof && prof.avatar_url && document.getElementById('nav-user-avatar')) {
                     document.getElementById('nav-user-avatar').src = prof.avatar_url;
                 }
             } catch (err) {

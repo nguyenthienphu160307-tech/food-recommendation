@@ -50,7 +50,7 @@
                 <!-- User Area (When logged in) -->
                 <div id="nav-user-area" class="user-account-dropdown" style="display: none;">
                     <button type="button" class="user-chip-btn" onclick="toggleUserDropdown()">
-                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Avatar" class="user-avatar-img">
+                        <img src="https://ui-avatars.com/api/?name=User&background=E11D48&color=fff" alt="Avatar" class="user-avatar-img">
                         <span class="user-display-name">Người dùng</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
@@ -599,17 +599,19 @@
                 showToast('success', 'Chúc mừng ' + data.data.full_name + '! Bạn đã đăng ký thành công.', 'Đăng ký thành công');
 
                 // Đồng bộ ngay thông tin tài khoản vừa đăng ký vào LocalStorage
+                const regAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.data.full_name || 'User')}&background=E11D48&color=fff&bold=true`;
                 const registeredUser = {
                     id: data.data.id,
                     full_name: data.data.full_name,
                     email: data.data.email,
-                    phone_number: data.data.phone_number
+                    phone_number: data.data.phone_number,
+                    avatar_url: regAvatar
                 };
                 localStorage.setItem('smart_dining_user', JSON.stringify(registeredUser));
                 localStorage.setItem('foodai_demo_profile_state', JSON.stringify({
                     full_name: data.data.full_name,
                     email: data.data.email,
-                    avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
+                    avatar_url: regAvatar
                 }));
 
                 // Chuyển sang trang đăng nhập để đăng nhập

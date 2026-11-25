@@ -415,8 +415,8 @@
                 <span id="theme-label">Giao diện Tối</span>
             </button>
             <div class="user-chip">
-                <img id="nav-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="Avatar">
-                <span id="nav-username">Nguyễn Văn An</span>
+                <img id="nav-avatar" src="https://ui-avatars.com/api/?name=User&background=E11D48&color=fff" alt="Avatar">
+                <span id="nav-username">Người dùng</span>
             </div>
         </div>
     </header>
@@ -860,13 +860,31 @@
 
         function loadExistingPreferences() {
             try {
+                let user = null;
+                const rawUser = localStorage.getItem('current_user') || localStorage.getItem('smart_dining_user');
+                if (rawUser) user = JSON.parse(rawUser);
+
+                if (user) {
+                    const displayName = user.full_name || user.email || 'Người dùng';
+                    document.getElementById('nav-username').innerText = displayName;
+                    const avatar = user.avatar_url && !user.avatar_url.includes('photo-1534528741775-53994a69daeb')
+                        ? user.avatar_url
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=E11D48&color=fff&bold=true`;
+                    document.getElementById('nav-avatar').src = avatar;
+                } else {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        const prof = JSON.parse(saved);
+                        if (prof.full_name) document.getElementById('nav-username').innerText = prof.full_name;
+                        if (prof.avatar_url && !prof.avatar_url.includes('photo-1534528741775-53994a69daeb')) {
+                            document.getElementById('nav-avatar').src = prof.avatar_url;
+                        }
+                    }
+                }
+
                 const saved = localStorage.getItem(STORAGE_KEY);
                 if (saved) {
                     const prof = JSON.parse(saved);
-                    if (prof.full_name) document.getElementById('nav-username').innerText = prof.full_name;
-                    if (prof.avatar_url) document.getElementById('nav-avatar').src = prof.avatar_url;
-
-                    if (prof.diet_type) {
                         state.diet_type = prof.diet_type;
                         document.querySelectorAll('.diet-card').forEach(card => {
                             const fn = card.getAttribute('onclick') || '';

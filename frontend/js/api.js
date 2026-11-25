@@ -138,12 +138,15 @@ const AuthAPI = {
             localStorage.setItem("smart_dining_token", token);
         }
         if (result.user) {
+            const avatar = result.user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(result.user.full_name || 'User')}&background=E11D48&color=fff&bold=true`;
+            result.user.avatar_url = avatar;
             localStorage.setItem("current_user", JSON.stringify(result.user));
             localStorage.setItem("smart_dining_user", JSON.stringify(result.user));
             localStorage.setItem("foodai_demo_profile_state", JSON.stringify({
                 full_name: result.user.full_name,
                 email: result.user.email,
-                role: result.user.role
+                role: result.user.role,
+                avatar_url: avatar
             }));
         }
         return result;

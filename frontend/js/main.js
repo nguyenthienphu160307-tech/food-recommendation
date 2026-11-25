@@ -136,6 +136,13 @@ function renderAuthState() {
             userArea.style.display = 'flex';
             const nameEl = userArea.querySelector('.user-display-name');
             if (nameEl) nameEl.textContent = user.full_name || user.email || 'Người dùng';
+            const imgEl = userArea.querySelector('.user-avatar-img');
+            if (imgEl) {
+                const displayName = user.full_name || user.email || 'User';
+                imgEl.src = user.avatar_url && !user.avatar_url.includes('photo-1534528741775-53994a69daeb')
+                    ? user.avatar_url
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=E11D48&color=fff&bold=true`;
+            }
         }
         if (drawerGuest) drawerGuest.style.display = 'none';
         if (drawerUser) {
