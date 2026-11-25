@@ -11,6 +11,10 @@ from app.schemas.ai_search import (
     AISearchRecommendResponse,
     LLMParseAndSaveRequest,
     LLMParseAndSaveResponse,
+    QueryRelaxationRequest,
+    QueryRelaxationResponse,
+    QueryRelaxationInfo,
+    MultiTurnRestaurantItem,
 )
 from app.core.prompt_template import (
     SYSTEM_PROMPT_TEMPLATE,
@@ -21,6 +25,9 @@ from app.core.prompt_template import (
 )
 from app.services.chat_session_service import ChatSessionService
 from app.services.ai_recommendation_pipeline import AIRecommendationPipeline
+from app.services.llm_service import LLMService
+from app.services.query_relaxation_service import QueryRelaxationService
+from app.services.multi_turn_state_machine import SearchSessionState, VALID_STATE_TRANSITIONS
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/search", tags=["AI Prompt & Trích xuất Tiêu chí"])
@@ -204,4 +211,69 @@ async def ai_search_and_recommend(
         total_candidates=pipeline_output["total_candidates"],
         top_n=payload.top_n,
         recommendations=pipeline_output["recommendations"],
+    )
+
+
+@router.get(
+    "/state-diagram",
+    summary="Lấy siêu dữ liệu 8 trạng thái State Machine (Hình 8.2 - TE9C669)"
+)
+def get_state_diagram_metadata():
+    return {
+        "task_code": "TE9C669",
+        "diagram_name": "State Diagram Vòng đời tìm kiếm (Hình 8.2 SRS)",
+        "states": [{"state": s.value, "name": s.name} for s in SearchSessionState],
+        "valid_transitions": {
+            k.value: [v.value for v in vals] for k, vals in VALID_STATE_TRANSITIONS.items()
+        },
+    }
+
+
+@router.post(
+    "/relax",
+    response_model=QueryRelaxationResponse,
+    summary="Tìm kiếm kèm cơ chế tự động nới lỏng điều kiện (TE9C66F)"
+)
+def relax_search_endpoint(
+    payload: QueryRelaxationRequest,
+    db: Session = Depends(get_db),
+):
+    results, meta = QueryRelaxationService.relax_and_search(
+        db=db,
+        lat=payload.lat,
+        lng=payload.lng,
+        radius_km=payload.radius_km,
+        cuisine=payload.cuisine,
+        budget=payload.budget,
+        price_min=payload.price_min,
+        price_max=payload.price_max,
+        min_rating=payload.min_rating,
+        has_parking=payload.has_parking,
+        has_private_room=payload.has_private_room,
+        has_outdoor=payload.has_outdoor,
+        pet_friendly=payload.pet_friendly,
+        vegetarian_support=payload.vegetarian_support,
+        limit=payload.limit,
+    )
+    items = [
+        MultiTurnRestaurantItem(
+            id=r.id,
+            name=r.name,
+            address=r.address,
+            cuisine_type=r.cuisine_type,
+            avg_rating=r.avg_rating,
+            min_price=r.min_price,
+            max_price=r.max_price,
+            distance_km=dist,
+            cover_image_url=r.images[0].image_url if r.images else None,
+            has_parking=r.amenities.has_parking if r.amenities else False,
+            has_private_room=r.amenities.has_private_room if r.amenities else False,
+        )
+        for r, dist in results
+    ]
+    return QueryRelaxationResponse(
+        results_count=len(items),
+        is_relaxed=bool(meta.get("relaxation_applied")),
+        relaxation_info=QueryRelaxationInfo(**meta),
+        results=items,
     )

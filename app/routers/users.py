@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from app.core.database import get_db
+from app.core.rbac import get_current_guest_or_user
 from app.models.user import User, UserProfile
 from app.schemas.user import UserProfileUpdateSchema, UserProfileResponseSchema
 from app.schemas.search import PrivacySettingsResponse, PrivacySettingsUpdateRequest
@@ -20,18 +21,16 @@ router = APIRouter(prefix="/api/users", tags=["Hồ sơ người dùng (UserProf
 def get_user_profile(
     email: Optional[str] = None,
     user_id: Optional[int] = None,
+    current_user: Optional[User] = Depends(get_current_guest_or_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Lấy thông tin hồ sơ người dùng từ bảng Users và UserProfiles:
-    - Nếu truyền email hoặc user_id -> Lấy đúng hồ sơ tài khoản đó.
-    - Nếu không truyền -> Lấy tài khoản người dùng hoạt động gần nhất.
-    """
     query = db.query(User)
     if user_id:
         user = query.filter(User.id == user_id).first()
     elif email:
         user = query.filter(User.email == email.strip().lower()).first()
+    elif current_user is not None:
+        user = current_user
     else:
         user = query.order_by(User.id.desc()).first()
 
@@ -72,6 +71,7 @@ def get_user_profile(
 )
 def update_user_profile(
     payload: UserProfileUpdateSchema,
+    current_user: User = Depends(get_current_guest_or_user),
     db: Session = Depends(get_db)
 ):
     """

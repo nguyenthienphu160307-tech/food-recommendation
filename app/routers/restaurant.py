@@ -29,6 +29,10 @@ from app.services.geo_service import (
     calculate_haversine_distance,
     format_distance_display,
 )
+from app.services.open_hours_service import (
+    check_restaurant_open_status,
+    get_vietnam_now,
+)
 
 router = APIRouter(prefix="/api/restaurants", tags=["Nhà hàng & Bộ lọc đa điều kiện (Restaurants)"])
 
@@ -350,7 +354,7 @@ def filter_restaurants(
     status_filter: str = Query("active", description="Trạng thái nhà hàng ('active', 'all')"),
     auto_relax: bool = Query(False, description="Tự động nới lỏng bán kính (+3km) hoặc ngân sách (±25%) khi 0 kết quả (TE9C66F)"),
     page: int = Query(1, ge=1, description="Số thứ tự trang"),
-    limit: int = Query(20, ge=1, le=100, description="Số lượng kết quả mỗi trang"),
+    limit: int = Query(20, ge=1, le=200, description="Số lượng kết quả mỗi trang"),
     db: Session = Depends(get_db),
 ):
     items, pagination = _query_filtered_restaurants(
@@ -374,9 +378,10 @@ def filter_restaurants(
         limit=limit,
     )
 
+    relaxation_meta = None
     if auto_relax and len(items) == 0:
         from app.services.query_relaxation_service import QueryRelaxationService
-        rel_results, _ = QueryRelaxationService.relax_and_search(
+        rel_results, rel_meta = QueryRelaxationService.relax_and_search(
             db=db,
             lat=lat,
             lng=lng,
@@ -393,6 +398,7 @@ def filter_restaurants(
             limit=limit,
         )
         if rel_results:
+            relaxation_meta = rel_meta
             items = [_serialize_restaurant(r, dist) for r, dist in rel_results]
             pagination = PaginationMetadata(
                 page=1,
@@ -423,6 +429,7 @@ def filter_restaurants(
             status_filter=status_filter,
         ),
         pagination=pagination,
+        relaxation=relaxation_meta,
     )
 
 
@@ -500,7 +507,17 @@ def get_restaurants(
     status_code=status.HTTP_200_OK,
     summary="Chi tiết một nhà hàng: thực đơn, thư viện ảnh, tiện ích (TSK-25 / FR-09)"
 )
-def get_restaurant_detail(restaurant_id: int, db: Session = Depends(get_db)):
+def get_restaurant_detail(
+    restaurant_id: int,
+    lat: Optional[float] = Query(None, ge=-90.0, le=90.0, description="Vĩ độ người dùng"),
+    lng: Optional[float] = Query(None, ge=-180.0, le=180.0, description="Kinh độ người dùng"),
+    db: Session = Depends(get_db),
+):
+    if (lat is None) != (lng is None):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Vui lòng cung cấp đầy đủ cả hai tọa độ lat và lng.",
+        )
     restaurant = (
         db.query(Restaurant)
         .options(
@@ -515,10 +532,14 @@ def get_restaurant_detail(restaurant_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Không tìm thấy nhà hàng.")
 
     base = _build_list_item(restaurant)
+    distance_km = None
+    if lat is not None and lng is not None:
+        distance_km = round(calculate_haversine_distance(lat, lng, restaurant.latitude, restaurant.longitude, unit="km"), 2)
     menus = sorted(restaurant.menus, key=lambda m: (m.display_order, m.id))
     images = sorted(restaurant.images, key=lambda i: (i.display_order, i.id))
     return RestaurantDetailResponse(
         **base.model_dump(),
+        distance_km=distance_km,
         menus=[
             MenuCategoryResponse(
                 id=m.id, name=m.name, description=m.description, display_order=m.display_order,

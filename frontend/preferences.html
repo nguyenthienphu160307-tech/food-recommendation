@@ -837,11 +837,11 @@
 
             // 2. Gửi request POST & PUT /api/users/preferences
             try {
-                const token = localStorage.getItem('foodai_access_token');
+                const token = localStorage.getItem('access_token') || localStorage.getItem('smart_dining_token') || localStorage.getItem('foodai_access_token');
                 const headers = { 'Content-Type': 'application/json' };
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                await fetch('http://localhost:8000/api/users/preferences', {
+                await fetch('/api/users/preferences', {
                     method: 'PUT',
                     headers: headers,
                     body: JSON.stringify(payload)

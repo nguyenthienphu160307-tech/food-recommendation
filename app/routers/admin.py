@@ -351,7 +351,8 @@ def update_user_status(
         revoked_sessions_count = len(active_sessions)
         for s in active_sessions:
             s.status = "closed"
-            s.closed_at = now_utc
+            s.ended_at = now_utc
+            s.closed_reason = "account_locked"
 
         # 2. Ghi nhận thu hồi Token đăng nhập vào bảng RevokedToken
         revoke_record = RevokedToken(

@@ -33,5 +33,12 @@ if "message" in notif_cols and "content" in notif_cols:
 if "notification_type" in notif_cols and "type" in notif_cols:
     cur.execute("UPDATE notifications SET type = notification_type WHERE type IS NULL")
 
+# users
+cur.execute("PRAGMA table_info(users)")
+u_cols = [c[1] for c in cur.fetchall()]
+if "last_login" not in u_cols:
+    cur.execute("ALTER TABLE users ADD COLUMN last_login DATETIME")
+    print("Added users.last_login")
+
 conn.commit()
 print("Migration completed successfully.")

@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.menu import RestaurantMenuResponse
 
@@ -106,6 +106,7 @@ class RestaurantImageResponse(BaseModel):
 
 class RestaurantDetailResponse(RestaurantListItemResponse):
     """Chi tiết một nhà hàng: thông tin cơ bản + thực đơn + thư viện ảnh"""
+    distance_km: Optional[float] = Field(None, description="Khoảng cách từ vị trí người dùng đến nhà hàng (km)")
     menus: List[MenuCategoryResponse] = []
     images: List[RestaurantImageResponse] = []
 
@@ -150,3 +151,4 @@ class RestaurantFilterResponse(BaseModel):
     data: List[RestaurantFilterItemResponse]
     applied_filters: AppliedFilterCriteria
     pagination: PaginationMetadata
+    relaxation: Optional[Dict[str, Any]] = Field(None, description="Thông tin nới lỏng điều kiện tự động (TE9C66F)")

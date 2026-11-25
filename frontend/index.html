@@ -2305,7 +2305,7 @@
                 else if (sortMode === 'rating') params.append('sort_by', 'rating');
                 else if (sortMode === 'price_asc') params.append('sort_by', 'price_asc');
 
-                params.append('limit', '50');
+                params.append('limit', '200');
 
                 const res = await fetch(`/api/restaurants/filter?${params.toString()}`);
                 if (res.ok) {

@@ -353,7 +353,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     Địa chỉ & Vị trí mặc định
                 </a>
-                <a href="/" class="settings-nav-item">
+                <a href="favorites-history.html" class="settings-nav-item">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
                     Quán ăn yêu thích
                 </a>
@@ -848,7 +848,13 @@
     //  TSK-20: Privacy Settings UI Logic
     // ============================================================
     async function loadPrivacySettings() {
-        const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+        let userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+        if (!userId) {
+            try {
+                const u = JSON.parse(localStorage.getItem('smart_dining_user') || localStorage.getItem('current_user') || 'null');
+                if (u && u.id) userId = String(u.id);
+            } catch (_) {}
+        }
         if (!userId) return;
         try {
             const res = await fetch(`/api/users/privacy?user_id=${userId}`);
@@ -868,7 +874,13 @@
     }
 
     async function savePrivacySettings() {
-        const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+        let userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+        if (!userId) {
+            try {
+                const u = JSON.parse(localStorage.getItem('smart_dining_user') || localStorage.getItem('current_user') || 'null');
+                if (u && u.id) userId = String(u.id);
+            } catch (_) {}
+        }
         if (!userId) {
             alert('Bạn cần đăng nhập để lưu cài đặt quyền riêng tư.');
             return;

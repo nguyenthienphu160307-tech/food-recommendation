@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
@@ -17,6 +19,7 @@ from app.schemas.auth import (
 )
 from app.core.security import hash_password, verify_password, generate_otp, create_access_token
 from app.core.email import send_otp_email
+from app.core.rbac import revoke_token
 
 router = APIRouter(prefix="/api/auth", tags=["Xác thực & Tài khoản (Auth)"])
 
@@ -255,3 +258,20 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         token=access_token,
         tokens=TokensResponse(access_token=access_token)
     )
+
+
+_logout_bearer = HTTPBearer(auto_error=False)
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Đăng xuất & thu hồi JWT Token"
+)
+def logout(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(_logout_bearer),
+    db: Session = Depends(get_db),
+):
+    if credentials and credentials.credentials:
+        revoke_token(db, credentials.credentials)
+    return {"message": "Đăng xuất thành công!"}

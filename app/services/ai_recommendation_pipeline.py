@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
-from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.restaurant import Restaurant, RestaurantAmenity
 from app.schemas.ai_search import DiningCriteriaSchema
@@ -22,14 +23,45 @@ class AIRecommendationPipeline:
     ) -> Tuple[float, float, str]:
         if criteria.location_text:
             geo = GeocodingService.geocode(criteria.location_text)
-            if geo and geo.get("lat") is not None and geo.get("lng") is not None:
-                return float(geo["lat"]), float(geo["lng"]), f"geocoded:{criteria.location_text}"
+            lat_val = geo.get("latitude") if geo else None
+            lng_val = geo.get("longitude") if geo else None
+            if lat_val is not None and lng_val is not None:
+                return float(lat_val), float(lng_val), f"geocoded:{criteria.location_text}"
 
         if user_lat is not None and user_lng is not None:
             return float(user_lat), float(user_lng), "user_gps"
 
         default_lat, default_lng = GeocodingService.DEFAULT_CENTER
         return default_lat, default_lng, "default_hcm_q1"
+
+    @staticmethod
+    def _serialize_candidate(r: Restaurant, dist_km: float) -> Dict[str, Any]:
+        cover_img = None
+        if r.images:
+            cover_img = next((img.image_url for img in r.images if img.is_cover), None)
+            if not cover_img:
+                cover_img = r.images[0].image_url
+
+        return {
+            "id": r.id,
+            "name": r.name,
+            "address": r.address,
+            "cuisine_type": r.cuisine_type,
+            "min_price": r.min_price,
+            "max_price": r.max_price,
+            "rating": r.avg_rating or 0.0,
+            "latitude": r.latitude,
+            "longitude": r.longitude,
+            "distance_km": round(dist_km, 2),
+            "cover_image_url": cover_img,
+            "amenities": {
+                "has_parking": r.amenities.has_parking if r.amenities else False,
+                "has_private_room": r.amenities.has_private_room if r.amenities else False,
+                "has_outdoor": r.amenities.has_outdoor if r.amenities else False,
+                "pet_friendly": r.amenities.pet_friendly if r.amenities else False,
+                "vegetarian_support": r.amenities.vegetarian_support if r.amenities else False,
+            },
+        }
 
     @classmethod
     def query_and_rank(
@@ -53,20 +85,23 @@ class AIRecommendationPipeline:
         }
 
         bbox = calculate_bounding_box(center_lat, center_lng, radius_km)
-        query = db.query(Restaurant).filter(
-            Restaurant.status == "active",
-            Restaurant.latitude.between(bbox.min_lat, bbox.max_lat),
-            Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
+        query = (
+            db.query(Restaurant)
+            .options(joinedload(Restaurant.images), joinedload(Restaurant.amenities))
+            .filter(
+                Restaurant.status == "active",
+                Restaurant.latitude.between(bbox.min_lat, bbox.max_lat),
+                Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
+            )
         )
 
-        from sqlalchemy import or_
-
+        conditions = []
         if criteria.cuisine:
             c_raw = criteria.cuisine.strip()
             c_lower = c_raw.lower()
             conditions = [
                 Restaurant.cuisine_type.ilike(f"%{c_raw}%"),
-                Restaurant.name.ilike(f"%{c_raw}%")
+                Restaurant.name.ilike(f"%{c_raw}%"),
             ]
             if "bbq" in c_lower or "nướng" in c_lower or "hàn quốc" in c_lower:
                 conditions.extend([
@@ -136,57 +171,25 @@ class AIRecommendationPipeline:
         for r in query.all():
             dist_km = calculate_haversine_distance(center_lat, center_lng, r.latitude, r.longitude)
             if dist_km <= radius_km:
-                candidates.append({
-                    "id": r.id,
-                    "name": r.name,
-                    "address": r.address,
-                    "cuisine_type": r.cuisine_type,
-                    "min_price": r.min_price,
-                    "max_price": r.max_price,
-                    "rating": r.avg_rating or 0.0,
-                    "latitude": r.latitude,
-                    "longitude": r.longitude,
-                    "distance_km": round(dist_km, 2),
-                    "amenities": {
-                        "has_parking": r.amenities.has_parking if r.amenities else False,
-                        "has_private_room": r.amenities.has_private_room if r.amenities else False,
-                        "has_outdoor": r.amenities.has_outdoor if r.amenities else False,
-                        "pet_friendly": r.amenities.pet_friendly if r.amenities else False,
-                        "vegetarian_support": r.amenities.vegetarian_support if r.amenities else False,
-                    },
-                })
+                candidates.append(cls._serialize_candidate(r, dist_km))
 
         # Nới lỏng bộ lọc nếu điều kiện tiện ích quá ngặt nghèo dẫn đến 0 kết quả
         if not candidates and any(required_amenities.values()):
-            relaxed_q = db.query(Restaurant).filter(
-                Restaurant.status == "active",
-                Restaurant.latitude.between(bbox.min_lat, bbox.max_lat),
-                Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
+            relaxed_q = (
+                db.query(Restaurant)
+                .options(joinedload(Restaurant.images), joinedload(Restaurant.amenities))
+                .filter(
+                    Restaurant.status == "active",
+                    Restaurant.latitude.between(bbox.min_lat, bbox.max_lat),
+                    Restaurant.longitude.between(bbox.min_lng, bbox.max_lng),
+                )
             )
-            if criteria.cuisine:
+            if criteria.cuisine and conditions:
                 relaxed_q = relaxed_q.filter(or_(*conditions))
             for r in relaxed_q.all():
                 dist_km = calculate_haversine_distance(center_lat, center_lng, r.latitude, r.longitude)
                 if dist_km <= radius_km:
-                    candidates.append({
-                        "id": r.id,
-                        "name": r.name,
-                        "address": r.address,
-                        "cuisine_type": r.cuisine_type,
-                        "min_price": r.min_price,
-                        "max_price": r.max_price,
-                        "rating": r.avg_rating or 0.0,
-                        "latitude": r.latitude,
-                        "longitude": r.longitude,
-                        "distance_km": round(dist_km, 2),
-                        "amenities": {
-                            "has_parking": r.amenities.has_parking if r.amenities else False,
-                            "has_private_room": r.amenities.has_private_room if r.amenities else False,
-                            "has_outdoor": r.amenities.has_outdoor if r.amenities else False,
-                            "pet_friendly": r.amenities.pet_friendly if r.amenities else False,
-                            "vegetarian_support": r.amenities.vegetarian_support if r.amenities else False,
-                        },
-                    })
+                    candidates.append(cls._serialize_candidate(r, dist_km))
 
         ranked = RankingEngine.rank_and_sort(
             restaurants=candidates,

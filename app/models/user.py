@@ -12,6 +12,7 @@ class User(Base):
     phone_number = Column(String(20), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=False)
     status = Column(String(20), default="active", nullable=False)  # 'active', 'locked'
+    last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -207,7 +207,7 @@ window.FoodAPI = {
     },
     restaurants: {
         listAll: async () => {
-            const res = await apiRequest("/restaurants?limit=100", "GET");
+            const res = await apiRequest("/restaurants?limit=200", "GET");
             return Array.isArray(res) ? res : (res.items || res.data || []);
         },
         categoryOf: (r) => {

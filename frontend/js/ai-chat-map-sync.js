@@ -66,23 +66,32 @@ const AIChatMapSync = {
                         blocked: false,
                         explanation: data.ai_explanation,
                         resolvedLocation: data.resolved_location,
-                        recommendations: data.recommendations.map(r => ({
-                            id: r.id,
-                            name: r.name,
-                            address: r.address,
-                            lat: r.latitude,
-                            lng: r.longitude,
-                            cuisineLabel: r.cuisine_type,
-                            priceMin: r.min_price,
-                            priceMax: r.max_price,
-                            rating: r.rating ?? r.avg_rating ?? 4.5,
-                            distanceKm: r.distance_km,
-                            matchScore: Math.round(r.match_score ?? r.final_score ?? 88),
-                            image: r.cover_image_url || 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
-                            parking: r.amenities?.has_parking ?? false,
-                            private_room: r.amenities?.has_private_room ?? false,
-                            vegetarian: r.amenities?.vegetarian_support ?? false
-                        }))
+                        recommendations: data.recommendations.map(r => {
+                            const localMatch = (localFallbackVenues || []).find(v => v.id === r.id);
+                            const imgUrl =
+                                r.cover_image_url ||
+                                (localMatch && (localMatch.image || localMatch.cover_image_url)) ||
+                                'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800';
+
+                            return {
+                                id: r.id,
+                                name: r.name,
+                                address: r.address,
+                                lat: r.latitude,
+                                lng: r.longitude,
+                                cuisineLabel: r.cuisine_type,
+                                priceMin: r.min_price,
+                                priceMax: r.max_price,
+                                rating: r.rating ?? r.avg_rating ?? 4.5,
+                                distanceKm: r.distance_km,
+                                matchScore: Math.round(r.match_score ?? r.final_score ?? 88),
+                                image: imgUrl,
+                                cover_image_url: imgUrl,
+                                parking: r.amenities?.has_parking ?? false,
+                                private_room: r.amenities?.has_private_room ?? false,
+                                vegetarian: r.amenities?.vegetarian_support ?? false
+                            };
+                        })
                     };
                 }
             }

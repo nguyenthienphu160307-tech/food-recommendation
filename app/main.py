@@ -9,7 +9,6 @@ from app.core.database import engine, Base, get_db
 import app.models
 from app.routers import (
     auth_router,
-    profile_router,
     users_router,
     restaurant_router,
     geo_router,
@@ -80,6 +79,9 @@ def seed_demo_accounts():
             db.add(UserProfile(user_id=student_user.id, full_name="Nguyễn Văn A"))
             db.add(UserRole(user_id=student_user.id, role_id=user_role.id))
             db.commit()
+        elif student_user.profile and student_user.profile.full_name == "Quản trị viên Hệ thống":
+            student_user.profile.full_name = "Nguyễn Văn A"
+            db.commit()
 
         db.close()
     except Exception as e:
@@ -105,7 +107,6 @@ app.add_middleware(
 
 # Đăng ký các Router API
 app.include_router(auth_router)
-app.include_router(profile_router)
 app.include_router(users_router)
 app.include_router(restaurant_router)
 app.include_router(geo_router)
@@ -260,6 +261,24 @@ def serve_index_alias():
     return serve_home_page()
 
 
+@app.get("/favorites-history", tags=["Frontend UI"], summary="Trang Quán ăn Yêu thích & Lịch sử Tìm kiếm AI")
+@app.get("/favorites-history.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_favorites_history_page():
+    fav_file = os.path.join(FRONTEND_DIR, "favorites-history.html")
+    if os.path.exists(fav_file):
+        return FileResponse(fav_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang yêu thích & lịch sử.")
+
+
+@app.get("/admin-users-reviews", tags=["Frontend UI"], summary="Trang Quản lý Người dùng & Kiểm duyệt Đánh giá")
+@app.get("/admin-users-reviews.html", tags=["Frontend UI"], include_in_schema=False)
+def serve_admin_users_reviews_page():
+    aur_file = os.path.join(FRONTEND_DIR, "admin-users-reviews.html")
+    if os.path.exists(aur_file):
+        return FileResponse(aur_file)
+    raise HTTPException(status_code=404, detail="Không tìm thấy trang quản lý người dùng & kiểm duyệt.")
+
+
 @app.get("/api/test-db", tags=["Hệ thống"])
 def test_db_connection(db: Session = Depends(get_db)):
     try:
@@ -270,31 +289,3 @@ def test_db_connection(db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={"status": "error", "error": str(e)},
         )
-        
-app.get("/", include_in_schema=False)
-def serve_home_page():
-    return RedirectResponse(url="/frontend/index.html")
-
-@app.get("/login", include_in_schema=False)
-def serve_login():
-    return RedirectResponse(url="/frontend/login.html")
-
-@app.get("/register", include_in_schema=False)
-def serve_register():
-    return RedirectResponse(url="/frontend/register.html")
-
-@app.get("/profile", include_in_schema=False)
-def serve_profile():
-    return RedirectResponse(url="/frontend/profile.html")
-
-@app.get("/admin", include_in_schema=False)
-def serve_admin():
-    return RedirectResponse(url="/frontend/admin.html")
-
-@app.get("/admin/menu", include_in_schema=False)
-def serve_admin_menu():
-    return RedirectResponse(url="/frontend/admin-menu.html")
-
-@app.get("/admin/images", include_in_schema=False)
-def serve_admin_images():
-    return RedirectResponse(url="/frontend/admin-images.html")
